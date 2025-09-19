@@ -1,0 +1,908 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 10px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px;
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 1.4rem;
+    margin-bottom: 0;
+    font-weight: 700;
+}
+
+.content {
+    padding: 15px 25px 25px 25px;
+}
+
+.layout-container {
+    display: flex;
+    gap: 25px;
+    align-items: flex-start;
+}
+
+.left-panel {
+    flex: 1;
+    min-width: 0;
+}
+
+.right-panel {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.debug-section {
+    margin-top: 0;
+    padding-top: 0;
+    flex: 1;
+    min-width: 400px;
+    width: 100%;
+    display: none; /* Default hidden state */
+    flex-direction: column;
+}
+
+.input-section {
+    margin-bottom: 0;
+}
+
+.input-group {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+/* Make text input group horizontal with gray background */
+.text-input-group {
+    flex-direction: row !important;
+    align-items: center !important;
+    padding: 10px 12px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+.text-input-group label {
+    display: inline !important;
+    margin-bottom: 0 !important;
+    margin-right: 12px;
+    white-space: nowrap;
+}
+
+.text-input-group .text-input {
+    width: 80%;
+    flex: 1;
+    padding: 5px 10px;
+}
+
+/* Style the entire dither-and-threshold container with gray background */
+.dither-and-threshold {
+    padding: 10px 12px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+/* Center BW mode radio buttons vertically within their flex container */
+.bw-mode-group {
+    align-self: center;
+}
+
+/* Center threshold control gray box vertically within their flex container */
+.threshold-control {
+    align-self: center;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+/* Main image controls container - no visual styling */
+.main-image-controls {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+}
+
+/* Screen reader only labels */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Apply margins to container divs */
+.scale-factor-and-noise-probability,
+.dither-and-threshold,
+.color-control,
+.qr-text-input,
+.debug-and-test-controls {
+    margin-top: 10px !important;
+    margin-bottom: 0 !important;
+}
+
+/* Remove all margins from control elements - let containers handle spacing */
+.scale-control,
+.noise-control,
+.threshold-control,
+.checkbox-label {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.image-upload-and-scaling {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: stretch;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.file-input-wrapper {
+    position: relative;
+    cursor: pointer;
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    width: 100%;
+    height: 256px;
+    min-height: 256px;
+    max-height: 256px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.scaling-mode-group {
+    align-self: stretch;
+    padding: 10px 12px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    min-width: 200px;
+}
+
+.scaling-mode-group label {
+    white-space: nowrap;
+}
+
+/* Override flex utilities: stack scaling mode radios vertically */
+.image-upload-and-scaling .scaling-mode-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.image-upload-and-scaling .scaling-mode-group > span {
+    margin-bottom: 4px;
+}
+
+.image-upload-and-scaling .scaling-mode-group label {
+    display: block;
+}
+
+/* Stack zoom controls vertically under Custom radio */
+.image-upload-and-scaling .scaling-mode-group .zoom-control {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-top: 8px;
+    width: 100%;
+    max-width: 200px;
+}
+
+.image-upload-and-scaling .scaling-mode-group .zoom-control > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.image-upload-and-scaling .scaling-mode-group .zoom-control input[type="range"] {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Hide value displays for zoom controls */
+.image-upload-and-scaling .scaling-mode-group .zoom-control span[id$="Value"] {
+    display: none;
+}
+
+.file-input-wrapper:hover {
+    border-color: #667eea;
+    background: #f0f4ff;
+}
+
+.file-input-wrapper input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.file-input-text {
+    color: #6c757d;
+    font-size: 0.95rem;
+}
+
+.file-input-text strong {
+    color: #667eea;
+}
+
+.test-image-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    white-space: nowrap;
+}
+
+.test-image-btn:hover {
+    background: #5a6268;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0;
+    font-size: 0.9rem;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-right: 8px;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* Reusable utility classes */
+.flex {
+    display: flex;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+}
+
+.flex-start {
+    display: flex;
+    align-items: flex-start;
+}
+
+.flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+.gap-4 {
+    gap: 4px;
+}
+
+.gap-8 {
+    gap: 8px;
+}
+
+.gap-16 {
+    gap: 16px;
+}
+
+.gap-24 {
+    gap: 24px;
+}
+
+.margin-0 {
+    margin: 0;
+}
+
+.margin-top-8 {
+    margin-top: 8px;
+}
+
+.margin-top-15 {
+    margin-top: 15px;
+}
+
+.margin-right-4 {
+    margin-right: 4px;
+}
+
+.margin-right-8 {
+    margin-right: 8px;
+}
+
+.margin-left-4 {
+    margin-left: 4px;
+}
+
+.margin-left-8 {
+    margin-left: 8px;
+}
+
+.margin-left-16 {
+    margin-left: 16px;
+}
+
+.margin-left-auto {
+    margin-left: auto;
+}
+
+.margin-bottom-0 {
+    margin-bottom: 0;
+}
+
+.padding-bottom-0 {
+    padding-bottom: 0;
+}
+
+.border-bottom-none {
+    border-bottom: none;
+}
+
+.min-width-30 {
+    min-width: 30px;
+}
+
+.width-80 {
+    width: 80px;
+}
+
+.width-100 {
+    width: 100px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.font-weight-600 {
+    font-weight: 600;
+}
+
+/* Control panel styles */
+.control-panel {
+    margin-top: 0;
+    margin-bottom: 15px;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.control-panel label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.85rem;
+}
+
+/* Slider styles */
+.slider-base {
+    width: 100%;
+    height: 3px;
+    border-radius: 2px;
+    background: #dee2e6;
+    outline: none;
+    margin-bottom: 3px;
+}
+
+.slider-base::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #667eea;
+    cursor: pointer;
+}
+
+.slider-base::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #667eea;
+    cursor: pointer;
+    border: none;
+}
+
+.slider-value {
+    font-weight: 600;
+    color: #667eea;
+    font-size: 0.8rem;
+}
+
+/* Specific slider classes */
+.threshold-slider,
+.scale-slider,
+.noise-slider {
+    width: 100%;
+    height: 3px;
+    border-radius: 2px;
+    background: #dee2e6;
+    outline: none;
+}
+
+.threshold-slider::-webkit-slider-thumb,
+.scale-slider::-webkit-slider-thumb,
+.noise-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #667eea;
+    cursor: pointer;
+}
+
+.threshold-slider::-moz-range-thumb,
+.scale-slider::-moz-range-thumb,
+.noise-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #667eea;
+    cursor: pointer;
+    border: none;
+}
+
+#thresholdValue,
+#scaleValue,
+#noiseValue {
+    font-weight: 600;
+    color: #667eea;
+    font-size: 0.8rem;
+}
+
+/* Control classes */
+.threshold-control,
+.scale-control,
+.noise-control,
+.color-control {
+    margin-top: 0;
+    margin-bottom: 15px;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+/* Make threshold sliders take full width since only one is visible at a time */
+.threshold-control .threshold-row {
+    display: block;
+}
+
+.threshold-control .threshold-row > div {
+    width: 100%;
+}
+
+.threshold-control .threshold-row > div:not(.hidden) {
+    display: block;
+}
+
+/* Keep slider contents horizontal within each threshold slider */
+.threshold-control .threshold-row .flex-center {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+}
+
+.threshold-control label,
+.scale-control label,
+.noise-control label,
+.color-control label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.85rem;
+}
+
+.debug-content {
+    width: 100%;
+}
+
+.debug-content h3 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.debug-images-grid {
+    display: flex;
+    gap: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 10px;
+    border: 2px dashed #dee2e6;
+    width: 100%;
+    min-width: 0;
+}
+
+.debug-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+.column-title {
+    text-align: center;
+    margin: 0 0 6px 0;
+    color: #333;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 6px;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.debug-image-item {
+    text-align: center;
+    background: white;
+    border-radius: 6px;
+    padding: 6px;
+    border: 1px solid #dee2e6;
+}
+
+.debug-image-item h4 {
+    margin: 0 0 4px 0;
+    color: #333;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.debug-image-item canvas {
+    border-radius: 5px;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    border: 1px solid #ccc;
+    background: #e6f3ff;
+}
+
+.text-input {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.text-input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.create-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+}
+
+.create-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.create-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.result-section {
+    margin-top: 0;
+    text-align: center;
+    flex: 1;
+    min-width: 0;
+    display: none; /* Default hidden state */
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.download-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.download-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+}
+
+.download-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.canvas-container {
+    position: relative;
+    display: inline-block;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+#resultCanvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+.instructions {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+    text-align: left;
+}
+
+.instructions h3 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.instructions ul {
+    color: #6c757d;
+    line-height: 1.6;
+}
+
+.instructions li {
+    margin-bottom: 5px;
+}
+
+.preview-image {
+    max-width: 100%;
+    max-height: 256px;
+    width: auto;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    object-fit: contain;
+}
+
+/* Style checkboxes and labels in color-row */
+.color-row input[type="checkbox"] {
+    margin-right: 8px;
+    transform: scale(1.1);
+}
+
+.color-row label {
+    display: inline;
+    margin-bottom: 0;
+    cursor: pointer;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.color-picker {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.color-picker::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.color-picker::-webkit-color-swatch {
+    border: none;
+    border-radius: 3px;
+}
+
+.color-picker:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.custom-colors {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0;
+}
+
+.color-label-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 4px;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.85rem;
+    min-width: 40px;
+}
+
+/* Gray out the label text for disabled color pickers using :has() if supported */
+.color-label-group:has(.color-picker:disabled) .color-label {
+    color: #aaa !important;
+}
+/* Fallback: gray out label and input together by reducing opacity of the group */
+.color-label-group .color-picker:disabled ~ .color-label,
+.color-label-group .color-label + .color-picker:disabled {
+    color: #aaa !important;
+}
+.color-label-group .color-picker:disabled,
+.color-label-group .color-label + .color-picker:disabled {
+    opacity: 0.5;
+}
+
+@media (max-width: 1024px) {
+    .container {
+        margin: 10px;
+        border-radius: 15px;
+    }
+    
+    .header {
+        padding: 20px;
+    }
+    
+    .header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .content {
+        padding: 20px;
+    }
+    
+    .layout-container {
+        flex-direction: row;
+        gap: 20px;
+    }
+    
+    .right-panel {
+        position: relative;
+    }
+    
+    
+    
+    
+    
+    
+    
+    .right-panel {
+        gap: 15px;
+    }
+    
+    .debug-section {
+        min-width: 0;
+    }
+    
+    .debug-images-grid {
+        flex-direction: column;
+        gap: 15px;
+        padding: 10px;
+    }
+    
+    .debug-column {
+        gap: 10px;
+    }
+    
+    .input-group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .image-upload-and-scaling {
+        gap: 10px;
+    }
+    
+    .test-image-btn {
+        padding: 12px 20px;
+    }
+    
+    /* Color control responsive improvements */
+    .color-control .color-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .custom-colors {
+        gap: 2px;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+    
+    .color-label-group {
+        min-width: 35px;
+    }
+    
+}
+
+/* Medium screen responsive improvements */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .color-control .color-row {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    
+    .custom-colors {
+        gap: 2px;
+        flex-wrap: wrap;
+    }
+    
+} 

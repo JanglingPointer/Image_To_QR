@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image To QR</title>
+    <script src="3rd_party/qrcode.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <div class="layout-container">
+                <div class="left-panel">
+                    <div class="input-section">
+                        <div class="upload-controls image-upload-and-scaling">
+                            <div class="file-input-wrapper">
+                                <input type="file" id="imageInput" accept="image/*">
+                                <div class="file-input-text">
+                                    <strong>Click to upload</strong> or drag and drop an image here
+                                </div>
+                                <img id="previewImage" class="preview-image hidden" alt="Preview of uploaded image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+                            </div>
+                            <div class="scaling-mode-group flex-center gap-16 margin-0 hidden">
+                                <span class="font-weight-600">Scaling Mode:</span>
+                                <label><input type="radio" name="scalingMode" id="scalingModeShrink" value="shrink" checked> Shrink</label>
+                                <label><input type="radio" name="scalingMode" id="scalingModeGrow" value="grow"> Grow</label>
+                                <label><input type="radio" name="scalingMode" id="scalingModeStretch" value="stretch"> Stretch</label>
+                                <label><input type="radio" name="scalingMode" id="scalingModeCustom" value="custom"> Custom</label>
+                                <div class="zoom-control flex-center gap-16 margin-top-8 hidden">
+                                    <div class="flex-center">
+                                        <span class="margin-right-4">Zoom:</span>
+                                        <label for="zoomSlider" class="sr-only">Zoom</label>
+                                        <input type="range" id="zoomSlider" min="-0.5" max="2" step="0.01" value="0" class="scale-slider width-80">
+                                        <span id="zoomValue" class="margin-left-4 min-width-30">0</span>
+                                    </div>
+                                    <div class="flex-center">
+                                        <span class="margin-right-4">X:</span>
+                                        <label for="offsetXSlider" class="sr-only">X Offset</label>
+                                        <input type="range" id="offsetXSlider" min="-1" max="1" step="0.01" value="0" class="scale-slider width-80">
+                                        <span id="offsetXValue" class="margin-left-4 min-width-30">0</span>
+                                    </div>
+                                    <div class="flex-center">
+                                        <span class="margin-right-4">Y:</span>
+                                        <label for="offsetYSlider" class="sr-only">Y Offset</label>
+                                        <input type="range" id="offsetYSlider" min="-1" max="1" step="0.01" value="0" class="scale-slider width-80">
+                                        <span id="offsetYValue" class="margin-left-4 min-width-30">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="main-image-controls hidden">
+                            <div class="scale-factor-and-noise-probability flex gap-24 margin-top-15">
+                                <div class="scale-control hidden flex-1">
+                                    <div class="flex-center">
+                                        <label for="scaleSlider" class="margin-right-8">Output Scale Factor (N)</label>
+                                        <span id="scaleValue" class="margin-left-auto">3</span>
+                                    </div>
+                                    <input type="range" id="scaleSlider" min="1" max="8" value="3" class="scale-slider">
+                                </div>
+                                <div class="noise-control hidden flex-1">
+                                    <div class="flex-center">
+                                        <label for="noiseSlider" class="margin-right-8">Noise Probability (%)</label>
+                                        <span id="noiseValue" class="margin-left-auto">10</span>
+                                        <button id="noiseSeedBtn" title="Change noise seed" class="margin-left-8">🎲</button>
+                                    </div>
+                                    <input type="range" id="noiseSlider" min="0" max="50" value="10" class="noise-slider">
+                                </div>
+                            </div>
+                            <div class="dither-and-threshold flex-start gap-16">
+                                <div class="bw-mode-group flex-column flex-start gap-4 margin-0">
+                                    <label><input type="radio" name="bwMode" id="bwModeDither" value="dither" checked> Dither</label>
+                                    <label><input type="radio" name="bwMode" id="bwModeThreshold" value="threshold"> Threshold</label>
+                                </div>
+                                <div class="threshold-control hidden margin-top-15 flex-1">
+                                    <div class="threshold-row flex-center gap-16">
+                                        <div class="flex-1">
+                                            <div class="flex-center">
+                                                <label for="thresholdSlider" class="margin-right-8">Threshold</label>
+                                                <input type="range" id="thresholdSlider" min="0" max="255" value="128" class="threshold-slider">
+                                                <span id="thresholdValue" class="margin-left-8">128</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="flex-center">
+                                                <label for="ditherBrightnessSlider">Brightness</label>
+                                                <input type="range" id="ditherBrightnessSlider" min="-1" max="1" step="0.01" value="0" class="threshold-slider">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                                <div class="color-control color-customization hidden">
+                                <div class="color-row flex-center gap-16">
+                                    <div class="duo-tone-group flex-center gap-4">
+                                        <input type="checkbox" id="originalColorsCheckbox">
+                                        <label for="originalColorsCheckbox" class="margin-bottom-0">Duo Tone</label>
+                                    </div>
+                                    <div class="custom-colors" id="customColorsSection">
+                                        <label for="colorDark" class="sr-only">Dark Color</label>
+                                        <input type="color" id="colorDark" value="#211e59" class="color-picker">
+                                        <label for="colorBright" class="sr-only">Bright Color</label>
+                                        <input type="color" id="colorBright" value="#f9f7dd" class="color-picker">
+                                    </div>
+                                    <div class="saturation-boost-group flex-center gap-4 hidden">
+                                        <label for="saturationBoostSlider" id="saturationBoostLabel" class="margin-bottom-0">Saturation</label>
+                                        <input type="range" id="saturationBoostSlider" min="0" max="1" step="0.01" value="0" class="threshold-slider width-100">
+                                    </div>
+                                    <div class="shine-group flex-center gap-4">
+                                        <input type="checkbox" id="shineCheckbox">
+                                        <label for="shineCheckbox" class="margin-bottom-0">Shine</label>
+                                    </div>
+                                </div>
+                                </div>
+                            
+                            <div class="input-group text-input-group qr-text-input">
+                                <label for="textInput">Text / Link</label>
+                                <input type="text" id="textInput" class="text-input" placeholder="https://example.com#enter_your_own_URL" value="https://example.com#enter_your_own_URL">
+                            </div>
+                        </div>
+                        
+                        <div class="input-group debug-and-test-controls">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="debugCheckbox">
+                                <span class="checkmark"></span>
+                                Debug
+                            </label>
+                            <button id="testImageBtn" class="test-image-btn">Use test image</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="right-panel">
+                    <div class="result-section" id="resultSection">
+                        <div class="canvas-container">
+                            <canvas id="resultCanvas"></canvas>
+                        </div>
+                        <button id="downloadBtn" class="download-btn">Save</button>
+                    </div>
+                    
+                    <div class="debug-section" id="debugSection">
+                        <div class="debug-content">
+                            <h3>Debug Output</h3>
+                            <div class="debug-images-grid">
+                                <div class="debug-column">
+                                    <div class="debug-image-item">
+                                        <h4>qr_noMargin</h4>
+                                        <canvas id="debugQrNoMargin"></canvas>
+                                    </div>
+                                    <div class="debug-image-item">
+                                        <h4>qr</h4>
+                                        <canvas id="debugQr"></canvas>
+                                    </div>
+                                    <div class="debug-image-item">
+                                        <h4>qrCtrlMask</h4>
+                                        <canvas id="debugQrCtrlMask"></canvas>
+                                    </div>
+                                    <div class="debug-image-item">
+                                        <h4>qrCtrl</h4>
+                                        <canvas id="debugQrCtrl"></canvas>
+                                    </div>
+                                    <div class="debug-image-item">
+                                        <h4>qrCtrlx3</h4>
+                                        <canvas id="debugQrCtrlx3"></canvas>
+                                    </div>
+                                    <div class="debug-image-item">
+                                        <h4>qrWithoutCtrl</h4>
+                                        <canvas id="debugQrWithoutCtrl"></canvas>
+                                    </div>
+                                    <div class="debug-image-item">
+                                        <h4>qrWithoutCtrlx3</h4>
+                                        <canvas id="debugQrWithoutCtrlx3"></canvas>
+                                    </div>
+                                    <div class="debug-image-item">
+                                        <h4>qrWithoutCtrlThinned</h4>
+                                        <canvas id="debugQrWithoutCtrlThinned"></canvas>
+                                    </div>
+                                </div>
+                                <div class="debug-column">
+                                    <div class="debug-image-item">
+                                        <h4>scaledUploadedImage</h4>
+                                        <canvas id="debugScaledUploadedImage"></canvas>
+                                    </div>
+                                    <div class="debug-image-item">
+                                        <h4>scaledUploadedImage_Gamma</h4>
+                                        <canvas id="debugScaledUploadedImage_Gamma"></canvas>
+                                    </div>
+                                    <div class="debug-image-item">
+                                        <h4>scaledUploadedImageBW</h4>
+                                        <canvas id="debugScaledUploadedImageBW"></canvas>
+                                    </div>
+                                    <div class="debug-image-item">
+                                        <h4>scaledUploadedImageBW_Noise</h4>
+                                        <canvas id="debugScaledUploadedImageBW_Noise"></canvas>
+                                    </div>
+                                    <div class="debug-image-item">
+                                        <h4>scaledUploadedImageBW_plusCtrl</h4>
+                                        <canvas id="debugScaledUploadedImageBW_plusCtrl"></canvas>
+                                    </div>
+                                    <div class="debug-image-item">
+                                        <h4>scaledUploadedImageBW_plusAllQR</h4>
+                                        <canvas id="debugScaledUploadedImageBW_plusAllQR"></canvas>
+                                    </div>
+                                    <div class="debug-image-item">
+                                        <h4>result_colored</h4>
+                                        <canvas id="debugResultColored"></canvas>
+                                    </div>
+                                    <div class="debug-image-item">
+                                        <h4>result_colored_shine</h4>
+                                        <canvas id="debugResultColoredShine"></canvas>
+                                    </div>
+                                    <div class="debug-image-item">
+                                        <h4>result_colored_xN</h4>
+                                        <canvas id="debugResultColoredXN"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="image-manipulation.js"></script>
+    <script src="ui-handlers.js"></script>
+</body>
+</html> 
