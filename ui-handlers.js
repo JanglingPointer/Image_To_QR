@@ -226,7 +226,7 @@ function applySettingsToUI(settings) {
     utils.updateSliderValue(thresholdSlider, thresholdValue);
     utils.updateSliderValue(scaleSlider, scaleValue);
     utils.updateSliderValue(noiseSlider, noiseValue);
-    utils.updateSliderValue(saturationBoostSlider, saturationBoostValue, (v) => parseFloat(v).toFixed(2));
+    // saturationBoostValue element was removed, so no need to update it
     utils.updateSliderValue(zoomSlider, zoomValue, (v) => parseFloat(v).toFixed(2));
     utils.updateSliderValue(offsetXSlider, offsetXValue, (v) => parseFloat(v).toFixed(2));
     utils.updateSliderValue(offsetYSlider, offsetYValue, (v) => parseFloat(v).toFixed(2));
@@ -627,7 +627,14 @@ function formatSaturationValue(val) {
     return parseFloat(val).toFixed(2);
 }
 
-utils.addSliderListener(saturationBoostSlider, saturationBoostValue, formatSaturationValue);
+// Handle saturation boost slider
+if (saturationBoostSlider) {
+    saturationBoostSlider.addEventListener('input', function() {
+        if (window.uploadedImage) {
+            updateResult();
+        }
+    });
+}
 
 // On page load, set testImageBtn visibility based on debugCheckbox
 if (debugCheckbox.checked) {
