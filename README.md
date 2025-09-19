@@ -14,3 +14,4 @@ https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js for providing the Base Q
 
 
 PS: I'm new to OpenSource Development, so If I am doing something wrong, i'm happy to adapt.
+PS2: I also uploaded a barebones Android App, I'll add the link as soon as it's accepted
