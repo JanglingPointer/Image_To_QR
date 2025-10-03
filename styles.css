@@ -35,6 +35,7 @@ body {
 
 .content {
     padding: 15px 25px 25px 25px;
+    min-width: 700px;
 }
 
 .layout-container {
@@ -185,7 +186,7 @@ body {
     background: #f8f9fa;
     border: 2px dashed #dee2e6;
     border-radius: 8px;
-    padding: 10px;
+    padding: 3px;
     text-align: center;
     width: 100%;
     height: 256px;
@@ -889,6 +890,41 @@ body {
     
     .color-label-group {
         min-width: 35px;
+    }
+    
+    /* Stack brightness slider under radio buttons for dither/threshold control */
+    .dither-and-threshold {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .bw-mode-group {
+        align-self: flex-start;
+    }
+    
+    .threshold-control {
+        align-self: stretch;
+        width: 100%;
+    }
+    
+    .threshold-control .threshold-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .threshold-control .threshold-row > div {
+        width: 100%;
+    }
+    
+    .threshold-control .threshold-row .flex-center {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .threshold-control .threshold-row .flex-center label {
+        margin-bottom: 4px;
     }
     
 }
