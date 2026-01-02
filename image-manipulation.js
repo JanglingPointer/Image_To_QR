@@ -1,5 +1,3 @@
-const resultCanvas = document.getElementById('resultCanvas');
-
 /**
  * Scales an image by a factor of 3 (every pixel becomes a 3x3 block)
  * @param {ImageData} imageData - The input image data
@@ -790,6 +788,20 @@ function applyOriginalColors(bwImageData, originalImageData, maskImageData, satu
         }
     }
     return result;
+}
+
+/**
+ * Helper for seeded random number generator (Mulberry32)
+ * @param {number} seed - The seed value
+ * @returns {Function} A random number generator function
+ */
+function mulberry32(seed) {
+    return function() {
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    }
 }
 
 /**

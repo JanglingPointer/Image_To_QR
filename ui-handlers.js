@@ -1,3 +1,6 @@
+(function() {
+'use strict';
+
 const imageInput = document.getElementById('imageInput');
 const textInput = document.getElementById('textInput');
 const previewImage = document.getElementById('previewImage');
@@ -44,6 +47,7 @@ const mainImageControls = document.querySelector('.main-image-controls');
 const downloadBtn = document.getElementById('downloadBtn');
 // Add a reference to the new debug canvas
 const debugResultColoredShine = document.getElementById('debugResultColoredShine');
+const shineCheckbox = document.getElementById('shineCheckbox');
 const saturationBoostCheckbox = document.getElementById('saturationBoostCheckbox');
 const saturationBoostLabel = document.getElementById('saturationBoostLabel');
 const saturationBoostSlider = document.getElementById('saturationBoostSlider');
@@ -230,16 +234,6 @@ function applySettingsToUI(settings) {
     utils.updateSliderValue(zoomSlider, zoomValue, (v) => parseFloat(v).toFixed(2));
     utils.updateSliderValue(offsetXSlider, offsetXValue, (v) => parseFloat(v).toFixed(2));
     utils.updateSliderValue(offsetYSlider, offsetYValue, (v) => parseFloat(v).toFixed(2));
-}
-
-// Helper for seeded random number generator
-function mulberry32(seed) {
-    return function() {
-        let t = seed += 0x6D2B79F5;
-        t = Math.imul(t ^ t >>> 15, t | 1);
-        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-        return ((t ^ t >>> 14) >>> 0) / 4294967296;
-    }
 }
 
 // Calculate average pixel value of an image
@@ -550,16 +544,18 @@ function validateColorRange(colorInput, isDark) {
 }
 
 // Simple throttling without event listener removal
-let isColorUpdateInProgress = false;
+if (typeof window.isColorUpdateInProgress === 'undefined') {
+    window.isColorUpdateInProgress = false;
+}
 
 const colorInputHandler = function() {
     validateColorRange(this, this === colorDark); // validate immediately
     
-    if (!window.uploadedImage || isColorUpdateInProgress) {
+    if (!window.uploadedImage || window.isColorUpdateInProgress) {
         return;
     }
     
-    isColorUpdateInProgress = true;
+    window.isColorUpdateInProgress = true;
     
     // Use setTimeout to break out of the current event loop
     setTimeout(async () => {
@@ -568,7 +564,7 @@ const colorInputHandler = function() {
         } catch (error) {
             console.error('Update result error:', error);
         } finally {
-            isColorUpdateInProgress = false;
+            window.isColorUpdateInProgress = false;
         }
     }, 0);
 };
@@ -927,4 +923,6 @@ updateZoomControlVisibility();
 
 // Ensure result and debug sections are hidden on page load
 utils.addHiddenClass(resultSection);
-utils.addHiddenClass(debugSection); 
+utils.addHiddenClass(debugSection);
+
+})(); 
