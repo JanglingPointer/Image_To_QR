@@ -26,6 +26,7 @@ const thresholdControl = document.querySelector('.threshold-control');
 // Add DitherBrightness slider and value
 const ditherBrightnessSlider = document.getElementById('ditherBrightnessSlider');
 const ditherBrightnessValue = document.getElementById('ditherBrightnessValue');
+const robustnessSlider = document.getElementById('robustnessSlider');
 const debugScaledUploadedImage_Gamma = document.getElementById('debugScaledUploadedImage_Gamma');
 const scaleSlider = document.getElementById('scaleSlider');
 const scaleValue = document.getElementById('scaleValue');
@@ -140,6 +141,7 @@ const initialSettings = {
     bwMode: 'dither',            // 'threshold' | 'dither'
     threshold: 128,
     ditherBrightness: 0,         // -1..1
+    robustness: 50,              // 0..100
     scale: 3,
     noise: 10,
     colorDark: '#211e59',
@@ -183,6 +185,7 @@ function applySettingsToUI(settings) {
     // Sliders and labels
     if (thresholdSlider) thresholdSlider.value = String(settings.threshold);
     if (ditherBrightnessSlider) ditherBrightnessSlider.value = String(settings.ditherBrightness);
+    if (robustnessSlider) robustnessSlider.value = String(settings.robustness);
     if (scaleSlider) scaleSlider.value = String(settings.scale);
     if (noiseSlider) noiseSlider.value = String(settings.noise);
     if (saturationBoostSlider) saturationBoostSlider.value = String(settings.saturationBoost);
@@ -706,8 +709,9 @@ async function updateResult() {
         if (bwMode === 'dither' && ditherBrightnessSlider) {
             ditherGamma = parseFloat(ditherBrightnessSlider.value);
         }
-        // Pass ditherGamma to generateQRCodeOverlay
-        const debugData = await generateQRCodeOverlay(window.uploadedImage, textToUse, threshold, scaleFactor, noiseProbability, darkColor, brightColor, useOriginalColors, noiseSeed, scalingMode, shine, bwMode, ditherGamma, saturationBoost, zoomValue, offsetXValue, offsetYValue);
+        const robustness = robustnessSlider ? parseFloat(robustnessSlider.value) : 50;
+        // Pass ditherGamma and robustness to generateQRCodeOverlay
+        const debugData = await generateQRCodeOverlay(window.uploadedImage, textToUse, threshold, scaleFactor, noiseProbability, darkColor, brightColor, useOriginalColors, noiseSeed, scalingMode, shine, bwMode, ditherGamma, saturationBoost, zoomValue, offsetXValue, offsetYValue, robustness);
         utils.removeHiddenClass(resultSection, 'flex');
         
         // Handle debug output
@@ -874,12 +878,15 @@ function updateDitherBrightnessVisibility() {
     // Get slider containers (grandparent divs with flex-1 class)
     const thresholdSliderDiv = thresholdSlider ? thresholdSlider.parentElement.parentElement : null;
     const ditherSliderDiv = ditherBrightnessSlider ? ditherBrightnessSlider.parentElement.parentElement : null;
+    const robustnessSliderDiv = robustnessSlider ? robustnessSlider.parentElement.parentElement : null;
     if (ditherRadio && ditherRadio.checked) {
         if (ditherSliderDiv) utils.removeHiddenClass(ditherSliderDiv);
+        if (robustnessSliderDiv) utils.removeHiddenClass(robustnessSliderDiv);
         if (thresholdSliderDiv) utils.addHiddenClass(thresholdSliderDiv);
     } else if (thresholdRadio && thresholdRadio.checked) {
         if (thresholdSliderDiv) utils.removeHiddenClass(thresholdSliderDiv);
         if (ditherSliderDiv) utils.addHiddenClass(ditherSliderDiv);
+        if (robustnessSliderDiv) utils.addHiddenClass(robustnessSliderDiv);
     }
 }
 // On page load, set initial visibility
@@ -887,6 +894,15 @@ updateDitherBrightnessVisibility();
 // DitherBrightness slider event
 if (ditherBrightnessSlider) {
     ditherBrightnessSlider.addEventListener('input', function() {
+        if (window.uploadedImage) {
+            updateResult();
+        }
+    });
+}
+
+// Robustness slider event
+if (robustnessSlider) {
+    robustnessSlider.addEventListener('input', function() {
         if (window.uploadedImage) {
             updateResult();
         }

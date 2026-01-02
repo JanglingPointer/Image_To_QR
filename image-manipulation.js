@@ -739,9 +739,11 @@ function applyCustomColors(imageData, darkColor, brightColor) {
  * @param {ImageData} bwImageData - The input black and white image data
  * @param {ImageData} originalImageData - The original colored image data
  * @param {ImageData} maskImageData - The mask image data (for useOriginalColors = true)
+ * @param {number} saturationBoost - Saturation boost value (0-1)
+ * @param {number} robustness - Robustness value (0-100), controls COLOR_BEND (0 → 35, 100 → 0)
  * @returns {ImageData} The colored image data using original colors
  */
-function applyOriginalColors(bwImageData, originalImageData, maskImageData, saturationBoost = 0) {
+function applyOriginalColors(bwImageData, originalImageData, maskImageData, saturationBoost = 0, robustness = 50) {
     // maskImageData: only apply original colors where mask alpha > 0
     // bwImageData: scaledUploadedImageBW_plusAllQR
     const result = new ImageData(bwImageData.width, bwImageData.height);
@@ -769,10 +771,12 @@ function applyOriginalColors(bwImageData, originalImageData, maskImageData, satu
                 // Global saturation boost
                 adjustedSaturation = Math.min(adjustedSaturation * (1 + saturationAmount), 100);
             }
+            // Calculate COLOR_BEND from robustness: 0 → 35, 100 → 0
+            const COLOR_BEND = 35 * (1 - robustness / 100);
             if (isBlack) {
-                adjustedLightness = Math.min(originalHsl.l, 20);
+                adjustedLightness = Math.min(originalHsl.l, COLOR_BEND);
             } else {
-                adjustedLightness = Math.max(originalHsl.l, 80);
+                adjustedLightness = Math.max(originalHsl.l, 100 - COLOR_BEND);
             }
             const adjustedRgb = hslToRgb(originalHsl.h, adjustedSaturation, adjustedLightness);
             resultData[i] = adjustedRgb.r;
@@ -933,13 +937,14 @@ async function getQRCodeImageData(text) {
  * @param {boolean} shine - Whether to apply a diagonal gradient shine (default: false)
  * @param {string} bwMode - 'threshold' or 'dither' for black and white conversion
  * @param {number} ditherGamma - Gamma value for dither brightness (default: 1.0)
- * @param {boolean} saturationBoost - Whether to apply saturation boost to original colors (default: false)
+ * @param {number} saturationBoost - Saturation boost value (0-1)
  * @param {number} zoomValue - Zoom factor for custom mode (0-2)
  * @param {number} offsetXValue - Horizontal offset for custom mode (-1 to 1)
  * @param {number} offsetYValue - Vertical offset for custom mode (-1 to 1)
+ * @param {number} robustness - Robustness value (0-100) for color adjustment, controls COLOR_BEND
  * @returns {Object} Object containing debug data including qrWithoutCtrlx3
  */
-async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scaleFactor = 3, noiseProbability = 15, darkColor = "#000000", brightColor = "#ffffff", useOriginalColors = false, noiseSeed = 12345, scalingMode = 'shrink', shine = false, bwMode = 'threshold', ditherGamma = 1.0, saturationBoost = 0, zoomValue = 0, offsetXValue = 0, offsetYValue = 0) {
+async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scaleFactor = 3, noiseProbability = 15, darkColor = "#000000", brightColor = "#ffffff", useOriginalColors = false, noiseSeed = 12345, scalingMode = 'shrink', shine = false, bwMode = 'threshold', ditherGamma = 1.0, saturationBoost = 0, zoomValue = 0, offsetXValue = 0, offsetYValue = 0, robustness = 50) {
     try {
         // Step 1: Generate QR code without margin using direct pixel access
         const qr_noMargin = await getQRCodeImageData(text);
@@ -1040,7 +1045,7 @@ async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scale
         // Step 7.8: Apply colors to create colored result
         let result_colored;
         if (useOriginalColors) {
-            result_colored = applyOriginalColors(scaledUploadedImageBW_plusAllQR, scaledUploadedImage, qrWithoutCtrlx3, saturationBoost);
+            result_colored = applyOriginalColors(scaledUploadedImageBW_plusAllQR, scaledUploadedImage, qrWithoutCtrlx3, saturationBoost, robustness);
         } else {
             result_colored = applyCustomColors(scaledUploadedImageBW_plusAllQR, darkColor, brightColor);
         }
