@@ -150,9 +150,9 @@ const initialSettings = {
     colorDark: '#211e59',
     colorBright: '#f9f7dd',
     originalColors: true,
-    saturationBoost: 0,
+    saturationBoost: 0.3,
     shine: false,
-    scalingMode: 'shrink',       // 'shrink' | 'grow' | 'stretch' | 'custom'
+    scalingMode: 'grow',       // 'shrink' | 'grow' | 'stretch' | 'custom'
     zoom: 0,
     offsetX: 0,
     offsetY: 0,
