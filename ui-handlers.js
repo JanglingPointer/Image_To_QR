@@ -48,6 +48,7 @@ const mainImageControls = document.querySelector('.main-image-controls');
 const downloadBtn = document.getElementById('downloadBtn');
 // Add a reference to the new debug canvas
 const debugResultColoredShine = document.getElementById('debugResultColoredShine');
+const robustnessControl = document.querySelector('.robustness-control');
 const shineCheckbox = document.getElementById('shineCheckbox');
 const saturationBoostCheckbox = document.getElementById('saturationBoostCheckbox');
 const saturationBoostLabel = document.getElementById('saturationBoostLabel');
@@ -878,15 +879,14 @@ function updateDitherBrightnessVisibility() {
     // Get slider containers (grandparent divs with flex-1 class)
     const thresholdSliderDiv = thresholdSlider ? thresholdSlider.parentElement.parentElement : null;
     const ditherSliderDiv = ditherBrightnessSlider ? ditherBrightnessSlider.parentElement.parentElement : null;
-    const robustnessSliderDiv = robustnessSlider ? robustnessSlider.parentElement.parentElement : null;
     if (ditherRadio && ditherRadio.checked) {
         if (ditherSliderDiv) utils.removeHiddenClass(ditherSliderDiv);
-        if (robustnessSliderDiv) utils.removeHiddenClass(robustnessSliderDiv);
+        if (robustnessControl) utils.removeHiddenClass(robustnessControl);
         if (thresholdSliderDiv) utils.addHiddenClass(thresholdSliderDiv);
     } else if (thresholdRadio && thresholdRadio.checked) {
         if (thresholdSliderDiv) utils.removeHiddenClass(thresholdSliderDiv);
         if (ditherSliderDiv) utils.addHiddenClass(ditherSliderDiv);
-        if (robustnessSliderDiv) utils.addHiddenClass(robustnessSliderDiv);
+        if (robustnessControl) utils.addHiddenClass(robustnessControl);
     }
 }
 // On page load, set initial visibility
