@@ -26,7 +26,8 @@ const thresholdControl = document.querySelector('.threshold-control');
 // Add DitherBrightness slider and value
 const ditherBrightnessSlider = document.getElementById('ditherBrightnessSlider');
 const ditherBrightnessValue = document.getElementById('ditherBrightnessValue');
-const robustnessSlider = document.getElementById('robustnessSlider');
+const claritySlider = document.getElementById('claritySlider');
+const clarityControl = document.querySelector('.clarity-control');
 const add4thSquareCheckbox = document.getElementById('add4thSquareCheckbox');
 const debugScaledUploadedImage_Gamma = document.getElementById('debugScaledUploadedImage_Gamma');
 const scaleSlider = document.getElementById('scaleSlider');
@@ -49,7 +50,6 @@ const mainImageControls = document.querySelector('.main-image-controls');
 const downloadBtn = document.getElementById('downloadBtn');
 // Add a reference to the new debug canvas
 const debugResultColoredShine = document.getElementById('debugResultColoredShine');
-const robustnessControl = document.querySelector('.robustness-control');
 const shineCheckbox = document.getElementById('shineCheckbox');
 const saturationBoostCheckbox = document.getElementById('saturationBoostCheckbox');
 const saturationBoostLabel = document.getElementById('saturationBoostLabel');
@@ -143,7 +143,7 @@ const initialSettings = {
     bwMode: 'dither',            // 'threshold' | 'dither'
     threshold: 128,
     ditherBrightness: 0,         // -1..1
-    robustness: 50,              // 0..100
+    clarity: 0,                  // 0..100
     add4thSquare: true,          // Whether to add 4th square
     scale: 3,
     noise: 10,
@@ -188,7 +188,7 @@ function applySettingsToUI(settings) {
     // Sliders and labels
     if (thresholdSlider) thresholdSlider.value = String(settings.threshold);
     if (ditherBrightnessSlider) ditherBrightnessSlider.value = String(settings.ditherBrightness);
-    if (robustnessSlider) robustnessSlider.value = String(settings.robustness);
+    if (claritySlider) claritySlider.value = String(settings.clarity);
     if (add4thSquareCheckbox) add4thSquareCheckbox.checked = settings.add4thSquare;
     if (scaleSlider) scaleSlider.value = String(settings.scale);
     if (noiseSlider) noiseSlider.value = String(settings.noise);
@@ -231,6 +231,7 @@ function applySettingsToUI(settings) {
     // Update computed UI visibility
     updateDitherBrightnessVisibility();
     updateZoomControlVisibility();
+    updateClarityVisibility();
     // Initially hide main image controls until image is uploaded
     utils.addHiddenClass(mainImageControls);
     // Ensure slider value labels reflect current values
@@ -491,6 +492,18 @@ function isPointInTriangle(px, py, triangle) {
 // Handle test image button
 testImageBtn.addEventListener('click', generateTestImage);
 
+// Function to update clarity control visibility
+function updateClarityVisibility() {
+    const debugChecked = debugCheckbox && debugCheckbox.checked;
+    const duoToneSelected = originalColorsCheckbox && originalColorsCheckbox.checked;
+    // Show clarity when debug is checked AND duo tone is NOT selected
+    if (debugChecked && !duoToneSelected) {
+        if (clarityControl) utils.removeHiddenClass(clarityControl);
+    } else {
+        if (clarityControl) utils.addHiddenClass(clarityControl);
+    }
+}
+
 // Handle debug checkbox
 debugCheckbox.addEventListener('change', function() {
     if (this.checked) {
@@ -503,6 +516,7 @@ debugCheckbox.addEventListener('change', function() {
         utils.addHiddenClass(debugSection);
         utils.addHiddenClass(testImageBtn);
     }
+    updateClarityVisibility();
 });
 
 // Add slider listeners using utility function
@@ -618,6 +632,7 @@ originalColorsCheckbox.addEventListener('change', function() {
         utils.addHiddenClass(customColorsSection);
         utils.removeHiddenClass(saturationBoostGroup, 'flex');
     }
+    updateClarityVisibility();
     if (window.uploadedImage) {
         updateResult();
     }
@@ -713,10 +728,10 @@ async function updateResult() {
         if (bwMode === 'dither' && ditherBrightnessSlider) {
             ditherGamma = parseFloat(ditherBrightnessSlider.value);
         }
-        const robustness = robustnessSlider ? parseFloat(robustnessSlider.value) : 50;
+        const clarity = claritySlider ? parseFloat(claritySlider.value) : 0;
         const add4thSquare = add4thSquareCheckbox ? add4thSquareCheckbox.checked : true;
-        // Pass ditherGamma, robustness, and add4thSquare to generateQRCodeOverlay
-        const debugData = await generateQRCodeOverlay(window.uploadedImage, textToUse, threshold, scaleFactor, noiseProbability, darkColor, brightColor, useOriginalColors, noiseSeed, scalingMode, shine, bwMode, ditherGamma, saturationBoost, zoomValue, offsetXValue, offsetYValue, robustness, add4thSquare);
+        // Pass ditherGamma, clarity, and add4thSquare to generateQRCodeOverlay
+        const debugData = await generateQRCodeOverlay(window.uploadedImage, textToUse, threshold, scaleFactor, noiseProbability, darkColor, brightColor, useOriginalColors, noiseSeed, scalingMode, shine, bwMode, ditherGamma, saturationBoost, zoomValue, offsetXValue, offsetYValue, clarity, add4thSquare);
         utils.removeHiddenClass(resultSection, 'flex');
         
         // Handle debug output
@@ -885,12 +900,10 @@ function updateDitherBrightnessVisibility() {
     const ditherSliderDiv = ditherBrightnessSlider ? ditherBrightnessSlider.parentElement.parentElement : null;
     if (ditherRadio && ditherRadio.checked) {
         if (ditherSliderDiv) utils.removeHiddenClass(ditherSliderDiv);
-        if (robustnessControl) utils.removeHiddenClass(robustnessControl);
         if (thresholdSliderDiv) utils.addHiddenClass(thresholdSliderDiv);
     } else if (thresholdRadio && thresholdRadio.checked) {
         if (thresholdSliderDiv) utils.removeHiddenClass(thresholdSliderDiv);
         if (ditherSliderDiv) utils.addHiddenClass(ditherSliderDiv);
-        if (robustnessControl) utils.addHiddenClass(robustnessControl);
     }
 }
 // On page load, set initial visibility
@@ -904,9 +917,9 @@ if (ditherBrightnessSlider) {
     });
 }
 
-// Robustness slider event
-if (robustnessSlider) {
-    robustnessSlider.addEventListener('input', function() {
+// Clarity slider event
+if (claritySlider) {
+    claritySlider.addEventListener('input', function() {
         if (window.uploadedImage) {
             updateResult();
         }

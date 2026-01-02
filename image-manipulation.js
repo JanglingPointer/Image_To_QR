@@ -755,10 +755,10 @@ function applyCustomColors(imageData, darkColor, brightColor) {
  * @param {ImageData} originalImageData - The original colored image data
  * @param {ImageData} maskImageData - The mask image data (for useOriginalColors = true)
  * @param {number} saturationBoost - Saturation boost value (0-1)
- * @param {number} robustness - Robustness value (0-100), controls COLOR_BEND (0 → 35, 100 → 0)
+ * @param {number} clarity - Clarity value (0-100), controls COLOR_BEND (0 → 35, 100 → 0)
  * @returns {ImageData} The colored image data using original colors
  */
-function applyOriginalColors(bwImageData, originalImageData, maskImageData, saturationBoost = 0, robustness = 50) {
+function applyOriginalColors(bwImageData, originalImageData, maskImageData, saturationBoost = 0, clarity = 0) {
     // maskImageData: only apply original colors where mask alpha > 0
     // bwImageData: scaledUploadedImageBW_plusAllQR
     const result = new ImageData(bwImageData.width, bwImageData.height);
@@ -786,8 +786,8 @@ function applyOriginalColors(bwImageData, originalImageData, maskImageData, satu
                 // Global saturation boost
                 adjustedSaturation = Math.min(adjustedSaturation * (1 + saturationAmount), 100);
             }
-            // Calculate COLOR_BEND from robustness: 0 → 35, 100 → 0
-            const COLOR_BEND = 35 * (1 - robustness / 100);
+            // Calculate COLOR_BEND from clarity: 0 → 35, 100 → 0
+            const COLOR_BEND = 35 * (1 - clarity / 100);
             if (isBlack) {
                 adjustedLightness = Math.min(originalHsl.l, COLOR_BEND);
             } else {
@@ -956,11 +956,11 @@ async function getQRCodeImageData(text) {
  * @param {number} zoomValue - Zoom factor for custom mode (0-2)
  * @param {number} offsetXValue - Horizontal offset for custom mode (-1 to 1)
  * @param {number} offsetYValue - Vertical offset for custom mode (-1 to 1)
- * @param {number} robustness - Robustness value (0-100) for color adjustment, controls COLOR_BEND
+ * @param {number} clarity - Clarity value (0-100) for color adjustment, controls COLOR_BEND
  * @param {boolean} add4thSquare - Whether to add a 4th square in the bottom-right corner
  * @returns {Object} Object containing debug data including qrWithoutCtrlx3
  */
-async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scaleFactor = 3, noiseProbability = 15, darkColor = "#000000", brightColor = "#ffffff", useOriginalColors = false, noiseSeed = 12345, scalingMode = 'shrink', shine = false, bwMode = 'threshold', ditherGamma = 1.0, saturationBoost = 0, zoomValue = 0, offsetXValue = 0, offsetYValue = 0, robustness = 50, add4thSquare = true) {
+async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scaleFactor = 3, noiseProbability = 15, darkColor = "#000000", brightColor = "#ffffff", useOriginalColors = false, noiseSeed = 12345, scalingMode = 'shrink', shine = false, bwMode = 'threshold', ditherGamma = 1.0, saturationBoost = 0, zoomValue = 0, offsetXValue = 0, offsetYValue = 0, clarity = 0, add4thSquare = true) {
     try {
         // Step 1: Generate QR code without margin using direct pixel access
         const qr_noMargin = await getQRCodeImageData(text);
@@ -1061,7 +1061,7 @@ async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scale
         // Step 7.8: Apply colors to create colored result
         let result_colored;
         if (useOriginalColors) {
-            result_colored = applyOriginalColors(scaledUploadedImageBW_plusAllQR, scaledUploadedImage, qrWithoutCtrlx3, saturationBoost, robustness);
+            result_colored = applyOriginalColors(scaledUploadedImageBW_plusAllQR, scaledUploadedImage, qrWithoutCtrlx3, saturationBoost, clarity);
         } else {
             result_colored = applyCustomColors(scaledUploadedImageBW_plusAllQR, darkColor, brightColor);
         }

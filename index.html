@@ -115,22 +115,13 @@
                                 </div>
                                 </div>
                             
-                            <div class="color-control robustness-control hidden">
-                                <div class="flex-center gap-16">
-                                    <div class="flex-center">
-                                        <label for="robustnessSlider">Robustness</label>
-                                        <input type="range" id="robustnessSlider" min="0" max="100" value="50" class="threshold-slider">
-                                    </div>
-                                    <div class="flex-center gap-4">
-                                        <input type="checkbox" id="add4thSquareCheckbox" checked>
-                                        <label for="add4thSquareCheckbox" class="margin-bottom-0">Add 4th Square</label>
-                                    </div>
-                                </div>
-                            </div>
-                            
                             <div class="input-group text-input-group qr-text-input">
                                 <label for="textInput">Text / Link</label>
                                 <input type="text" id="textInput" class="text-input" placeholder="https://example.com#enter_your_own_URL" value="https://example.com#enter_your_own_URL">
+                                <div class="flex-center gap-4">
+                                    <input type="checkbox" id="add4thSquareCheckbox" checked>
+                                    <label for="add4thSquareCheckbox" class="margin-bottom-0">Add 4th Square</label>
+                                </div>
                             </div>
                         </div>
                         
@@ -141,6 +132,10 @@
                                 Debug
                             </label>
                             <button id="testImageBtn" class="test-image-btn">Use test image</button>
+                            <div class="flex-center gap-4 clarity-control hidden">
+                                <label for="claritySlider">Color Robustness</label>
+                                <input type="range" id="claritySlider" min="0" max="100" value="0" class="threshold-slider">
+                            </div>
                         </div>
                     </div>
                 </div>
