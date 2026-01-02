@@ -125,9 +125,10 @@ function addMargin(marginSize, imageData) {
  * @param {ImageData} imageData - The input image data
  * @param {number} marginSize - Size of the margin
  * @param {number} rectSize - Size of the control squares
+ * @param {boolean} add4thSquare - Whether to add a 4th square in the bottom-right corner
  * @returns {ImageData} The mask image data
  */
-function generateMask(imageData, marginSize, rectSize) {
+function generateMask(imageData, marginSize, rectSize, add4thSquare = true) {
     const width = imageData.width;
     const height = imageData.height;
     
@@ -152,6 +153,20 @@ function generateMask(imageData, marginSize, rectSize) {
             if ((isLeftStripe && (isUpperStripe || isLowerStripe)) ||
                 (isRightStripe && isUpperStripe)) {
                 shouldBeMasked = true;
+            }
+
+            // Add 4th square in bottom-right corner if enabled
+            if (add4thSquare) {
+                const squareSize = 5;
+                const distanceFromBorder = 5;
+                const squareLeft = width - distanceFromBorder - squareSize;
+                const squareRight = width - distanceFromBorder;
+                const squareTop = height - distanceFromBorder - squareSize;
+                const squareBottom = height - distanceFromBorder;
+                
+                if (x >= squareLeft && x < squareRight && y >= squareTop && y < squareBottom) {
+                    shouldBeMasked = true;
+                }
             }
 
             const indexBase = (y * width + x) * 4;
@@ -942,9 +957,10 @@ async function getQRCodeImageData(text) {
  * @param {number} offsetXValue - Horizontal offset for custom mode (-1 to 1)
  * @param {number} offsetYValue - Vertical offset for custom mode (-1 to 1)
  * @param {number} robustness - Robustness value (0-100) for color adjustment, controls COLOR_BEND
+ * @param {boolean} add4thSquare - Whether to add a 4th square in the bottom-right corner
  * @returns {Object} Object containing debug data including qrWithoutCtrlx3
  */
-async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scaleFactor = 3, noiseProbability = 15, darkColor = "#000000", brightColor = "#ffffff", useOriginalColors = false, noiseSeed = 12345, scalingMode = 'shrink', shine = false, bwMode = 'threshold', ditherGamma = 1.0, saturationBoost = 0, zoomValue = 0, offsetXValue = 0, offsetYValue = 0, robustness = 50) {
+async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scaleFactor = 3, noiseProbability = 15, darkColor = "#000000", brightColor = "#ffffff", useOriginalColors = false, noiseSeed = 12345, scalingMode = 'shrink', shine = false, bwMode = 'threshold', ditherGamma = 1.0, saturationBoost = 0, zoomValue = 0, offsetXValue = 0, offsetYValue = 0, robustness = 50, add4thSquare = true) {
     try {
         // Step 1: Generate QR code without margin using direct pixel access
         const qr_noMargin = await getQRCodeImageData(text);
@@ -953,7 +969,7 @@ async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scale
         const qr = addMargin(1, qr_noMargin);
 
         // Step 3: Generate mask for control squares and margin
-        const qrCtrlMask = generateMask(qr, 1, 8);
+        const qrCtrlMask = generateMask(qr, 1, 8, add4thSquare);
 
         // Step 4: Create QR with control squares (transparent where not masked)
         const qrCtrl = setWhereMasked(qr, qrCtrlMask, 0, 0, 0, 0, true);

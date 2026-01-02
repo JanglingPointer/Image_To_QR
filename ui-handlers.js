@@ -27,6 +27,7 @@ const thresholdControl = document.querySelector('.threshold-control');
 const ditherBrightnessSlider = document.getElementById('ditherBrightnessSlider');
 const ditherBrightnessValue = document.getElementById('ditherBrightnessValue');
 const robustnessSlider = document.getElementById('robustnessSlider');
+const add4thSquareCheckbox = document.getElementById('add4thSquareCheckbox');
 const debugScaledUploadedImage_Gamma = document.getElementById('debugScaledUploadedImage_Gamma');
 const scaleSlider = document.getElementById('scaleSlider');
 const scaleValue = document.getElementById('scaleValue');
@@ -143,6 +144,7 @@ const initialSettings = {
     threshold: 128,
     ditherBrightness: 0,         // -1..1
     robustness: 50,              // 0..100
+    add4thSquare: true,          // Whether to add 4th square
     scale: 3,
     noise: 10,
     colorDark: '#211e59',
@@ -187,6 +189,7 @@ function applySettingsToUI(settings) {
     if (thresholdSlider) thresholdSlider.value = String(settings.threshold);
     if (ditherBrightnessSlider) ditherBrightnessSlider.value = String(settings.ditherBrightness);
     if (robustnessSlider) robustnessSlider.value = String(settings.robustness);
+    if (add4thSquareCheckbox) add4thSquareCheckbox.checked = settings.add4thSquare;
     if (scaleSlider) scaleSlider.value = String(settings.scale);
     if (noiseSlider) noiseSlider.value = String(settings.noise);
     if (saturationBoostSlider) saturationBoostSlider.value = String(settings.saturationBoost);
@@ -711,8 +714,9 @@ async function updateResult() {
             ditherGamma = parseFloat(ditherBrightnessSlider.value);
         }
         const robustness = robustnessSlider ? parseFloat(robustnessSlider.value) : 50;
-        // Pass ditherGamma and robustness to generateQRCodeOverlay
-        const debugData = await generateQRCodeOverlay(window.uploadedImage, textToUse, threshold, scaleFactor, noiseProbability, darkColor, brightColor, useOriginalColors, noiseSeed, scalingMode, shine, bwMode, ditherGamma, saturationBoost, zoomValue, offsetXValue, offsetYValue, robustness);
+        const add4thSquare = add4thSquareCheckbox ? add4thSquareCheckbox.checked : true;
+        // Pass ditherGamma, robustness, and add4thSquare to generateQRCodeOverlay
+        const debugData = await generateQRCodeOverlay(window.uploadedImage, textToUse, threshold, scaleFactor, noiseProbability, darkColor, brightColor, useOriginalColors, noiseSeed, scalingMode, shine, bwMode, ditherGamma, saturationBoost, zoomValue, offsetXValue, offsetYValue, robustness, add4thSquare);
         utils.removeHiddenClass(resultSection, 'flex');
         
         // Handle debug output
@@ -903,6 +907,15 @@ if (ditherBrightnessSlider) {
 // Robustness slider event
 if (robustnessSlider) {
     robustnessSlider.addEventListener('input', function() {
+        if (window.uploadedImage) {
+            updateResult();
+        }
+    });
+}
+
+// Add 4th Square checkbox event
+if (add4thSquareCheckbox) {
+    add4thSquareCheckbox.addEventListener('change', function() {
         if (window.uploadedImage) {
             updateResult();
         }
