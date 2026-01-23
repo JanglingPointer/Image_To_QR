@@ -965,11 +965,15 @@ async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scale
         // Step 1: Generate QR code without margin using direct pixel access
         const qr_noMargin = await getQRCodeImageData(text);
 
+        // Only add 4th square if checkbox is checked AND QR code is at least 25 pixels
+        // (Regular Small QR codes don't have a 4th square)
+        const shouldAdd4thSquare = add4thSquare && qr_noMargin.width >= 25;
+
         // Step 2: Add 1 pixel margin
         const qr = addMargin(1, qr_noMargin);
 
         // Step 3: Generate mask for control squares and margin
-        const qrCtrlMask = generateMask(qr, 1, 8, add4thSquare);
+        const qrCtrlMask = generateMask(qr, 1, 8, shouldAdd4thSquare);
 
         // Step 4: Create QR with control squares (transparent where not masked)
         const qrCtrl = setWhereMasked(qr, qrCtrlMask, 0, 0, 0, 0, true);
