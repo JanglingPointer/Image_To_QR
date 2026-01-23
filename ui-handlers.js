@@ -682,17 +682,12 @@ async function updateResult() {
     }
     
     const textValue = textInput.value.trim();
-    if (!textValue || textValue.length === 0) {
-        utils.addHiddenClass(resultSection);
-        if (debugCheckbox.checked) {
-            utils.addHiddenClass(debugSection);
-        }
-        hideImageUI(); // Hide scaling mode group if no image
-        return;
-    }
     
+    // Use fallback string "." if text is empty or whitespace-only
     let textToUse = textValue;
-    if (textToUse === textInput.placeholder) {
+    if (!textToUse || textToUse.length === 0) {
+        textToUse = '.';
+    } else if (textToUse === textInput.placeholder) {
         textToUse = textInput.placeholder;
     }
     
