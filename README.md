@@ -6,9 +6,13 @@ Demo: https://janglingpointer.github.io/Image_To_QR/
 <img width="800" alt="ui_screenshot" src="https://github.com/user-attachments/assets/ba1b71bd-f9f9-4ebf-b736-cb5d68c39a34" />
 <img width="800" alt="results" src="https://github.com/user-attachments/assets/d99d59cb-c4cc-4e72-b878-8ee4e8082d72" />
 
-<b>Note:</b>
+<b>General Note:</b>
 <br/>
-As not all the pixels in the resulting image display data of the QR Code, the resulting code requires more perfect conditions in terms of lighting, distance and angle for a successful scan, compared to a simple "boring" qr-code.
+Like all QR codes, the code can be created & scanned offline and has no expiration date.
+
+<b>Note on Robustness:</b>
+<br/>
+As not all the pixels in the resulting image display data of the QR Code, the resulting code requires more perfect conditions in terms of lighting, distance and angle for a successful scan, compared to a simple "boring" qr-code. But in my use cases they always worked nicely. Just try out the Examples.
 
 <b>Thanks to:</b>
 <br/>
