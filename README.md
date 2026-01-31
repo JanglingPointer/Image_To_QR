@@ -12,7 +12,7 @@ Like all QR codes, the code can be created & scanned offline and has no expirati
 
 <b>Note on Robustness:</b>
 <br/>
-As not all the pixels in the resulting image display data of the QR Code, the resulting code requires more perfect conditions in terms of lighting, distance and angle for a successful scan, compared to a simple "boring" qr-code. But in my use cases they always worked nicely. Just try out the Examples.
+As not all the pixels in the resulting image display data of the QR Code, the resulting code is a tiny bit "less robust" compared to a simple "boring" qr-code. But in my use cases they always worked nicely. Just try out the Examples.
 
 <b>Thanks to:</b>
 <br/>
