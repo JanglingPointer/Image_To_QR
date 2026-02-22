@@ -268,9 +268,11 @@ function onlyKeepCenterPixelOf9x9Block(image) {
  * @param {HTMLImageElement} sourceImage - The source image
  * @param {boolean} useTransparencyOverride - If true, override corner color with a
  *   contrasting opaque color when the image has significant transparency. Default true.
+ * @param {boolean} allowTransparentPadding - If true, return transparent when corners
+ *   are transparent (for padding that should match transparent borders). Default false.
  * @returns {number[]} RGBA background color array
  */
-function detectPaddingColor(sourceImage, useTransparencyOverride = true) {
+function detectPaddingColor(sourceImage, useTransparencyOverride = true, allowTransparentPadding = false) {
     function colorsAlmostEqual(a, b, tolerance = 10) {
         return Math.abs(a[0] - b[0]) <= tolerance && Math.abs(a[1] - b[1]) <= tolerance && Math.abs(a[2] - b[2]) <= tolerance && Math.abs(a[3] - b[3]) <= tolerance;
     }
@@ -321,6 +323,13 @@ function detectPaddingColor(sourceImage, useTransparencyOverride = true) {
         bgColor = brightness < 128 ? [0, 0, 0, 255] : [255, 255, 255, 255];
     }
 
+    if (allowTransparentPadding) {
+        const avgCornerAlpha = (corners[0][3] + corners[1][3] + corners[2][3] + corners[3][3]) / 4;
+        if (avgCornerAlpha < 128) {
+            return [0, 0, 0, 0];
+        }
+    }
+
     if (useTransparencyOverride) {
         let sum = 0, count = 0;
         let transparentPixels = 0;
@@ -341,6 +350,54 @@ function detectPaddingColor(sourceImage, useTransparencyOverride = true) {
 }
 
 /**
+ * Parses a hex color string to RGBA array [r, g, b, a].
+ * @param {string} hexColor - Hex color (e.g. "#000000")
+ * @returns {number[]} [r, g, b, 255]
+ */
+function hexToRgba(hexColor) {
+    const hex = hexColor.replace('#', '');
+    return [
+        parseInt(hex.substring(0, 2), 16),
+        parseInt(hex.substring(2, 4), 16),
+        parseInt(hex.substring(4, 6), 16),
+        255
+    ];
+}
+
+/**
+ * Extends padding pixels by sampling from the nearest edge of the drawn image.
+ * Uses integer bounds to handle fractional draw coordinates correctly.
+ * @param {ImageData} imageData - The image data (modified in place)
+ * @param {number} imgX - Left edge of the image content
+ * @param {number} imgY - Top edge of the image content
+ * @param {number} imgW - Width of the image content
+ * @param {number} imgH - Height of the image content
+ */
+function extendPaddingInImageData(imageData, imgX, imgY, imgW, imgH) {
+    const data = imageData.data;
+    const w = imageData.width;
+    const h = imageData.height;
+    // Use integer bounds - fractional coords can cause sampling from padding instead of image edge
+    const leftCol = Math.max(0, Math.floor(imgX));
+    const topRow = Math.max(0, Math.floor(imgY));
+    const rightCol = Math.min(w - 1, Math.ceil(imgX + imgW) - 1);
+    const bottomRow = Math.min(h - 1, Math.ceil(imgY + imgH) - 1);
+    for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+            if (x >= leftCol && x <= rightCol && y >= topRow && y <= bottomRow) continue;
+            const sampleX = Math.max(leftCol, Math.min(rightCol, x));
+            const sampleY = Math.max(topRow, Math.min(bottomRow, y));
+            const srcIdx = (sampleY * w + sampleX) * 4;
+            const dstIdx = (y * w + x) * 4;
+            data[dstIdx] = data[srcIdx];
+            data[dstIdx + 1] = data[srcIdx + 1];
+            data[dstIdx + 2] = data[srcIdx + 2];
+            data[dstIdx + 3] = data[srcIdx + 3];
+        }
+    }
+}
+
+/**
  * Scales an image to match the dimensions while maintaining aspect ratio
  * @param {HTMLImageElement} sourceImage - The image to scale
  * @param {number} targetWidth - Target width
@@ -349,14 +406,24 @@ function detectPaddingColor(sourceImage, useTransparencyOverride = true) {
  * @param {number} zoomValue - Zoom factor for custom mode (0-2)
  * @param {number} offsetXValue - Horizontal offset for custom mode (-1 to 1)
  * @param {number} offsetYValue - Vertical offset for custom mode (-1 to 1)
- * @returns {ImageData} The scaled image data with white padding
+ * @param {string} outsidePixels - 'auto' | 'extend' | 'color' for padding treatment
+ * @param {string} outsidePixelsColor - Hex color when outsidePixels is 'color'
+ * @returns {ImageData} The scaled image data with padding
  */
-function scaleImageToDimensions(sourceImage, targetWidth, targetHeight, scalingMode = 'shrink', zoomValue = 0, offsetXValue = 0, offsetYValue = 0) {
-    const bgColor = detectPaddingColor(sourceImage);
+function scaleImageToDimensions(sourceImage, targetWidth, targetHeight, scalingMode = 'shrink', zoomValue = 0, offsetXValue = 0, offsetYValue = 0, outsidePixels = 'auto', outsidePixelsColor = '#000000') {
+    let bgColor;
+    if (outsidePixels === 'color') {
+        bgColor = hexToRgba(outsidePixelsColor);
+    } else if (outsidePixels === 'extend') {
+        bgColor = [0, 0, 0, 0]; // Transparent - avoids blending with fill that brightens edge pixels
+    } else {
+        bgColor = detectPaddingColor(sourceImage);
+    }
     const canvas = document.createElement('canvas');
     canvas.width = targetWidth;
     canvas.height = targetHeight;
     const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false; // Crisp edges for extend mode
 
     ctx.fillStyle = `rgba(${bgColor[0]},${bgColor[1]},${bgColor[2]},${bgColor[3] / 255})`;
     ctx.fillRect(0, 0, targetWidth, targetHeight);
@@ -460,7 +527,11 @@ function scaleImageToDimensions(sourceImage, targetWidth, targetHeight, scalingM
         
         // Use drawImage with source and destination parameters
         ctx.drawImage(sourceImage, finalSourceCropX, finalSourceCropY, finalSourceCropWidth, finalSourceCropHeight, finalOffsetX, finalOffsetY, finalDrawWidth, finalDrawHeight);
-        return ctx.getImageData(0, 0, targetWidth, targetHeight);
+        const result = ctx.getImageData(0, 0, targetWidth, targetHeight);
+        if (outsidePixels === 'extend') {
+            extendPaddingInImageData(result, finalOffsetX, finalOffsetY, finalDrawWidth, finalDrawHeight);
+        }
+        return result;
     } else {
         // Shrink: scale so the largest dimension matches target, keep aspect ratio (default)
         if (sourceAspect > targetAspect) {
@@ -481,7 +552,11 @@ function scaleImageToDimensions(sourceImage, targetWidth, targetHeight, scalingM
     // Draw the image centered with aspect ratio maintained
     ctx.drawImage(sourceImage, offsetX, offsetY, drawWidth, drawHeight);
     
-    return ctx.getImageData(0, 0, targetWidth, targetHeight);
+    const result = ctx.getImageData(0, 0, targetWidth, targetHeight);
+    if (outsidePixels === 'extend') {
+        extendPaddingInImageData(result, offsetX, offsetY, drawWidth, drawHeight);
+    }
+    return result;
 }
 
 /**
@@ -558,16 +633,25 @@ function downsampleByBlockSize(imageData, blockSize) {
 /**
  * Crops the center targetSize×targetSize pixels from the source image (1:1, no scaling).
  * If blockSize > 1, first downsamples by taking every blockSize-th pixel, then crops/pads.
- * If the source is smaller than targetSize, pads by extending the outermost pixels outward.
+ * If the source is smaller than targetSize, padding treatment depends on outsidePixels.
  * offsetXValue, offsetYValue (-1 to 1) shift the image position when smaller than target.
  * @param {HTMLImageElement} sourceImage - The image to crop
  * @param {number} targetSize - The square dimension to produce
  * @param {number} blockSize - Downsample factor (1 = no downsample)
  * @param {number} offsetXValue - Horizontal position offset (-1 to 1, 0 = centered)
  * @param {number} offsetYValue - Vertical position offset (-1 to 1, 0 = centered)
+ * @param {string} outsidePixels - 'auto' | 'extend' | 'color' for padding treatment
+ * @param {string} outsidePixelsColor - Hex color when outsidePixels is 'color'
  * @returns {ImageData} The cropped/padded image data
  */
-function cropCenterPixels(sourceImage, targetSize, blockSize = 1, offsetXValue = 0, offsetYValue = 0) {
+function cropCenterPixels(sourceImage, targetSize, blockSize = 1, offsetXValue = 0, offsetYValue = 0, outsidePixels = 'extend', outsidePixelsColor = '#000000') {
+    let paddingColor;
+    if (outsidePixels === 'color') {
+        paddingColor = hexToRgba(outsidePixelsColor);
+    } else if (outsidePixels === 'auto') {
+        paddingColor = detectPaddingColor(sourceImage, true, true); // allowTransparentPadding for transparent borders
+    }
+
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = sourceImage.width;
     tempCanvas.height = sourceImage.height;
@@ -602,16 +686,28 @@ function cropCenterPixels(sourceImage, targetSize, blockSize = 1, offsetXValue =
 
     for (let y = 0; y < targetSize; y++) {
         for (let x = 0; x < targetSize; x++) {
-            const srcCol = Math.max(0, Math.min(x - dstX, cropW - 1));
-            const srcRow = Math.max(0, Math.min(y - dstY, cropH - 1));
-            const sx = srcX + srcCol;
-            const sy = srcY + srcRow;
-            const srcIdx = (sy * w + sx) * 4;
-            const outIdx = (y * targetSize + x) * 4;
-            out[outIdx]     = srcData.data[srcIdx];
-            out[outIdx + 1] = srcData.data[srcIdx + 1];
-            out[outIdx + 2] = srcData.data[srcIdx + 2];
-            out[outIdx + 3] = srcData.data[srcIdx + 3];
+            const relX = x - dstX;
+            const relY = y - dstY;
+            const inBounds = relX >= 0 && relX < cropW && relY >= 0 && relY < cropH;
+
+            if (inBounds || outsidePixels === 'extend') {
+                const srcCol = Math.max(0, Math.min(relX, cropW - 1));
+                const srcRow = Math.max(0, Math.min(relY, cropH - 1));
+                const sx = srcX + srcCol;
+                const sy = srcY + srcRow;
+                const srcIdx = (sy * w + sx) * 4;
+                const outIdx = (y * targetSize + x) * 4;
+                out[outIdx]     = srcData.data[srcIdx];
+                out[outIdx + 1] = srcData.data[srcIdx + 1];
+                out[outIdx + 2] = srcData.data[srcIdx + 2];
+                out[outIdx + 3] = srcData.data[srcIdx + 3];
+            } else {
+                const outIdx = (y * targetSize + x) * 4;
+                out[outIdx]     = paddingColor[0];
+                out[outIdx + 1] = paddingColor[1];
+                out[outIdx + 2] = paddingColor[2];
+                out[outIdx + 3] = paddingColor[3];
+            }
         }
     }
 
@@ -1076,9 +1172,11 @@ async function getQRCodeImageData(text) {
  * @param {number} offsetYValue - Vertical offset for custom mode (-1 to 1)
  * @param {number} clarity - Clarity value (0-100) for color adjustment, controls COLOR_BEND
  * @param {boolean} add4thSquare - Whether to add a 4th square in the bottom-right corner
+ * @param {string} outsidePixels - 'auto' | 'extend' | 'color' for padding treatment
+ * @param {string} outsidePixelsColor - Hex color when outsidePixels is 'color'
  * @returns {Object} Object containing debug data including qrWithoutCtrlx3
  */
-async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scaleFactor = 3, noiseProbability = 15, darkColor = "#000000", brightColor = "#ffffff", useOriginalColors = false, noiseSeed = 12345, scalingMode = 'shrink', shine = false, bwMode = 'threshold', ditherGamma = 1.0, saturationBoost = 0, zoomValue = 0, offsetXValue = 0, offsetYValue = 0, clarity = 0, add4thSquare = true, blockSize = 1) {
+async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scaleFactor = 3, noiseProbability = 15, darkColor = "#000000", brightColor = "#ffffff", useOriginalColors = false, noiseSeed = 12345, scalingMode = 'shrink', shine = false, bwMode = 'threshold', ditherGamma = 1.0, saturationBoost = 0, zoomValue = 0, offsetXValue = 0, offsetYValue = 0, clarity = 0, add4thSquare = true, blockSize = 1, outsidePixels = 'auto', outsidePixelsColor = '#000000') {
     try {
         // Step 1: Generate QR code without margin using direct pixel access
         const qr_noMargin = await getQRCodeImageData(text);
@@ -1111,9 +1209,9 @@ async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scale
         // Step 7: Scale uploaded image to match QR dimensions
         let scaledUploadedImage;
         if (bwMode === 'pixelperfect') {
-            scaledUploadedImage = cropCenterPixels(uploadedImage, qrWithoutCtrlThinned.width, blockSize, offsetXValue, offsetYValue);
+            scaledUploadedImage = cropCenterPixels(uploadedImage, qrWithoutCtrlThinned.width, blockSize, offsetXValue, offsetYValue, outsidePixels, outsidePixelsColor);
         } else {
-            scaledUploadedImage = scaleImageToDimensions(uploadedImage, qrWithoutCtrlThinned.width, qrWithoutCtrlThinned.height, scalingMode, zoomValue, offsetXValue, offsetYValue);
+            scaledUploadedImage = scaleImageToDimensions(uploadedImage, qrWithoutCtrlThinned.width, qrWithoutCtrlThinned.height, scalingMode, zoomValue, offsetXValue, offsetYValue, outsidePixels, outsidePixelsColor);
         }
 
         // Step 7.5: Optionally apply gamma correction for dither mode

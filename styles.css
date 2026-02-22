@@ -211,7 +211,7 @@ body {
     white-space: nowrap;
 }
 
-/* Override flex utilities: stack scaling mode radios vertically */
+/* Override flex utilities: scaling mode layout */
 .image-upload-and-scaling .scaling-mode-group {
     display: flex;
     flex-direction: column;
@@ -225,6 +225,48 @@ body {
 
 .image-upload-and-scaling .scaling-mode-group label {
     display: block;
+}
+
+/* 2x2 grid for scaling mode radio buttons */
+.scaling-mode-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 16px;
+}
+
+.scaling-mode-grid label {
+    white-space: nowrap;
+}
+
+/* Outside Pixels - always visible when scaling mode group is shown */
+.outside-pixels-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.outside-pixels-group > span {
+    margin-bottom: 2px;
+}
+
+/* 2x2 grid for Outside Pixels: Auto, Extend, Color, color picker */
+.outside-pixels-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 16px;
+    align-items: center;
+}
+
+.outside-pixels-grid label {
+    white-space: nowrap;
+}
+
+.outside-pixels-color-picker {
+    display: flex;
+    align-items: center;
 }
 
 /* Stack zoom controls vertically under Custom radio */

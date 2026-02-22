@@ -160,6 +160,8 @@ const initialSettings = {
     zoom: 0,
     offsetX: 0,
     offsetY: 0,
+    outsidePixels: 'auto',     // 'auto' | 'extend' | 'color'
+    outsidePixelsColor: '#000000',
     debug: false
 };
 
@@ -228,6 +230,15 @@ function applySettingsToUI(settings) {
         stretchRadio.checked = settings.scalingMode === 'stretch';
         customRadio.checked = settings.scalingMode === 'custom';
     }
+    // Outside Pixels radios and color picker
+    const outsidePixelsAutoEl = document.getElementById('outsidePixelsAuto');
+    const outsidePixelsExtendEl = document.getElementById('outsidePixelsExtend');
+    const outsidePixelsColorEl = document.getElementById('outsidePixelsColor');
+    const outsidePixelsColorPickerEl = document.getElementById('outsidePixelsColorPicker');
+    if (outsidePixelsAutoEl) outsidePixelsAutoEl.checked = settings.outsidePixels === 'auto';
+    if (outsidePixelsExtendEl) outsidePixelsExtendEl.checked = settings.outsidePixels === 'extend';
+    if (outsidePixelsColorEl) outsidePixelsColorEl.checked = settings.outsidePixels === 'color';
+    if (outsidePixelsColorPickerEl) outsidePixelsColorPickerEl.value = settings.outsidePixelsColor || '#000000';
     // Debug checkbox and dependent UI
     if (debugCheckbox) debugCheckbox.checked = settings.debug;
     if (settings.debug) {
@@ -747,7 +758,14 @@ async function updateResult() {
         const clarity = claritySlider ? parseFloat(claritySlider.value) : 0;
         const add4thSquare = add4thSquareCheckbox ? add4thSquareCheckbox.checked : true;
         const blockSize = blockSizeSlider ? parseInt(blockSizeSlider.value, 10) : 1;
-        const debugData = await generateQRCodeOverlay(window.uploadedImage, textToUse, threshold, scaleFactor, noiseProbability, darkColor, brightColor, useOriginalColors, noiseSeed, scalingMode, shine, bwMode, ditherGamma, saturationBoost, zoomValue, offsetXValue, offsetYValue, clarity, add4thSquare, blockSize);
+        const outsidePixelsExtend = document.getElementById('outsidePixelsExtend');
+        const outsidePixelsColorRadio = document.getElementById('outsidePixelsColor');
+        const outsidePixelsColorPicker = document.getElementById('outsidePixelsColorPicker');
+        let outsidePixels = 'auto';
+        if (outsidePixelsExtend && outsidePixelsExtend.checked) outsidePixels = 'extend';
+        else if (outsidePixelsColorRadio && outsidePixelsColorRadio.checked) outsidePixels = 'color';
+        const outsidePixelsColor = (outsidePixelsColorPicker && outsidePixels === 'color') ? outsidePixelsColorPicker.value : '#000000';
+        const debugData = await generateQRCodeOverlay(window.uploadedImage, textToUse, threshold, scaleFactor, noiseProbability, darkColor, brightColor, useOriginalColors, noiseSeed, scalingMode, shine, bwMode, ditherGamma, saturationBoost, zoomValue, offsetXValue, offsetYValue, clarity, add4thSquare, blockSize, outsidePixels, outsidePixelsColor);
         utils.removeHiddenClass(resultSection, 'flex');
         
         // Handle debug output
@@ -886,7 +904,15 @@ async function updateResult() {
 // Add event listeners to scaling mode radio buttons to trigger updateResult
 ['scalingModeShrink', 'scalingModeGrow', 'scalingModeStretch'].forEach(function(id) {
     utils.addRadioListener(id);
-}); 
+});
+
+// Add event listeners to Outside Pixels radio buttons and color picker
+['outsidePixelsAuto', 'outsidePixelsExtend', 'outsidePixelsColor'].forEach(function(id) {
+    utils.addRadioListener(id);
+});
+if (document.getElementById('outsidePixelsColorPicker')) {
+    utils.addUpdateListener(document.getElementById('outsidePixelsColorPicker'));
+} 
 
 shineCheckbox.addEventListener('change', function() {
     if (window.uploadedImage) {
@@ -978,16 +1004,16 @@ const zoomSliderWrapper = document.getElementById('zoomSliderWrapper');
 // Function to update scaling mode and zoom control visibility
 function updateScalingModeAndZoomVisibility() {
     const pixelPerfectRadio = document.getElementById('bwModePixelArt');
-    const scalingRadios = document.querySelectorAll('input[name="scalingMode"]');
+    const scalingModePresets = document.querySelector('.scaling-mode-presets');
     const customRadio = document.getElementById('scalingModeCustom');
 
     if (pixelPerfectRadio && pixelPerfectRadio.checked && window.uploadedImage) {
-        scalingRadios.forEach(r => { r.disabled = true; });
+        if (scalingModePresets) utils.addHiddenClass(scalingModePresets);
         if (customRadio) customRadio.checked = true;
         if (zoomControl) utils.removeHiddenClass(zoomControl, 'inline-flex');
         if (zoomSliderWrapper) utils.addHiddenClass(zoomSliderWrapper);
     } else {
-        scalingRadios.forEach(r => { r.disabled = false; });
+        if (scalingModePresets) utils.removeHiddenClass(scalingModePresets, 'contents');
         if (zoomSliderWrapper) utils.removeHiddenClass(zoomSliderWrapper, 'flex');
         if (customRadio && customRadio.checked && window.uploadedImage) {
             if (zoomControl) utils.removeHiddenClass(zoomControl, 'inline-flex');
