@@ -91,10 +91,10 @@
                                 </div>
                             </div>
                             <div class="dither-and-threshold flex-start gap-16">
-                                <div class="bw-mode-group flex-column flex-start gap-4 margin-0">
+                                <div class="bw-mode-group bw-mode-grid margin-0">
                                     <label><input type="radio" name="bwMode" id="bwModeDither" value="dither" checked> Dither</label>
-                                    <label><input type="radio" name="bwMode" id="bwModeThreshold" value="threshold"> Threshold</label>
                                     <label><input type="radio" name="bwMode" id="bwModePixelArt" value="pixelperfect"> Pixel Perfect</label>
+                                    <label><input type="radio" name="bwMode" id="bwModeThreshold" value="threshold"> Threshold</label>
                                 </div>
                                 <div class="threshold-control hidden margin-top-15 flex-1">
                                     <div class="threshold-row flex-center gap-16">
@@ -115,9 +115,9 @@
                                 </div>
                                 <div class="block-size-control hidden margin-top-15 flex-1">
                                     <div class="flex-center">
-                                        <label for="blockSizeSlider" class="margin-right-8">Block Size</label>
+                                        <label for="blockSizeSlider">Block Size</label>
                                         <input type="range" id="blockSizeSlider" min="1" max="16" value="1" class="threshold-slider">
-                                        <span id="blockSizeValue" class="margin-left-8">1</span>
+                                        <span id="blockSizeValue">1</span>
                                     </div>
                                 </div>
                             </div>

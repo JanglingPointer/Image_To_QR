@@ -119,12 +119,17 @@ body {
 }
 
 /* Center BW mode radio buttons vertically within their flex container */
-.bw-mode-group {
+/* 2x2 grid layout: Top-Left=Dither, Top-Right=Pixel Perfect, Bottom-Left=Threshold */
+.bw-mode-group.bw-mode-grid {
     align-self: center;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 12px;
 }
 
 /* Center threshold control gray box vertically within their flex container */
-.threshold-control {
+.threshold-control,
+.block-size-control {
     align-self: center;
     background: none !important;
     border: none !important;
@@ -166,6 +171,7 @@ body {
 .scale-control,
 .noise-control,
 .threshold-control,
+.block-size-control,
 .checkbox-label {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
@@ -551,7 +557,8 @@ body {
 
 #thresholdValue,
 #scaleValue,
-#noiseValue {
+#noiseValue,
+#blockSizeValue {
     font-weight: 600;
     color: #667eea;
     font-size: 0.8rem;
@@ -591,6 +598,7 @@ body {
 }
 
 .threshold-control label,
+.block-size-control label,
 .scale-control label,
 .noise-control label,
 .color-control label {
@@ -598,6 +606,13 @@ body {
     font-weight: 600;
     color: #333;
     font-size: 0.85rem;
+}
+
+/* Block size slider - match Brightness slider layout */
+.block-size-control .flex-center {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
 }
 
 .debug-content {
@@ -945,9 +960,20 @@ body {
         align-self: flex-start;
     }
     
-    .threshold-control {
+    .threshold-control,
+    .block-size-control {
         align-self: stretch;
         width: 100%;
+    }
+    
+    .block-size-control .flex-center {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .block-size-control .flex-center label {
+        margin-bottom: 4px;
     }
     
     .threshold-control .threshold-row {
