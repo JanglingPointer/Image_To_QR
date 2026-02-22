@@ -485,58 +485,137 @@ function scaleImageToDimensions(sourceImage, targetWidth, targetHeight, scalingM
 }
 
 /**
+ * Computes the block size from an image: the greatest B such that every horizontal
+ * run of B consecutive pixels has identical color. Scans left-to-right per row.
+ * @param {HTMLImageElement} image - The source image
+ * @returns {number} Block size (1-16)
+ */
+function computeBlockSizeFromImage(image) {
+    const canvas = document.createElement('canvas');
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(image, 0, 0);
+    const data = ctx.getImageData(0, 0, image.width, image.height);
+    const w = data.width;
+    const h = data.height;
+    const pixels = data.data;
+
+    function pixelEquals(x1, y1, x2, y2) {
+        const i1 = (y1 * w + x1) * 4;
+        const i2 = (y2 * w + x2) * 4;
+        return pixels[i1] === pixels[i2] && pixels[i1 + 1] === pixels[i2 + 1] &&
+               pixels[i1 + 2] === pixels[i2 + 2] && pixels[i1 + 3] === pixels[i2 + 3];
+    }
+
+    let minRun = Infinity;
+    for (let y = 0; y < h; y++) {
+        let x = 0;
+        while (x < w) {
+            let runLen = 1;
+            while (x + runLen < w && pixelEquals(x, y, x + runLen, y)) {
+                runLen++;
+            }
+            if (runLen < minRun) minRun = runLen;
+            x += runLen;
+        }
+    }
+    const blockSize = minRun === Infinity ? 1 : minRun;
+    return Math.max(1, Math.min(blockSize, 16));
+}
+
+/**
+ * Downsamples ImageData by taking every N-th pixel (nearest-neighbor).
+ * @param {ImageData} imageData - The source image data
+ * @param {number} blockSize - Take every blockSize-th pixel (1 = no change)
+ * @returns {ImageData} The downsampled image data
+ */
+function downsampleByBlockSize(imageData, blockSize) {
+    if (blockSize <= 1) return imageData;
+    const w = imageData.width;
+    const h = imageData.height;
+    const newW = Math.ceil(w / blockSize);
+    const newH = Math.ceil(h / blockSize);
+    const result = new ImageData(newW, newH);
+    const src = imageData.data;
+    const out = result.data;
+    for (let j = 0; j < newH; j++) {
+        for (let i = 0; i < newW; i++) {
+            const sx = Math.min(i * blockSize, w - 1);
+            const sy = Math.min(j * blockSize, h - 1);
+            const srcIdx = (sy * w + sx) * 4;
+            const outIdx = (j * newW + i) * 4;
+            out[outIdx]     = src[srcIdx];
+            out[outIdx + 1] = src[srcIdx + 1];
+            out[outIdx + 2] = src[srcIdx + 2];
+            out[outIdx + 3] = src[srcIdx + 3];
+        }
+    }
+    return result;
+}
+
+/**
  * Crops the center targetSize×targetSize pixels from the source image (1:1, no scaling).
- * If the source is smaller than targetSize in either dimension, pads using the same
- * canvas-based background fill as scaleImageToDimensions (via detectPaddingColor).
+ * If blockSize > 1, first downsamples by taking every blockSize-th pixel, then crops/pads.
+ * If the source is smaller than targetSize, pads by extending the outermost pixels outward.
+ * offsetXValue, offsetYValue (-1 to 1) shift the image position when smaller than target.
  * @param {HTMLImageElement} sourceImage - The image to crop
  * @param {number} targetSize - The square dimension to produce
+ * @param {number} blockSize - Downsample factor (1 = no downsample)
+ * @param {number} offsetXValue - Horizontal position offset (-1 to 1, 0 = centered)
+ * @param {number} offsetYValue - Vertical position offset (-1 to 1, 0 = centered)
  * @returns {ImageData} The cropped/padded image data
  */
-function cropCenterPixels(sourceImage, targetSize) {
-    const w = sourceImage.width;
-    const h = sourceImage.height;
-
-    // Read raw source pixels
+function cropCenterPixels(sourceImage, targetSize, blockSize = 1, offsetXValue = 0, offsetYValue = 0) {
     const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = w;
-    tempCanvas.height = h;
+    tempCanvas.width = sourceImage.width;
+    tempCanvas.height = sourceImage.height;
     const tempCtx = tempCanvas.getContext('2d');
     tempCtx.imageSmoothingEnabled = false;
-    tempCtx.drawImage(sourceImage, 0, 0, w, h, 0, 0, w, h);
-    const srcData = tempCtx.getImageData(0, 0, w, h);
+    tempCtx.drawImage(sourceImage, 0, 0, sourceImage.width, sourceImage.height, 0, 0, sourceImage.width, sourceImage.height);
+    let srcData = tempCtx.getImageData(0, 0, sourceImage.width, sourceImage.height);
 
-    // Fill output canvas with padding color using corner-based detection only
-    // (skip transparency override — pixel art images intentionally have transparent backgrounds)
-    const bgColor = detectPaddingColor(sourceImage, false);
-    const outCanvas = document.createElement('canvas');
-    outCanvas.width = targetSize;
-    outCanvas.height = targetSize;
-    const outCtx = outCanvas.getContext('2d');
-    outCtx.fillStyle = `rgba(${bgColor[0]},${bgColor[1]},${bgColor[2]},${bgColor[3] / 255})`;
-    outCtx.fillRect(0, 0, targetSize, targetSize);
+    if (blockSize > 1) {
+        srcData = downsampleByBlockSize(srcData, blockSize);
+    }
 
-    // Place raw source pixels at the center (putImageData = pixel-perfect, no compositing)
+    const w = srcData.width;
+    const h = srcData.height;
+
     const srcX = Math.max(0, Math.floor((w - targetSize) / 2));
     const srcY = Math.max(0, Math.floor((h - targetSize) / 2));
     const cropW = Math.min(w, targetSize);
     const cropH = Math.min(h, targetSize);
-    const dstX = Math.max(0, Math.floor((targetSize - w) / 2));
-    const dstY = Math.max(0, Math.floor((targetSize - h) / 2));
+    let dstX = Math.max(0, Math.floor((targetSize - w) / 2));
+    let dstY = Math.max(0, Math.floor((targetSize - h) / 2));
 
-    const centerPatch = new ImageData(cropW, cropH);
-    for (let y = 0; y < cropH; y++) {
-        for (let x = 0; x < cropW; x++) {
-            const srcIdx = ((srcY + y) * w + (srcX + x)) * 4;
-            const dstIdx = (y * cropW + x) * 4;
-            centerPatch.data[dstIdx]     = srcData.data[srcIdx];
-            centerPatch.data[dstIdx + 1] = srcData.data[srcIdx + 1];
-            centerPatch.data[dstIdx + 2] = srcData.data[srcIdx + 2];
-            centerPatch.data[dstIdx + 3] = srcData.data[srcIdx + 3];
+    if (w < targetSize || h < targetSize) {
+        const maxOffsetX = Math.max(0, Math.floor((targetSize - cropW) / 2));
+        const maxOffsetY = Math.max(0, Math.floor((targetSize - cropH) / 2));
+        dstX = Math.max(0, Math.min(targetSize - cropW, Math.round(dstX + offsetXValue * maxOffsetX)));
+        dstY = Math.max(0, Math.min(targetSize - cropH, Math.round(dstY + offsetYValue * maxOffsetY)));
+    }
+
+    const result = new ImageData(targetSize, targetSize);
+    const out = result.data;
+
+    for (let y = 0; y < targetSize; y++) {
+        for (let x = 0; x < targetSize; x++) {
+            const srcCol = Math.max(0, Math.min(x - dstX, cropW - 1));
+            const srcRow = Math.max(0, Math.min(y - dstY, cropH - 1));
+            const sx = srcX + srcCol;
+            const sy = srcY + srcRow;
+            const srcIdx = (sy * w + sx) * 4;
+            const outIdx = (y * targetSize + x) * 4;
+            out[outIdx]     = srcData.data[srcIdx];
+            out[outIdx + 1] = srcData.data[srcIdx + 1];
+            out[outIdx + 2] = srcData.data[srcIdx + 2];
+            out[outIdx + 3] = srcData.data[srcIdx + 3];
         }
     }
-    outCtx.putImageData(centerPatch, dstX, dstY);
 
-    return outCtx.getImageData(0, 0, targetSize, targetSize);
+    return result;
 }
 
 /**
@@ -999,7 +1078,7 @@ async function getQRCodeImageData(text) {
  * @param {boolean} add4thSquare - Whether to add a 4th square in the bottom-right corner
  * @returns {Object} Object containing debug data including qrWithoutCtrlx3
  */
-async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scaleFactor = 3, noiseProbability = 15, darkColor = "#000000", brightColor = "#ffffff", useOriginalColors = false, noiseSeed = 12345, scalingMode = 'shrink', shine = false, bwMode = 'threshold', ditherGamma = 1.0, saturationBoost = 0, zoomValue = 0, offsetXValue = 0, offsetYValue = 0, clarity = 0, add4thSquare = true) {
+async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scaleFactor = 3, noiseProbability = 15, darkColor = "#000000", brightColor = "#ffffff", useOriginalColors = false, noiseSeed = 12345, scalingMode = 'shrink', shine = false, bwMode = 'threshold', ditherGamma = 1.0, saturationBoost = 0, zoomValue = 0, offsetXValue = 0, offsetYValue = 0, clarity = 0, add4thSquare = true, blockSize = 1) {
     try {
         // Step 1: Generate QR code without margin using direct pixel access
         const qr_noMargin = await getQRCodeImageData(text);
@@ -1031,8 +1110,8 @@ async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scale
 
         // Step 7: Scale uploaded image to match QR dimensions
         let scaledUploadedImage;
-        if (bwMode === 'pixelart') {
-            scaledUploadedImage = cropCenterPixels(uploadedImage, qrWithoutCtrlThinned.width);
+        if (bwMode === 'pixelperfect') {
+            scaledUploadedImage = cropCenterPixels(uploadedImage, qrWithoutCtrlThinned.width, blockSize, offsetXValue, offsetYValue);
         } else {
             scaledUploadedImage = scaleImageToDimensions(uploadedImage, qrWithoutCtrlThinned.width, qrWithoutCtrlThinned.height, scalingMode, zoomValue, offsetXValue, offsetYValue);
         }
@@ -1040,7 +1119,7 @@ async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scale
         // Step 7.5: Optionally apply gamma correction for dither mode
         let scaledUploadedImage_Gamma = null;
         let scaledUploadedImageBW;
-        if (bwMode === 'pixelart') {
+        if (bwMode === 'pixelperfect') {
             scaledUploadedImageBW = convertToBlackAndWhite(scaledUploadedImage, 128);
         } else if (bwMode === 'dither') {
             // Apply brightness/contrast adjustment to grayscale before dithering
@@ -1222,4 +1301,5 @@ async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scale
 }
 
 // Export for use in other modules
-window.generateQRCodeOverlay = generateQRCodeOverlay; 
+window.generateQRCodeOverlay = generateQRCodeOverlay;
+window.computeBlockSizeFromImage = computeBlockSizeFromImage; 

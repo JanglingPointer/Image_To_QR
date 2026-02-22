@@ -62,6 +62,9 @@ const offsetXSlider = document.getElementById('offsetXSlider');
 const offsetXValue = document.getElementById('offsetXValue');
 const offsetYSlider = document.getElementById('offsetYSlider');
 const offsetYValue = document.getElementById('offsetYValue');
+const blockSizeSlider = document.getElementById('blockSizeSlider');
+const blockSizeValue = document.getElementById('blockSizeValue');
+const blockSizeControl = document.querySelector('.block-size-control');
 
 // Global variable to store the uploaded image
 window.uploadedImage = null;
@@ -140,7 +143,8 @@ const utils = {
 // Centralized initial settings
 const initialSettings = {
     text: 'https://example.com#enter_your_own_URL',
-    bwMode: 'dither',            // 'threshold' | 'dither' | 'pixelart'
+    bwMode: 'dither',            // 'threshold' | 'dither' | 'pixelperfect'
+    blockSize: 1,                // 1-8 for pixel art mode
     threshold: 128,
     ditherBrightness: 0,         // -1..1
     clarity: 0,                  // 0..100
@@ -185,7 +189,7 @@ function applySettingsToUI(settings) {
     if (bwThreshold && bwDither && bwPixelArt) {
         bwThreshold.checked = settings.bwMode === 'threshold';
         bwDither.checked = settings.bwMode === 'dither';
-        bwPixelArt.checked = settings.bwMode === 'pixelart';
+        bwPixelArt.checked = settings.bwMode === 'pixelperfect';
     }
     // Sliders and labels
     if (thresholdSlider) thresholdSlider.value = String(settings.threshold);
@@ -198,6 +202,7 @@ function applySettingsToUI(settings) {
     if (zoomSlider) zoomSlider.value = String(settings.zoom);
     if (offsetXSlider) offsetXSlider.value = String(settings.offsetX);
     if (offsetYSlider) offsetYSlider.value = String(settings.offsetY);
+    if (blockSizeSlider) blockSizeSlider.value = String(settings.blockSize);
     // Color pickers
     if (colorDark) {
         colorDark.value = settings.colorDark;
@@ -244,6 +249,7 @@ function applySettingsToUI(settings) {
     utils.updateSliderValue(zoomSlider, zoomValue, (v) => parseFloat(v).toFixed(2));
     utils.updateSliderValue(offsetXSlider, offsetXValue, (v) => parseFloat(v).toFixed(2));
     utils.updateSliderValue(offsetYSlider, offsetYValue, (v) => parseFloat(v).toFixed(2));
+    utils.updateSliderValue(blockSizeSlider, blockSizeValue);
 }
 
 // Calculate average pixel value of an image
@@ -267,6 +273,16 @@ function calculateAveragePixelValue(image) {
     }
     
     return totalValue / pixelCount;
+}
+
+// Auto-compute block size when Pixel Perfect is selected (min horizontal run length)
+function autoComputeBlockSize() {
+    if (!window.uploadedImage || !blockSizeSlider || !blockSizeValue) return;
+    const pixelPerfectRadio = document.getElementById('bwModePixelArt');
+    if (!pixelPerfectRadio || !pixelPerfectRadio.checked) return;
+    const blockSize = window.computeBlockSizeFromImage(window.uploadedImage);
+    blockSizeSlider.value = String(blockSize);
+    blockSizeValue.textContent = String(blockSize);
 }
 
 // Auto-adjust threshold based on image
@@ -306,7 +322,6 @@ imageInput.addEventListener('change', function(e) {
                     utils.removeHiddenClass(previewImage);
                     document.querySelector('.file-input-text').style.display = 'none';
                     utils.removeHiddenClass(mainImageControls);
-                    utils.removeHiddenClass(thresholdControl);
                     utils.removeHiddenClass(scaleControl);
                     utils.removeHiddenClass(noiseControl);
                     utils.removeHiddenClass(colorControl);
@@ -314,6 +329,8 @@ imageInput.addEventListener('change', function(e) {
                     utils.removeHiddenClass(bwModeGroup);
                     
                     autoAdjustThreshold(window.uploadedImage);
+                    autoComputeBlockSize();
+                    updateDitherBrightnessVisibility();
                     updateZoomControlVisibility();
                     updateResult();
                 };
@@ -464,13 +481,14 @@ function generateTestImage() {
         utils.removeHiddenClass(previewImage);
         document.querySelector('.file-input-text').style.display = 'none';
         utils.removeHiddenClass(mainImageControls);
-        utils.removeHiddenClass(thresholdControl);
         utils.removeHiddenClass(scaleControl);
         utils.removeHiddenClass(noiseControl);
         utils.removeHiddenClass(colorControl);
         utils.removeHiddenClass(scalingModeGroup, 'flex');
         utils.removeHiddenClass(bwModeGroup);
         autoAdjustThreshold(window.uploadedImage);
+        autoComputeBlockSize();
+        updateDitherBrightnessVisibility();
         updateZoomControlVisibility();
         updateResult();
     };
@@ -720,7 +738,7 @@ async function updateResult() {
         const shineCheckbox = document.getElementById('shineCheckbox');
         const shine = shineCheckbox && shineCheckbox.checked;
         // In updateResult, get the selected black & white mode and pass it to generateQRCodeOverlay
-        const bwMode = document.getElementById('bwModePixelArt').checked ? 'pixelart' :
+        const bwMode = document.getElementById('bwModePixelArt').checked ? 'pixelperfect' :
                        (document.getElementById('bwModeDither').checked ? 'dither' : 'threshold');
         let ditherGamma = 1.0;
         if (bwMode === 'dither' && ditherBrightnessSlider) {
@@ -728,8 +746,8 @@ async function updateResult() {
         }
         const clarity = claritySlider ? parseFloat(claritySlider.value) : 0;
         const add4thSquare = add4thSquareCheckbox ? add4thSquareCheckbox.checked : true;
-        // Pass ditherGamma, clarity, and add4thSquare to generateQRCodeOverlay
-        const debugData = await generateQRCodeOverlay(window.uploadedImage, textToUse, threshold, scaleFactor, noiseProbability, darkColor, brightColor, useOriginalColors, noiseSeed, scalingMode, shine, bwMode, ditherGamma, saturationBoost, zoomValue, offsetXValue, offsetYValue, clarity, add4thSquare);
+        const blockSize = blockSizeSlider ? parseInt(blockSizeSlider.value, 10) : 1;
+        const debugData = await generateQRCodeOverlay(window.uploadedImage, textToUse, threshold, scaleFactor, noiseProbability, darkColor, brightColor, useOriginalColors, noiseSeed, scalingMode, shine, bwMode, ditherGamma, saturationBoost, zoomValue, offsetXValue, offsetYValue, clarity, add4thSquare, blockSize);
         utils.removeHiddenClass(resultSection, 'flex');
         
         // Handle debug output
@@ -881,7 +899,9 @@ shineCheckbox.addEventListener('change', function() {
     const element = document.getElementById(id);
     if (element) {
         element.addEventListener('change', () => {
-            updateDitherBrightnessVisibility(); // Update visibility on change
+            updateDitherBrightnessVisibility();
+            autoComputeBlockSize();
+            updateZoomControlVisibility();
             if (window.uploadedImage) {
                 updateResult();
             }
@@ -889,7 +909,7 @@ shineCheckbox.addEventListener('change', function() {
     }
 }); 
 
-// Show/hide DitherBrightness slider based on BW mode
+// Show/hide DitherBrightness / Block Size slider based on BW mode
 function updateDitherBrightnessVisibility() {
     const ditherRadio = document.getElementById('bwModeDither');
     const thresholdRadio = document.getElementById('bwModeThreshold');
@@ -898,14 +918,17 @@ function updateDitherBrightnessVisibility() {
     const ditherSliderDiv = ditherBrightnessSlider ? ditherBrightnessSlider.parentElement.parentElement : null;
     if (pixelArtRadio && pixelArtRadio.checked) {
         if (thresholdControl) utils.addHiddenClass(thresholdControl);
-    } else if (ditherRadio && ditherRadio.checked) {
+        if (blockSizeControl) utils.removeHiddenClass(blockSizeControl, 'flex');
+    } else {
+        if (blockSizeControl) utils.addHiddenClass(blockSizeControl);
         if (thresholdControl) utils.removeHiddenClass(thresholdControl);
-        if (ditherSliderDiv) utils.removeHiddenClass(ditherSliderDiv);
-        if (thresholdSliderDiv) utils.addHiddenClass(thresholdSliderDiv);
-    } else if (thresholdRadio && thresholdRadio.checked) {
-        if (thresholdControl) utils.removeHiddenClass(thresholdControl);
-        if (thresholdSliderDiv) utils.removeHiddenClass(thresholdSliderDiv);
-        if (ditherSliderDiv) utils.addHiddenClass(ditherSliderDiv);
+        if (ditherRadio && ditherRadio.checked) {
+            if (ditherSliderDiv) utils.removeHiddenClass(ditherSliderDiv);
+            if (thresholdSliderDiv) utils.addHiddenClass(thresholdSliderDiv);
+        } else if (thresholdRadio && thresholdRadio.checked) {
+            if (thresholdSliderDiv) utils.removeHiddenClass(thresholdSliderDiv);
+            if (ditherSliderDiv) utils.addHiddenClass(ditherSliderDiv);
+        }
     }
 }
 // On page load, set initial visibility
@@ -918,6 +941,9 @@ if (ditherBrightnessSlider) {
         }
     });
 }
+
+// Block Size slider (Pixel Perfect mode)
+utils.addSliderListener(blockSizeSlider, blockSizeValue);
 
 // Clarity slider event
 if (claritySlider) {
@@ -947,14 +973,37 @@ document.querySelectorAll('input[name="scalingMode"]').forEach(radio => {
     });
 });
 
+const zoomSliderWrapper = document.getElementById('zoomSliderWrapper');
+
+// Function to update scaling mode and zoom control visibility
+function updateScalingModeAndZoomVisibility() {
+    const pixelPerfectRadio = document.getElementById('bwModePixelArt');
+    const scalingRadios = document.querySelectorAll('input[name="scalingMode"]');
+    const customRadio = document.getElementById('scalingModeCustom');
+
+    if (pixelPerfectRadio && pixelPerfectRadio.checked && window.uploadedImage) {
+        scalingRadios.forEach(r => { r.disabled = true; });
+        if (customRadio) customRadio.checked = true;
+        if (zoomControl) utils.removeHiddenClass(zoomControl, 'inline-flex');
+        if (zoomSliderWrapper) utils.addHiddenClass(zoomSliderWrapper);
+    } else {
+        scalingRadios.forEach(r => { r.disabled = false; });
+        if (zoomSliderWrapper) utils.removeHiddenClass(zoomSliderWrapper, 'flex');
+        if (customRadio && customRadio.checked && window.uploadedImage) {
+            if (zoomControl) utils.removeHiddenClass(zoomControl, 'inline-flex');
+        } else {
+            if (zoomControl) utils.addHiddenClass(zoomControl);
+        }
+    }
+}
+
 // Function to update zoom control visibility
 function updateZoomControlVisibility() {
-    const customRadio = document.getElementById('scalingModeCustom');
-    if (customRadio && customRadio.checked && window.uploadedImage) {
-        utils.removeHiddenClass(zoomControl, 'inline-flex');
-    } else {
+    if (!window.uploadedImage) {
         utils.addHiddenClass(zoomControl);
+        return;
     }
+    updateScalingModeAndZoomVisibility();
 }
 
 // Add zoom and offset slider listeners
