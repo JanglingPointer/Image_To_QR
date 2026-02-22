@@ -140,7 +140,7 @@ const utils = {
 // Centralized initial settings
 const initialSettings = {
     text: 'https://example.com#enter_your_own_URL',
-    bwMode: 'dither',            // 'threshold' | 'dither'
+    bwMode: 'dither',            // 'threshold' | 'dither' | 'pixelart'
     threshold: 128,
     ditherBrightness: 0,         // -1..1
     clarity: 0,                  // 0..100
@@ -181,9 +181,11 @@ function applySettingsToUI(settings) {
     // BW Mode radios
     const bwThreshold = document.getElementById('bwModeThreshold');
     const bwDither = document.getElementById('bwModeDither');
-    if (bwThreshold && bwDither) {
+    const bwPixelArt = document.getElementById('bwModePixelArt');
+    if (bwThreshold && bwDither && bwPixelArt) {
         bwThreshold.checked = settings.bwMode === 'threshold';
         bwDither.checked = settings.bwMode === 'dither';
+        bwPixelArt.checked = settings.bwMode === 'pixelart';
     }
     // Sliders and labels
     if (thresholdSlider) thresholdSlider.value = String(settings.threshold);
@@ -718,7 +720,8 @@ async function updateResult() {
         const shineCheckbox = document.getElementById('shineCheckbox');
         const shine = shineCheckbox && shineCheckbox.checked;
         // In updateResult, get the selected black & white mode and pass it to generateQRCodeOverlay
-        const bwMode = (document.getElementById('bwModeDither').checked ? 'dither' : 'threshold');
+        const bwMode = document.getElementById('bwModePixelArt').checked ? 'pixelart' :
+                       (document.getElementById('bwModeDither').checked ? 'dither' : 'threshold');
         let ditherGamma = 1.0;
         if (bwMode === 'dither' && ditherBrightnessSlider) {
             ditherGamma = parseFloat(ditherBrightnessSlider.value);
@@ -874,7 +877,7 @@ shineCheckbox.addEventListener('change', function() {
 }); 
 
 // Add event listeners to black & white mode radio buttons to trigger updateResult
-['bwModeThreshold', 'bwModeDither'].forEach(function(id) {
+['bwModeThreshold', 'bwModeDither', 'bwModePixelArt'].forEach(function(id) {
     const element = document.getElementById(id);
     if (element) {
         element.addEventListener('change', () => {
@@ -890,13 +893,17 @@ shineCheckbox.addEventListener('change', function() {
 function updateDitherBrightnessVisibility() {
     const ditherRadio = document.getElementById('bwModeDither');
     const thresholdRadio = document.getElementById('bwModeThreshold');
-    // Get slider containers (grandparent divs with flex-1 class)
+    const pixelArtRadio = document.getElementById('bwModePixelArt');
     const thresholdSliderDiv = thresholdSlider ? thresholdSlider.parentElement.parentElement : null;
     const ditherSliderDiv = ditherBrightnessSlider ? ditherBrightnessSlider.parentElement.parentElement : null;
-    if (ditherRadio && ditherRadio.checked) {
+    if (pixelArtRadio && pixelArtRadio.checked) {
+        if (thresholdControl) utils.addHiddenClass(thresholdControl);
+    } else if (ditherRadio && ditherRadio.checked) {
+        if (thresholdControl) utils.removeHiddenClass(thresholdControl);
         if (ditherSliderDiv) utils.removeHiddenClass(ditherSliderDiv);
         if (thresholdSliderDiv) utils.addHiddenClass(thresholdSliderDiv);
     } else if (thresholdRadio && thresholdRadio.checked) {
+        if (thresholdControl) utils.removeHiddenClass(thresholdControl);
         if (thresholdSliderDiv) utils.removeHiddenClass(thresholdSliderDiv);
         if (ditherSliderDiv) utils.addHiddenClass(ditherSliderDiv);
     }

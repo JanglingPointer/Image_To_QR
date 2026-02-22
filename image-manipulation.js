@@ -263,32 +263,17 @@ function onlyKeepCenterPixelOf9x9Block(image) {
 }
 
 /**
- * Scales an image to match the dimensions while maintaining aspect ratio
- * @param {HTMLImageElement} sourceImage - The image to scale
- * @param {number} targetWidth - Target width
- * @param {number} targetHeight - Target height
- * @param {string} scalingMode - 'shrink', 'grow', 'stretch', or 'custom'
- * @param {number} zoomValue - Zoom factor for custom mode (0-2)
- * @param {number} offsetXValue - Horizontal offset for custom mode (-1 to 1)
- * @param {number} offsetYValue - Vertical offset for custom mode (-1 to 1)
- * @returns {ImageData} The scaled image data with white padding
+ * Determines the background/padding color for a source image by examining corner pixels
+ * and transparency. Returns an RGBA array [r, g, b, a].
+ * @param {HTMLImageElement} sourceImage - The source image
+ * @param {boolean} useTransparencyOverride - If true, override corner color with a
+ *   contrasting opaque color when the image has significant transparency. Default true.
+ * @returns {number[]} RGBA background color array
  */
-function scaleImageToDimensions(sourceImage, targetWidth, targetHeight, scalingMode = 'shrink', zoomValue = 0, offsetXValue = 0, offsetYValue = 0) {
-    // Helper to get RGBA from image at (x, y)
-    function getPixel(img, x, y) {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        const data = ctx.getImageData(x, y, 1, 1).data;
-        return [data[0], data[1], data[2], data[3]];
-    }
-    // Helper to compare two RGBA colors (allowing small difference)
+function detectPaddingColor(sourceImage, useTransparencyOverride = true) {
     function colorsAlmostEqual(a, b, tolerance = 10) {
         return Math.abs(a[0] - b[0]) <= tolerance && Math.abs(a[1] - b[1]) <= tolerance && Math.abs(a[2] - b[2]) <= tolerance && Math.abs(a[3] - b[3]) <= tolerance;
     }
-    // Helper to average four RGBA colors
     function averageColors(colors) {
         const avg = [0, 0, 0, 0];
         for (const c of colors) {
@@ -297,14 +282,27 @@ function scaleImageToDimensions(sourceImage, targetWidth, targetHeight, scalingM
         for (let i = 0; i < 4; ++i) avg[i] = Math.round(avg[i] / colors.length);
         return avg;
     }
-    // Determine background color for all modes
+
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = sourceImage.width;
+    tempCanvas.height = sourceImage.height;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.drawImage(sourceImage, 0, 0);
+    const tempData = tempCtx.getImageData(0, 0, sourceImage.width, sourceImage.height).data;
+
+    function getPixel(x, y) {
+        const i = (y * sourceImage.width + x) * 4;
+        return [tempData[i], tempData[i+1], tempData[i+2], tempData[i+3]];
+    }
+
+    const corners = [
+        getPixel(0, 0),
+        getPixel(sourceImage.width - 1, 0),
+        getPixel(0, sourceImage.height - 1),
+        getPixel(sourceImage.width - 1, sourceImage.height - 1)
+    ];
+
     let bgColor = [255, 255, 255, 255];
-    const c1 = getPixel(sourceImage, 0, 0);
-    const c2 = getPixel(sourceImage, sourceImage.width - 1, 0);
-    const c3 = getPixel(sourceImage, 0, sourceImage.height - 1);
-    const c4 = getPixel(sourceImage, sourceImage.width - 1, sourceImage.height - 1);
-    const corners = [c1, c2, c3, c4];
-    // Count how many are almost equal to each other
     let found = false;
     for (let i = 0; i < 4; ++i) {
         let count = 1;
@@ -318,64 +316,50 @@ function scaleImageToDimensions(sourceImage, targetWidth, targetHeight, scalingM
         }
     }
     if (!found) {
-        // Average the four
         const avg = averageColors(corners);
-        // Use black if dark, white if bright
         const brightness = 0.299 * avg[0] + 0.587 * avg[1] + 0.114 * avg[2];
         bgColor = brightness < 128 ? [0, 0, 0, 255] : [255, 255, 255, 255];
     }
+
+    if (useTransparencyOverride) {
+        let sum = 0, count = 0;
+        let transparentPixels = 0;
+        for (let i = 0; i < tempData.length; i += 4) {
+            if (tempData[i + 3] < 255) transparentPixels++;
+            if (tempData[i + 3] > 0) {
+                sum += tempData[i] * 0.299 + tempData[i + 1] * 0.587 + tempData[i + 2] * 0.114;
+                count++;
+            }
+        }
+        const transparencyRatio = transparentPixels / (tempData.length / 4);
+        if (transparencyRatio > 0.1 && count > 0) {
+            const avg = sum / count;
+            return avg > 128 ? [0, 0, 0, 255] : [255, 255, 255, 255];
+        }
+    }
+    return bgColor;
+}
+
+/**
+ * Scales an image to match the dimensions while maintaining aspect ratio
+ * @param {HTMLImageElement} sourceImage - The image to scale
+ * @param {number} targetWidth - Target width
+ * @param {number} targetHeight - Target height
+ * @param {string} scalingMode - 'shrink', 'grow', 'stretch', or 'custom'
+ * @param {number} zoomValue - Zoom factor for custom mode (0-2)
+ * @param {number} offsetXValue - Horizontal offset for custom mode (-1 to 1)
+ * @param {number} offsetYValue - Vertical offset for custom mode (-1 to 1)
+ * @returns {ImageData} The scaled image data with white padding
+ */
+function scaleImageToDimensions(sourceImage, targetWidth, targetHeight, scalingMode = 'shrink', zoomValue = 0, offsetXValue = 0, offsetYValue = 0) {
+    const bgColor = detectPaddingColor(sourceImage);
     const canvas = document.createElement('canvas');
     canvas.width = targetWidth;
     canvas.height = targetHeight;
     const ctx = canvas.getContext('2d');
 
-    // Check if the image has alpha and compute average brightness of non-transparent pixels
-    let overlayBg = null;
-    // Draw image to temp canvas to inspect alpha
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = sourceImage.width;
-    tempCanvas.height = sourceImage.height;
-    const tempCtx = tempCanvas.getContext('2d');
-    tempCtx.drawImage(sourceImage, 0, 0);
-    const tempImageData = tempCtx.getImageData(0, 0, sourceImage.width, sourceImage.height);
-    const tempData = tempImageData.data;
-    let sum = 0, count = 0;
-    let hasAlpha = false;
-    for (let i = 0; i < tempData.length; i += 4) {
-        const alpha = tempData[i + 3];
-        if (alpha > 0) {
-            hasAlpha = true;
-            // Calculate grayscale value (luminance)
-            const gray = tempData[i] * 0.299 + tempData[i + 1] * 0.587 + tempData[i + 2] * 0.114;
-            sum += gray;
-            count++;
-        }
-    }
-    // Only use alpha-based background if there's significant transparency
-    let hasSignificantAlpha = false;
-    if (hasAlpha && count > 0) {
-        // Check if there are many transparent pixels
-        let transparentPixels = 0;
-        for (let i = 3; i < tempData.length; i += 4) {
-            if (tempData[i] < 255) transparentPixels++;
-        }
-        const transparencyRatio = transparentPixels / (tempData.length / 4);
-        hasSignificantAlpha = transparencyRatio > 0.1; // More than 10% transparent pixels
-        
-        if (hasSignificantAlpha) {
-            const avg = sum / count;
-            // If average is bright, use black background, else use white
-            overlayBg = avg > 128 ? 'black' : 'white';
-        }
-    }
-    // Fill background
-    if (overlayBg && hasSignificantAlpha) {
-        ctx.fillStyle = overlayBg;
-        ctx.fillRect(0, 0, targetWidth, targetHeight);
-    } else {
-        ctx.fillStyle = `rgba(${bgColor[0]},${bgColor[1]},${bgColor[2]},${bgColor[3] / 255})`;
-        ctx.fillRect(0, 0, targetWidth, targetHeight);
-    }
+    ctx.fillStyle = `rgba(${bgColor[0]},${bgColor[1]},${bgColor[2]},${bgColor[3] / 255})`;
+    ctx.fillRect(0, 0, targetWidth, targetHeight);
     
     // Calculate scaling to maintain aspect ratio
     const sourceAspect = sourceImage.width / sourceImage.height;
@@ -498,6 +482,61 @@ function scaleImageToDimensions(sourceImage, targetWidth, targetHeight, scalingM
     ctx.drawImage(sourceImage, offsetX, offsetY, drawWidth, drawHeight);
     
     return ctx.getImageData(0, 0, targetWidth, targetHeight);
+}
+
+/**
+ * Crops the center targetSize×targetSize pixels from the source image (1:1, no scaling).
+ * If the source is smaller than targetSize in either dimension, pads using the same
+ * canvas-based background fill as scaleImageToDimensions (via detectPaddingColor).
+ * @param {HTMLImageElement} sourceImage - The image to crop
+ * @param {number} targetSize - The square dimension to produce
+ * @returns {ImageData} The cropped/padded image data
+ */
+function cropCenterPixels(sourceImage, targetSize) {
+    const w = sourceImage.width;
+    const h = sourceImage.height;
+
+    // Read raw source pixels
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = w;
+    tempCanvas.height = h;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.imageSmoothingEnabled = false;
+    tempCtx.drawImage(sourceImage, 0, 0, w, h, 0, 0, w, h);
+    const srcData = tempCtx.getImageData(0, 0, w, h);
+
+    // Fill output canvas with padding color using corner-based detection only
+    // (skip transparency override — pixel art images intentionally have transparent backgrounds)
+    const bgColor = detectPaddingColor(sourceImage, false);
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = targetSize;
+    outCanvas.height = targetSize;
+    const outCtx = outCanvas.getContext('2d');
+    outCtx.fillStyle = `rgba(${bgColor[0]},${bgColor[1]},${bgColor[2]},${bgColor[3] / 255})`;
+    outCtx.fillRect(0, 0, targetSize, targetSize);
+
+    // Place raw source pixels at the center (putImageData = pixel-perfect, no compositing)
+    const srcX = Math.max(0, Math.floor((w - targetSize) / 2));
+    const srcY = Math.max(0, Math.floor((h - targetSize) / 2));
+    const cropW = Math.min(w, targetSize);
+    const cropH = Math.min(h, targetSize);
+    const dstX = Math.max(0, Math.floor((targetSize - w) / 2));
+    const dstY = Math.max(0, Math.floor((targetSize - h) / 2));
+
+    const centerPatch = new ImageData(cropW, cropH);
+    for (let y = 0; y < cropH; y++) {
+        for (let x = 0; x < cropW; x++) {
+            const srcIdx = ((srcY + y) * w + (srcX + x)) * 4;
+            const dstIdx = (y * cropW + x) * 4;
+            centerPatch.data[dstIdx]     = srcData.data[srcIdx];
+            centerPatch.data[dstIdx + 1] = srcData.data[srcIdx + 1];
+            centerPatch.data[dstIdx + 2] = srcData.data[srcIdx + 2];
+            centerPatch.data[dstIdx + 3] = srcData.data[srcIdx + 3];
+        }
+    }
+    outCtx.putImageData(centerPatch, dstX, dstY);
+
+    return outCtx.getImageData(0, 0, targetSize, targetSize);
 }
 
 /**
@@ -991,12 +1030,19 @@ async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scale
         const qrWithoutCtrlThinned = onlyKeepCenterPixelOf9x9Block(qrWithoutCtrlx3);
 
         // Step 7: Scale uploaded image to match QR dimensions
-        const scaledUploadedImage = scaleImageToDimensions(uploadedImage, qrWithoutCtrlThinned.width, qrWithoutCtrlThinned.height, scalingMode, zoomValue, offsetXValue, offsetYValue);
+        let scaledUploadedImage;
+        if (bwMode === 'pixelart') {
+            scaledUploadedImage = cropCenterPixels(uploadedImage, qrWithoutCtrlThinned.width);
+        } else {
+            scaledUploadedImage = scaleImageToDimensions(uploadedImage, qrWithoutCtrlThinned.width, qrWithoutCtrlThinned.height, scalingMode, zoomValue, offsetXValue, offsetYValue);
+        }
 
         // Step 7.5: Optionally apply gamma correction for dither mode
         let scaledUploadedImage_Gamma = null;
         let scaledUploadedImageBW;
-        if (bwMode === 'dither') {
+        if (bwMode === 'pixelart') {
+            scaledUploadedImageBW = convertToBlackAndWhite(scaledUploadedImage, 128);
+        } else if (bwMode === 'dither') {
             // Apply brightness/contrast adjustment to grayscale before dithering
             // ditherGamma now ranges from -1 (darken, more contrast), 0 (no change), 1 (brighten, more contrast)
             scaledUploadedImage_Gamma = new ImageData(scaledUploadedImage.width, scaledUploadedImage.height);
