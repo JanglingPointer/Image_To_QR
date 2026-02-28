@@ -1038,67 +1038,72 @@ function applyCustomColors(imageData, darkColor, brightColor) {
 
 /**
  * Transforms a black and white image to use original image colors with HSB or HSL adjustments
- * @param {ImageData} bwImageData - The input black and white image data
+ * @param {ImageData} bwImageData - The input black and white image data (after noise + QR overlay)
  * @param {ImageData} originalImageData - The original colored image data
  * @param {ImageData} maskImageData - The mask image data (for useOriginalColors = true)
- * @param {number} saturationBoost - Saturation boost value (0-1)
  * @param {number} clarity - Clarity value (0-100), controls COLOR_BEND
  * @param {boolean} useHsl - If true, use HSL color space; if false, use HSB (default)
+ * @param {ImageData|null} unalteredBwImageData - Pre-noise/QR B&W image for detecting altered pixels.
+ *   When provided, unaltered pixels keep original color; only altered pixels get luminance adjustment.
  * @returns {ImageData} The colored image data using original colors
  */
-function applyOriginalColors(bwImageData, originalImageData, maskImageData, saturationBoost = 0, clarity = 0, useHsl = false) {
+function applyOriginalColors(bwImageData, originalImageData, maskImageData, clarity = 0, useHsl = false, unalteredBwImageData = null) {
     const result = new ImageData(bwImageData.width, bwImageData.height);
     const bwData = bwImageData.data;
     const originalData = originalImageData.data;
     const resultData = result.data;
     const maskData = maskImageData ? maskImageData.data : null;
-    const COLOR_BEND_BASE = useHsl ? 35 : 50;
+    const unalteredBwData = unalteredBwImageData ? unalteredBwImageData.data : null;
+    const COLOR_BEND_BASE = 35;
     const COLOR_BEND = COLOR_BEND_BASE * (1 - clarity / 100);
     for (let i = 0; i < bwData.length; i += 4) {
         if (maskData && maskData[i + 3] > 0) {
-            const isBlack = bwData[i] === 0;
             const originalR = originalData[i];
             const originalG = originalData[i + 1];
             const originalB = originalData[i + 2];
 
+            const isUnaltered = unalteredBwData && (bwData[i] === unalteredBwData[i]);
+            if (isUnaltered) {
+                resultData[i] = originalR;
+                resultData[i + 1] = originalG;
+                resultData[i + 2] = originalB;
+                resultData[i + 3] = 255;
+                continue;
+            }
+
+            const isBlack = bwData[i] === 0;
+            const MIN_GAP = 20;
             let adjustedRgb;
             if (useHsl) {
                 const originalHsl = rgbToHsl(originalR, originalG, originalB);
-                let adjustedSaturation = originalHsl.s;
-                if (saturationBoost > 0) {
-                    let vibranceAmount = 0.6 * saturationBoost;
-                    let saturationAmount = 0.25 * saturationBoost;
-                    let vibranceBoost = (1 - (adjustedSaturation / 100)) * vibranceAmount * 100;
-                    adjustedSaturation = Math.min(adjustedSaturation + vibranceBoost, 100);
-                    adjustedSaturation = Math.min(adjustedSaturation * (1 + saturationAmount), 100);
-                    if (originalHsl.s <= 100 / 255) adjustedSaturation = Math.min(adjustedSaturation, 100 / 255);
+                let darkLightness = Math.min(originalHsl.l, COLOR_BEND);
+                let brightLightness = Math.max(originalHsl.l, 100 - COLOR_BEND);
+                if (brightLightness - darkLightness < MIN_GAP) {
+                    const mid = (darkLightness + brightLightness) / 2;
+                    darkLightness = Math.max(0, mid - MIN_GAP / 2);
+                    brightLightness = Math.min(100, mid + MIN_GAP / 2);
                 }
-                let adjustedLightness;
                 if (isBlack) {
-                    adjustedLightness = Math.min(originalHsl.l, COLOR_BEND);
+                    adjustedRgb = hslToRgb(originalHsl.h, originalHsl.s, darkLightness);
                 } else {
-                    adjustedLightness = Math.max(originalHsl.l, 100 - COLOR_BEND);
+                    adjustedRgb = hslToRgb(originalHsl.h, originalHsl.s, brightLightness);
                 }
-                adjustedRgb = hslToRgb(originalHsl.h, adjustedSaturation, adjustedLightness);
             } else {
                 const originalHsb = rgbToHsb(originalR, originalG, originalB);
                 let adjustedSaturation = originalHsb.s;
-                let adjustedBrightness = originalHsb.b;
-                if (saturationBoost > 0) {
-                    let vibranceAmount = 0.6 * saturationBoost;
-                    let saturationAmount = 0.25 * saturationBoost;
-                    let vibranceBoost = (1 - (adjustedSaturation / 100)) * vibranceAmount * 100;
-                    adjustedSaturation = Math.min(adjustedSaturation + vibranceBoost, 100);
-                    adjustedSaturation = Math.min(adjustedSaturation * (1 + saturationAmount), 100);
-                    if (originalHsb.s <= 100 / 255) adjustedSaturation = Math.min(adjustedSaturation, 100 / 255);
+                let darkBrightness = Math.min(originalHsb.b, COLOR_BEND);
+                let brightBrightness = Math.max(originalHsb.b, 100 - COLOR_BEND);
+                if (brightBrightness - darkBrightness < MIN_GAP) {
+                    const mid = (darkBrightness + brightBrightness) / 2;
+                    darkBrightness = Math.max(0, mid - MIN_GAP / 2);
+                    brightBrightness = Math.min(100, mid + MIN_GAP / 2);
                 }
                 if (isBlack) {
-                    adjustedBrightness = Math.min(originalHsb.b, COLOR_BEND);
+                    adjustedRgb = hsbToRgb(originalHsb.h, adjustedSaturation, darkBrightness);
                 } else {
                     adjustedSaturation = Math.min(adjustedSaturation, COLOR_BEND);
-                    adjustedBrightness = Math.max(originalHsb.b, 100 - COLOR_BEND);
+                    adjustedRgb = hsbToRgb(originalHsb.h, adjustedSaturation, brightBrightness);
                 }
-                adjustedRgb = hsbToRgb(originalHsb.h, adjustedSaturation, adjustedBrightness);
             }
 
             resultData[i] = adjustedRgb.r;
@@ -1380,10 +1385,46 @@ async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scale
         // Step 7.8: Apply colors to create colored result
         let result_colored;
         if (useOriginalColors) {
-            result_colored = applyOriginalColors(scaledUploadedImageBW_plusAllQR, scaledUploadedImage, qrWithoutCtrlx3, saturationBoost, clarity, useHsl);
+            let unalteredBw = null;
+            if (bwMode === 'pixelperfect') {
+                unalteredBw = new ImageData(
+                    new Uint8ClampedArray(scaledUploadedImageBW.data),
+                    scaledUploadedImageBW.width,
+                    scaledUploadedImageBW.height
+                );
+                const qrThinnedData = qrWithoutCtrlThinned.data;
+                for (let i = 0; i < qrThinnedData.length; i += 4) {
+                    if (qrThinnedData[i + 3] > 0) {
+                        const inv = bwPlusAllQRData[i] === 0 ? 255 : 0;
+                        unalteredBw.data[i] = inv;
+                        unalteredBw.data[i + 1] = inv;
+                        unalteredBw.data[i + 2] = inv;
+                        unalteredBw.data[i + 3] = 255;
+                    }
+                }
+            }
+            result_colored = applyOriginalColors(scaledUploadedImageBW_plusAllQR, scaledUploadedImage, qrWithoutCtrlx3, clarity, useHsl, unalteredBw);
         } else {
             result_colored = applyCustomColors(scaledUploadedImageBW_plusAllQR, darkColor, brightColor);
         }
+        // Apply saturation boost as a post-processing step
+        if (result_colored && saturationBoost > 0 && useOriginalColors) {
+            const data = result_colored.data;
+            for (let i = 0; i < data.length; i += 4) {
+                const hsl = rgbToHsl(data[i], data[i + 1], data[i + 2]);
+                let s = hsl.s;
+                const vibranceAmount = 0.6 * saturationBoost;
+                const saturationAmount = 0.25 * saturationBoost;
+                const vibranceBoost = (1 - (s / 100)) * vibranceAmount * 100;
+                s = Math.min(s + vibranceBoost, 100);
+                s = Math.min(s * (1 + saturationAmount), 100);
+                const rgb = hslToRgb(hsl.h, s, hsl.l);
+                data[i] = rgb.r;
+                data[i + 1] = rgb.g;
+                data[i + 2] = rgb.b;
+            }
+        }
+
         // Compute result_colored_shine before result_colored_xN
         let result_colored_shine = null;
         if (result_colored) {

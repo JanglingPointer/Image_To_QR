@@ -29,6 +29,7 @@ const ditherBrightnessValue = document.getElementById('ditherBrightnessValue');
 const claritySlider = document.getElementById('claritySlider');
 const clarityControl = document.querySelector('.clarity-control');
 const add4thSquareCheckbox = document.getElementById('add4thSquareCheckbox');
+const add4thSquareControl = document.querySelector('.add-4th-square-control');
 const debugScaledUploadedImage_Gamma = document.getElementById('debugScaledUploadedImage_Gamma');
 const scaleSlider = document.getElementById('scaleSlider');
 const scaleValue = document.getElementById('scaleValue');
@@ -540,12 +541,14 @@ debugCheckbox.addEventListener('change', function() {
     if (this.checked) {
         utils.removeHiddenClass(debugSection);
         utils.removeHiddenClass(testImageBtn);
+        utils.removeHiddenClass(add4thSquareControl);
         if (window.uploadedImage) {
             updateResult();
         }
     } else {
         utils.addHiddenClass(debugSection);
         utils.addHiddenClass(testImageBtn);
+        utils.addHiddenClass(add4thSquareControl);
     }
     updateClarityVisibility();
 });
@@ -685,11 +688,13 @@ if (saturationBoostSlider) {
     });
 }
 
-// On page load, set testImageBtn visibility based on debugCheckbox
+// On page load, set testImageBtn and add4thSquare visibility based on debugCheckbox
 if (debugCheckbox.checked) {
     utils.removeHiddenClass(testImageBtn);
+    utils.removeHiddenClass(add4thSquareControl);
 } else {
     utils.addHiddenClass(testImageBtn);
+    utils.addHiddenClass(add4thSquareControl);
 }
 
 // Hide image controls when no image is present
@@ -773,125 +778,36 @@ async function updateResult() {
         if (debugCheckbox.checked && debugData) {
             utils.removeHiddenClass(debugSection, 'flex');
             
-            // Display all debug images
-            if (debugData.qr_noMargin) {
-                const ctx = debugQrNoMargin.getContext('2d');
-                debugQrNoMargin.width = debugData.qr_noMargin.width;
-                debugQrNoMargin.height = debugData.qr_noMargin.height;
-                ctx.putImageData(debugData.qr_noMargin, 0, 0);
+            function renderDebugImage(canvas, imageData) {
+                const item = canvas.closest('.debug-image-item');
+                if (imageData) {
+                    if (item) item.style.display = '';
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = imageData.width;
+                    canvas.height = imageData.height;
+                    ctx.putImageData(imageData, 0, 0);
+                } else {
+                    if (item) item.style.display = 'none';
+                }
             }
-            
-            if (debugData.qr) {
-                const ctx = debugQr.getContext('2d');
-                debugQr.width = debugData.qr.width;
-                debugQr.height = debugData.qr.height;
-                ctx.putImageData(debugData.qr, 0, 0);
-            }
-            
-            if (debugData.qrCtrlMask) {
-                const ctx = debugQrCtrlMask.getContext('2d');
-                debugQrCtrlMask.width = debugData.qrCtrlMask.width;
-                debugQrCtrlMask.height = debugData.qrCtrlMask.height;
-                ctx.putImageData(debugData.qrCtrlMask, 0, 0);
-            }
-            
-            if (debugData.qrCtrl) {
-                const ctx = debugQrCtrl.getContext('2d');
-                debugQrCtrl.width = debugData.qrCtrl.width;
-                debugQrCtrl.height = debugData.qrCtrl.height;
-                ctx.putImageData(debugData.qrCtrl, 0, 0);
-            }
-            
-            if (debugData.qrCtrlx3) {
-                const ctx = debugQrCtrlx3.getContext('2d');
-                debugQrCtrlx3.width = debugData.qrCtrlx3.width;
-                debugQrCtrlx3.height = debugData.qrCtrlx3.height;
-                ctx.putImageData(debugData.qrCtrlx3, 0, 0);
-            }
-            
-            if (debugData.qrWithoutCtrl) {
-                const ctx = debugQrWithoutCtrl.getContext('2d');
-                debugQrWithoutCtrl.width = debugData.qrWithoutCtrl.width;
-                debugQrWithoutCtrl.height = debugData.qrWithoutCtrl.height;
-                ctx.putImageData(debugData.qrWithoutCtrl, 0, 0);
-            }
-            
-            if (debugData.qrWithoutCtrlx3) {
-                const ctx = debugQrWithoutCtrlx3.getContext('2d');
-                debugQrWithoutCtrlx3.width = debugData.qrWithoutCtrlx3.width;
-                debugQrWithoutCtrlx3.height = debugData.qrWithoutCtrlx3.height;
-                ctx.putImageData(debugData.qrWithoutCtrlx3, 0, 0);
-            }
-            
-            if (debugData.qrWithoutCtrlThinned) {
-                const ctx = debugQrWithoutCtrlThinned.getContext('2d');
-                debugQrWithoutCtrlThinned.width = debugData.qrWithoutCtrlThinned.width;
-                debugQrWithoutCtrlThinned.height = debugData.qrWithoutCtrlThinned.height;
-                ctx.putImageData(debugData.qrWithoutCtrlThinned, 0, 0);
-            }
-            
-            if (debugData.scaledUploadedImage) {
-                const ctx = debugScaledUploadedImage.getContext('2d');
-                debugScaledUploadedImage.width = debugData.scaledUploadedImage.width;
-                debugScaledUploadedImage.height = debugData.scaledUploadedImage.height;
-                ctx.putImageData(debugData.scaledUploadedImage, 0, 0);
-            }
-            
-            if (debugData.scaledUploadedImageBW) {
-                const ctx = debugScaledUploadedImageBW.getContext('2d');
-                debugScaledUploadedImageBW.width = debugData.scaledUploadedImageBW.width;
-                debugScaledUploadedImageBW.height = debugData.scaledUploadedImageBW.height;
-                ctx.putImageData(debugData.scaledUploadedImageBW, 0, 0);
-            }
-            
-            if (debugData.scaledUploadedImageBW_Noise) {
-                const ctx = debugScaledUploadedImageBW_Noise.getContext('2d');
-                debugScaledUploadedImageBW_Noise.width = debugData.scaledUploadedImageBW_Noise.width;
-                debugScaledUploadedImageBW_Noise.height = debugData.scaledUploadedImageBW_Noise.height;
-                ctx.putImageData(debugData.scaledUploadedImageBW_Noise, 0, 0);
-            }
-            
-            if (debugData.scaledUploadedImageBW_plusCtrl) {
-                const ctx = debugScaledUploadedImageBW_plusCtrl.getContext('2d');
-                debugScaledUploadedImageBW_plusCtrl.width = debugData.scaledUploadedImageBW_plusCtrl.width;
-                debugScaledUploadedImageBW_plusCtrl.height = debugData.scaledUploadedImageBW_plusCtrl.height;
-                ctx.putImageData(debugData.scaledUploadedImageBW_plusCtrl, 0, 0);
-            }
-            
-            if (debugData.scaledUploadedImageBW_plusAllQR) {
-                const ctx = debugScaledUploadedImageBW_plusAllQR.getContext('2d');
-                debugScaledUploadedImageBW_plusAllQR.width = debugData.scaledUploadedImageBW_plusAllQR.width;
-                debugScaledUploadedImageBW_plusAllQR.height = debugData.scaledUploadedImageBW_plusAllQR.height;
-                ctx.putImageData(debugData.scaledUploadedImageBW_plusAllQR, 0, 0);
-            }
-            
-            if (debugData.result_colored) {
-                const ctx = debugResultColored.getContext('2d');
-                debugResultColored.width = debugData.result_colored.width;
-                debugResultColored.height = debugData.result_colored.height;
-                ctx.putImageData(debugData.result_colored, 0, 0);
-            }
-            
-            if (debugData.result_colored_xN) {
-                const ctx = debugResultColoredXN.getContext('2d');
-                debugResultColoredXN.width = debugData.result_colored_xN.width;
-                debugResultColoredXN.height = debugData.result_colored_xN.height;
-                ctx.putImageData(debugData.result_colored_xN, 0, 0);
-            }
-            // In updateResult, after rendering result_colored and result_colored_xN, render result_colored_shine if present
-            if (debugData.result_colored_shine) {
-                const ctx = debugResultColoredShine.getContext('2d');
-                debugResultColoredShine.width = debugData.result_colored_shine.width;
-                debugResultColoredShine.height = debugData.result_colored_shine.height;
-                ctx.putImageData(debugData.result_colored_shine, 0, 0);
-            }
-            // After rendering other debug images, render scaledUploadedImage_Gamma if present
-            if (debugData.scaledUploadedImage_Gamma) {
-                const ctx = debugScaledUploadedImage_Gamma.getContext('2d');
-                debugScaledUploadedImage_Gamma.width = debugData.scaledUploadedImage_Gamma.width;
-                debugScaledUploadedImage_Gamma.height = debugData.scaledUploadedImage_Gamma.height;
-                ctx.putImageData(debugData.scaledUploadedImage_Gamma, 0, 0);
-            }
+
+            renderDebugImage(debugQrNoMargin, debugData.qr_noMargin);
+            renderDebugImage(debugQr, debugData.qr);
+            renderDebugImage(debugQrCtrlMask, debugData.qrCtrlMask);
+            renderDebugImage(debugQrCtrl, debugData.qrCtrl);
+            renderDebugImage(debugQrCtrlx3, debugData.qrCtrlx3);
+            renderDebugImage(debugQrWithoutCtrl, debugData.qrWithoutCtrl);
+            renderDebugImage(debugQrWithoutCtrlx3, debugData.qrWithoutCtrlx3);
+            renderDebugImage(debugQrWithoutCtrlThinned, debugData.qrWithoutCtrlThinned);
+            renderDebugImage(debugScaledUploadedImage, debugData.scaledUploadedImage);
+            renderDebugImage(debugScaledUploadedImage_Gamma, debugData.scaledUploadedImage_Gamma);
+            renderDebugImage(debugScaledUploadedImageBW, debugData.scaledUploadedImageBW);
+            renderDebugImage(debugScaledUploadedImageBW_Noise, debugData.scaledUploadedImageBW_Noise);
+            renderDebugImage(debugScaledUploadedImageBW_plusCtrl, debugData.scaledUploadedImageBW_plusCtrl);
+            renderDebugImage(debugScaledUploadedImageBW_plusAllQR, debugData.scaledUploadedImageBW_plusAllQR);
+            renderDebugImage(debugResultColored, debugData.result_colored);
+            renderDebugImage(debugResultColoredShine, debugData.result_colored_shine);
+            renderDebugImage(debugResultColoredXN, debugData.result_colored_xN);
         } else {
             utils.addHiddenClass(debugSection);
         }
