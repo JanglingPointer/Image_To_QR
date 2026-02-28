@@ -200,7 +200,7 @@ function applySettingsToUI(settings) {
     if (add4thSquareCheckbox) add4thSquareCheckbox.checked = settings.add4thSquare;
     if (scaleSlider) scaleSlider.value = String(settings.scale);
     if (noiseSlider) noiseSlider.value = String(settings.noise);
-    if (saturationBoostSlider) saturationBoostSlider.value = String(settings.saturationBoost);
+    if (saturationBoostSlider) saturationBoostSlider.value = settings.bwMode === 'pixelperfect' ? '0' : String(settings.saturationBoost);
     if (zoomSlider) zoomSlider.value = String(settings.zoom);
     if (offsetXSlider) offsetXSlider.value = String(settings.offsetX);
     if (offsetYSlider) offsetYSlider.value = String(settings.offsetY);
@@ -765,7 +765,8 @@ async function updateResult() {
         if (outsidePixelsExtend && outsidePixelsExtend.checked) outsidePixels = 'extend';
         else if (outsidePixelsColorRadio && outsidePixelsColorRadio.checked) outsidePixels = 'color';
         const outsidePixelsColor = (outsidePixelsColorPicker && outsidePixels === 'color') ? outsidePixelsColorPicker.value : '#000000';
-        const debugData = await generateQRCodeOverlay(window.uploadedImage, textToUse, threshold, scaleFactor, noiseProbability, darkColor, brightColor, useOriginalColors, noiseSeed, scalingMode, shine, bwMode, ditherGamma, saturationBoost, zoomValue, offsetXValue, offsetYValue, clarity, add4thSquare, blockSize, outsidePixels, outsidePixelsColor);
+        const useHsl = hslCheckbox && hslCheckbox.checked;
+        const debugData = await generateQRCodeOverlay(window.uploadedImage, textToUse, threshold, scaleFactor, noiseProbability, darkColor, brightColor, useOriginalColors, noiseSeed, scalingMode, shine, bwMode, ditherGamma, saturationBoost, zoomValue, offsetXValue, offsetYValue, clarity, add4thSquare, blockSize, outsidePixels, outsidePixelsColor, useHsl);
         utils.removeHiddenClass(resultSection, 'flex');
         
         // Handle debug output
@@ -918,6 +919,13 @@ shineCheckbox.addEventListener('change', function() {
     if (window.uploadedImage) {
         updateResult();
     }
+});
+
+const hslCheckbox = document.getElementById('hslCheckbox');
+hslCheckbox.addEventListener('change', function() {
+    if (window.uploadedImage) {
+        updateResult();
+    }
 }); 
 
 // Add event listeners to black & white mode radio buttons to trigger updateResult
@@ -925,6 +933,9 @@ shineCheckbox.addEventListener('change', function() {
     const element = document.getElementById(id);
     if (element) {
         element.addEventListener('change', () => {
+            if (id === 'bwModePixelArt' && saturationBoostSlider) {
+                saturationBoostSlider.value = '0';
+            }
             updateDitherBrightnessVisibility();
             autoComputeBlockSize();
             updateZoomControlVisibility();

@@ -916,6 +916,79 @@ function hslToRgb(h, s, l) {
 }
 
 /**
+ * Converts RGB values to HSB (HSV)
+ * @param {number} r - Red value (0-255)
+ * @param {number} g - Green value (0-255)
+ * @param {number} b - Blue value (0-255)
+ * @returns {Object} Object with h, s, b values (h: 0-360, s: 0-100, b: 0-100)
+ */
+function rgbToHsb(r, g, b) {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h, s;
+    const v = max;
+
+    const d = max - min;
+    s = max === 0 ? 0 : d / max;
+
+    if (max === min) {
+        h = 0;
+    } else {
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+
+    return {
+        h: h * 360,
+        s: s * 100,
+        b: v * 100
+    };
+}
+
+/**
+ * Converts HSB (HSV) values to RGB
+ * @param {number} h - Hue (0-360)
+ * @param {number} s - Saturation (0-100)
+ * @param {number} bVal - Brightness/Value (0-100)
+ * @returns {Object} Object with r, g, b values (0-255)
+ */
+function hsbToRgb(h, s, bVal) {
+    h /= 360;
+    s /= 100;
+    bVal /= 100;
+
+    const i = Math.floor(h * 6);
+    const f = h * 6 - i;
+    const p = bVal * (1 - s);
+    const q = bVal * (1 - f * s);
+    const t = bVal * (1 - (1 - f) * s);
+
+    let r, g, b;
+    switch (i % 6) {
+        case 0: r = bVal; g = t;    b = p;    break;
+        case 1: r = q;    g = bVal; b = p;    break;
+        case 2: r = p;    g = bVal; b = t;    break;
+        case 3: r = p;    g = q;    b = bVal; break;
+        case 4: r = t;    g = p;    b = bVal; break;
+        case 5: r = bVal; g = p;    b = q;    break;
+    }
+
+    return {
+        r: Math.round(r * 255),
+        g: Math.round(g * 255),
+        b: Math.round(b * 255)
+    };
+}
+
+/**
  * Converts RGB values to hex color string
  * @param {number} r - Red value (0-255)
  * @param {number} g - Green value (0-255)
@@ -964,56 +1037,75 @@ function applyCustomColors(imageData, darkColor, brightColor) {
 }
 
 /**
- * Transforms a black and white image to use original image colors with HSL adjustments
+ * Transforms a black and white image to use original image colors with HSB or HSL adjustments
  * @param {ImageData} bwImageData - The input black and white image data
  * @param {ImageData} originalImageData - The original colored image data
  * @param {ImageData} maskImageData - The mask image data (for useOriginalColors = true)
  * @param {number} saturationBoost - Saturation boost value (0-1)
- * @param {number} clarity - Clarity value (0-100), controls COLOR_BEND (0 → 35, 100 → 0)
+ * @param {number} clarity - Clarity value (0-100), controls COLOR_BEND
+ * @param {boolean} useHsl - If true, use HSL color space; if false, use HSB (default)
  * @returns {ImageData} The colored image data using original colors
  */
-function applyOriginalColors(bwImageData, originalImageData, maskImageData, saturationBoost = 0, clarity = 0) {
-    // maskImageData: only apply original colors where mask alpha > 0
-    // bwImageData: scaledUploadedImageBW_plusAllQR
+function applyOriginalColors(bwImageData, originalImageData, maskImageData, saturationBoost = 0, clarity = 0, useHsl = false) {
     const result = new ImageData(bwImageData.width, bwImageData.height);
     const bwData = bwImageData.data;
     const originalData = originalImageData.data;
     const resultData = result.data;
     const maskData = maskImageData ? maskImageData.data : null;
+    const COLOR_BEND_BASE = useHsl ? 35 : 50;
+    const COLOR_BEND = COLOR_BEND_BASE * (1 - clarity / 100);
     for (let i = 0; i < bwData.length; i += 4) {
         if (maskData && maskData[i + 3] > 0) {
-            // Use original color logic (as before)
             const isBlack = bwData[i] === 0;
             const originalR = originalData[i];
             const originalG = originalData[i + 1];
             const originalB = originalData[i + 2];
-            const originalHsl = rgbToHsl(originalR, originalG, originalB);
-            let adjustedLightness;
-            let adjustedSaturation = originalHsl.s;
-            if (saturationBoost > 0) {
-                // Scale vibrance and saturation boost by slider value
-                let vibranceAmount = 0.6 * saturationBoost;
-                let saturationAmount = 0.25 * saturationBoost;
-                // Vibrance: only boost if not already saturated
-                let vibranceBoost = (1 - (adjustedSaturation / 100)) * vibranceAmount * 100;
-                adjustedSaturation = Math.min(adjustedSaturation + vibranceBoost, 100);
-                // Global saturation boost
-                adjustedSaturation = Math.min(adjustedSaturation * (1 + saturationAmount), 100);
-            }
-            // Calculate COLOR_BEND from clarity: 0 → 35, 100 → 0
-            const COLOR_BEND = 35 * (1 - clarity / 100);
-            if (isBlack) {
-                adjustedLightness = Math.min(originalHsl.l, COLOR_BEND);
+
+            let adjustedRgb;
+            if (useHsl) {
+                const originalHsl = rgbToHsl(originalR, originalG, originalB);
+                let adjustedSaturation = originalHsl.s;
+                if (saturationBoost > 0) {
+                    let vibranceAmount = 0.6 * saturationBoost;
+                    let saturationAmount = 0.25 * saturationBoost;
+                    let vibranceBoost = (1 - (adjustedSaturation / 100)) * vibranceAmount * 100;
+                    adjustedSaturation = Math.min(adjustedSaturation + vibranceBoost, 100);
+                    adjustedSaturation = Math.min(adjustedSaturation * (1 + saturationAmount), 100);
+                    if (originalHsl.s <= 100 / 255) adjustedSaturation = Math.min(adjustedSaturation, 100 / 255);
+                }
+                let adjustedLightness;
+                if (isBlack) {
+                    adjustedLightness = Math.min(originalHsl.l, COLOR_BEND);
+                } else {
+                    adjustedLightness = Math.max(originalHsl.l, 100 - COLOR_BEND);
+                }
+                adjustedRgb = hslToRgb(originalHsl.h, adjustedSaturation, adjustedLightness);
             } else {
-                adjustedLightness = Math.max(originalHsl.l, 100 - COLOR_BEND);
+                const originalHsb = rgbToHsb(originalR, originalG, originalB);
+                let adjustedSaturation = originalHsb.s;
+                let adjustedBrightness = originalHsb.b;
+                if (saturationBoost > 0) {
+                    let vibranceAmount = 0.6 * saturationBoost;
+                    let saturationAmount = 0.25 * saturationBoost;
+                    let vibranceBoost = (1 - (adjustedSaturation / 100)) * vibranceAmount * 100;
+                    adjustedSaturation = Math.min(adjustedSaturation + vibranceBoost, 100);
+                    adjustedSaturation = Math.min(adjustedSaturation * (1 + saturationAmount), 100);
+                    if (originalHsb.s <= 100 / 255) adjustedSaturation = Math.min(adjustedSaturation, 100 / 255);
+                }
+                if (isBlack) {
+                    adjustedBrightness = Math.min(originalHsb.b, COLOR_BEND);
+                } else {
+                    adjustedSaturation = Math.min(adjustedSaturation, COLOR_BEND);
+                    adjustedBrightness = Math.max(originalHsb.b, 100 - COLOR_BEND);
+                }
+                adjustedRgb = hsbToRgb(originalHsb.h, adjustedSaturation, adjustedBrightness);
             }
-            const adjustedRgb = hslToRgb(originalHsl.h, adjustedSaturation, adjustedLightness);
+
             resultData[i] = adjustedRgb.r;
             resultData[i + 1] = adjustedRgb.g;
             resultData[i + 2] = adjustedRgb.b;
             resultData[i + 3] = 255;
         } else {
-            // Copy color directly from bwImageData (scaledUploadedImageBW_plusAllQR)
             resultData[i] = bwData[i];
             resultData[i + 1] = bwData[i + 1];
             resultData[i + 2] = bwData[i + 2];
@@ -1176,7 +1268,7 @@ async function getQRCodeImageData(text) {
  * @param {string} outsidePixelsColor - Hex color when outsidePixels is 'color'
  * @returns {Object} Object containing debug data including qrWithoutCtrlx3
  */
-async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scaleFactor = 3, noiseProbability = 15, darkColor = "#000000", brightColor = "#ffffff", useOriginalColors = false, noiseSeed = 12345, scalingMode = 'shrink', shine = false, bwMode = 'threshold', ditherGamma = 1.0, saturationBoost = 0, zoomValue = 0, offsetXValue = 0, offsetYValue = 0, clarity = 0, add4thSquare = true, blockSize = 1, outsidePixels = 'auto', outsidePixelsColor = '#000000') {
+async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scaleFactor = 3, noiseProbability = 15, darkColor = "#000000", brightColor = "#ffffff", useOriginalColors = false, noiseSeed = 12345, scalingMode = 'shrink', shine = false, bwMode = 'threshold', ditherGamma = 1.0, saturationBoost = 0, zoomValue = 0, offsetXValue = 0, offsetYValue = 0, clarity = 0, add4thSquare = true, blockSize = 1, outsidePixels = 'auto', outsidePixelsColor = '#000000', useHsl = false) {
     try {
         // Step 1: Generate QR code without margin using direct pixel access
         const qr_noMargin = await getQRCodeImageData(text);
@@ -1288,7 +1380,7 @@ async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scale
         // Step 7.8: Apply colors to create colored result
         let result_colored;
         if (useOriginalColors) {
-            result_colored = applyOriginalColors(scaledUploadedImageBW_plusAllQR, scaledUploadedImage, qrWithoutCtrlx3, saturationBoost, clarity);
+            result_colored = applyOriginalColors(scaledUploadedImageBW_plusAllQR, scaledUploadedImage, qrWithoutCtrlx3, saturationBoost, clarity, useHsl);
         } else {
             result_colored = applyCustomColors(scaledUploadedImageBW_plusAllQR, darkColor, brightColor);
         }
