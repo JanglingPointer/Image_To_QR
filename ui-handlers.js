@@ -829,7 +829,31 @@ async function updateResult() {
 });
 if (document.getElementById('outsidePixelsColorPicker')) {
     utils.addUpdateListener(document.getElementById('outsidePixelsColorPicker'));
-} 
+}
+
+// Function to update outside pixels color picker visibility
+function updateOutsidePixelsColorPickerVisibility() {
+    const colorRadio = document.getElementById('outsidePixelsColor');
+    const colorPickerDiv = document.querySelector('.outside-pixels-color-picker');
+    if (colorRadio && colorPickerDiv) {
+        if (colorRadio.checked) {
+            utils.removeHiddenClass(colorPickerDiv, 'flex');
+        } else {
+            utils.addHiddenClass(colorPickerDiv);
+        }
+    }
+}
+
+// Add event listeners to outside pixels radio buttons to toggle color picker visibility
+['outsidePixelsAuto', 'outsidePixelsExtend', 'outsidePixelsColor'].forEach(function(id) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.addEventListener('change', updateOutsidePixelsColorPickerVisibility);
+    }
+});
+
+// Initialize color picker visibility on page load
+updateOutsidePixelsColorPickerVisibility(); 
 
 shineCheckbox.addEventListener('change', function() {
     if (window.uploadedImage) {

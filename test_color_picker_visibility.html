@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Color Picker Visibility</title>
+    <style>
+        .hidden { display: none !important; }
+        .outside-pixels-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 16px;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+        }
+        .color-picker {
+            width: 28px;
+            height: 28px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Color Picker Visibility</h1>
+    <div class="outside-pixels-group">
+        <span class="font-weight-600">Outside Pixels</span>
+        <div class="outside-pixels-grid">
+            <label><input type="radio" name="outsidePixels" id="outsidePixelsAuto" value="auto" checked> Auto</label>
+            <label><input type="radio" name="outsidePixels" id="outsidePixelsExtend" value="extend"> Extend</label>
+            <label><input type="radio" name="outsidePixels" id="outsidePixelsColor" value="color"> Color</label>
+            <div class="outside-pixels-color-picker hidden">
+                <label for="outsidePixelsColorPicker" class="sr-only">Outside Pixels Color</label>
+                <input type="color" id="outsidePixelsColorPicker" value="#000000" class="color-picker">
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Utility functions
+        const utils = {
+            removeHiddenClass: (element, displayType = 'block') => {
+                if (element) {
+                    element.classList.remove('hidden');
+                    element.style.display = displayType;
+                }
+            },
+            addHiddenClass: (element) => {
+                if (element) {
+                    element.classList.add('hidden');
+                }
+            }
+        };
+
+        // Function to update outside pixels color picker visibility
+        function updateOutsidePixelsColorPickerVisibility() {
+            const colorRadio = document.getElementById('outsidePixelsColor');
+            const colorPickerDiv = document.querySelector('.outside-pixels-color-picker');
+            if (colorRadio && colorPickerDiv) {
+                if (colorRadio.checked) {
+                    utils.removeHiddenClass(colorPickerDiv, 'flex');
+                } else {
+                    utils.addHiddenClass(colorPickerDiv);
+                }
+            }
+        }
+
+        // Add event listeners to outside pixels radio buttons to toggle color picker visibility
+        ['outsidePixelsAuto', 'outsidePixelsExtend', 'outsidePixelsColor'].forEach(function(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('change', updateOutsidePixelsColorPickerVisibility);
+            }
+        });
+
+        // Initialize color picker visibility on page load
+        updateOutsidePixelsColorPickerVisibility();
+        
+        console.log('Test page loaded. Color picker should be hidden initially.');
+        console.log('Try selecting different radio buttons to test visibility toggling.');
+    </script>
+</body>
+</html>
