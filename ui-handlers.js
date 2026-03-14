@@ -280,29 +280,6 @@
     utils.updateSliderValue(blockSizeSlider, blockSizeValue);
   }
 
-  // Calculate average pixel value of an image
-  function calculateAveragePixelValue(image) {
-    const canvas = document.createElement("canvas");
-    canvas.width = image.width;
-    canvas.height = image.height;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(image, 0, 0);
-
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-    let totalValue = 0;
-    let pixelCount = 0;
-
-    for (let i = 0; i < data.length; i += 4) {
-      // Calculate grayscale value (luminance)
-      const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
-      totalValue += gray;
-      pixelCount++;
-    }
-
-    return totalValue / pixelCount;
-  }
-
   // Auto-compute block size when Pixel Perfect is active
   function autoComputeBlockSize() {
     if (!window.uploadedImage || !blockSizeSlider || !blockSizeValue) return;
@@ -314,7 +291,7 @@
 
   // Auto-adjust threshold based on image
   function autoAdjustThreshold(image) {
-    const averagePixelValue = calculateAveragePixelValue(image);
+    const averagePixelValue = window.calculateAveragePixelValue(image);
     const newThreshold = Math.round(averagePixelValue);
     thresholdSlider.value = newThreshold;
     thresholdValue.textContent = newThreshold;
@@ -424,112 +401,13 @@
     }
   });
 
-  // Generate test image function
+  // Generate test image (uses image-manipulation for generation, handles UI)
   function generateTestImage() {
-    // Random aspect ratio between 0.5 and 2.0
-    const aspect = 0.5 + Math.random() * 1.5; // 0.5 to 2.0
-    let width, height;
-    if (aspect >= 1) {
-      width = 256 * aspect;
-      height = 256;
-    } else {
-      width = 256;
-      height = 256 / aspect;
-    }
-    width = Math.round(width);
-    height = Math.round(height);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext("2d");
-    // Create random gradient background
-    const imageData = ctx.createImageData(width, height);
-    const data = imageData.data;
-    // Generate random gradient parameters for background
-    const bgGradient = {
-      x1: Math.random() * width,
-      y1: Math.random() * height,
-      x2: Math.random() * width,
-      y2: Math.random() * height,
-      r1: Math.random() * 255,
-      g1: Math.random() * 255,
-      b1: Math.random() * 255,
-      r2: Math.random() * 255,
-      g2: Math.random() * 255,
-      b2: Math.random() * 255,
-    };
-    // Create background gradient
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const index = (y * width + x) * 4;
-        // Calculate distance from gradient line
-        const dist =
-          Math.abs(
-            (bgGradient.y2 - bgGradient.y1) * x -
-              (bgGradient.x2 - bgGradient.x1) * y +
-              bgGradient.x2 * bgGradient.y1 -
-              bgGradient.y2 * bgGradient.x1,
-          ) /
-          Math.sqrt(
-            (bgGradient.y2 - bgGradient.y1) ** 2 +
-              (bgGradient.x2 - bgGradient.x1) ** 2,
-          );
-        // Create gradient pattern
-        const blend = Math.sin(dist * 0.05) * 0.5 + 0.5;
-        // Interpolate background colors
-        const r = Math.floor(
-          bgGradient.r1 * (1 - blend) + bgGradient.r2 * blend,
-        );
-        const g = Math.floor(
-          bgGradient.g1 * (1 - blend) + bgGradient.g2 * blend,
-        );
-        const b = Math.floor(
-          bgGradient.b1 * (1 - blend) + bgGradient.b2 * blend,
-        );
-        data[index] = r; // Red
-        data[index + 1] = g; // Green
-        data[index + 2] = b; // Blue
-        data[index + 3] = 255; // Alpha
-      }
-    }
-    // Generate 5 random triangles
-    const triangles = [];
-    for (let i = 0; i < 5; i++) {
-      triangles.push({
-        x1: Math.random() * width,
-        y1: Math.random() * height,
-        x2: Math.random() * width,
-        y2: Math.random() * height,
-        x3: Math.random() * width,
-        y3: Math.random() * height,
-        r: Math.random() * 255,
-        g: Math.random() * 255,
-        b: Math.random() * 255,
-      });
-    }
-    // Draw triangles
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const index = (y * width + x) * 4;
-        // Check if point is inside any triangle
-        for (const triangle of triangles) {
-          if (isPointInTriangle(x, y, triangle)) {
-            data[index] = triangle.r; // Red
-            data[index + 1] = triangle.g; // Green
-            data[index + 2] = triangle.b; // Blue
-            data[index + 3] = 255; // Alpha
-            break; // Only use the first triangle that contains this point
-          }
-        }
-      }
-    }
-    ctx.putImageData(imageData, 0, 0);
-    // Convert to image
+    const dataUrl = window.generateRandomTestImageDataUrl();
     const testImage = new Image();
     testImage.onload = function () {
       window.uploadedImage = testImage;
-      previewImage.src = canvas.toDataURL();
+      previewImage.src = dataUrl;
       utils.removeHiddenClass(previewImage);
       document.querySelector(".file-input-text").style.display = "none";
       utils.removeHiddenClass(mainImageControls);
@@ -544,21 +422,7 @@
       updateZoomControlVisibility();
       updateResult();
     };
-    testImage.src = canvas.toDataURL();
-  }
-
-  // Helper function to check if a point is inside a triangle
-  function isPointInTriangle(px, py, triangle) {
-    const { x1, y1, x2, y2, x3, y3 } = triangle;
-
-    // Calculate barycentric coordinates
-    const denominator = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
-    const a = ((y2 - y3) * (px - x3) + (x3 - x2) * (py - y3)) / denominator;
-    const b = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3)) / denominator;
-    const c = 1 - a - b;
-
-    // Point is inside if all barycentric coordinates are between 0 and 1
-    return a >= 0 && a <= 1 && b >= 0 && b <= 1 && c >= 0 && c <= 1;
+    testImage.src = dataUrl;
   }
 
   // Handle test image button
@@ -609,28 +473,9 @@
     }
   });
 
-  // Function to calculate luminance from hex color
-  function calculateLuminance(hexColor) {
-    // Convert hex to RGB
-    const hex = hexColor.replace("#", "");
-    const r = parseInt(hex.substr(0, 2), 16) / 255;
-    const g = parseInt(hex.substr(2, 2), 16) / 255;
-    const b = parseInt(hex.substr(4, 2), 16) / 255;
-
-    // Apply gamma correction
-    const toLinear = (c) =>
-      c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-    const rLinear = toLinear(r);
-    const gLinear = toLinear(g);
-    const bLinear = toLinear(b);
-
-    // Calculate relative luminance (0-1)
-    return 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
-  }
-
   // Function to validate color and apply red border if out of range
   function validateColorRange(colorInput, isDark) {
-    const luminance = calculateLuminance(colorInput.value);
+    const luminance = window.calculateLuminance(colorInput.value);
     const isValidRange = isDark ? luminance <= 0.3 : luminance >= 0.7;
 
     if (isValidRange) {

@@ -628,6 +628,32 @@ function scaleImageToDimensions(
 }
 
 /**
+ * Calculates the average pixel value (luminance) of an image.
+ * @param {HTMLImageElement} image - The source image
+ * @returns {number} Average luminance (0-255)
+ */
+function calculateAveragePixelValue(image) {
+  const canvas = document.createElement("canvas");
+  canvas.width = image.width;
+  canvas.height = image.height;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(image, 0, 0);
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  let totalValue = 0;
+  let pixelCount = 0;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+    totalValue += gray;
+    pixelCount++;
+  }
+
+  return totalValue / pixelCount;
+}
+
+/**
  * Computes the block size from an image: the greatest B such that every horizontal
  * run of B consecutive pixels has identical color. Scans left-to-right per row.
  * @param {HTMLImageElement} image - The source image
@@ -961,6 +987,26 @@ function floydSteinbergDither(imageData) {
     result.data[i + 3] = 255;
   }
   return result;
+}
+
+/**
+ * Calculates relative luminance from a hex color (WCAG formula).
+ * @param {string} hexColor - Hex color (e.g. "#000000")
+ * @returns {number} Luminance (0-1)
+ */
+function calculateLuminance(hexColor) {
+  const hex = hexColor.replace("#", "");
+  const r = parseInt(hex.substr(0, 2), 16) / 255;
+  const g = parseInt(hex.substr(2, 2), 16) / 255;
+  const b = parseInt(hex.substr(4, 2), 16) / 255;
+
+  const toLinear = (c) =>
+    c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  const rLinear = toLinear(r);
+  const gLinear = toLinear(g);
+  const bLinear = toLinear(b);
+
+  return 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
 }
 
 /**
@@ -1394,6 +1440,124 @@ function addNoiseToImage(imageData, noiseProbability, seed) {
     }
   }
   return result;
+}
+
+/**
+ * Checks if a point is inside a triangle (barycentric test).
+ * @param {number} px - Point X
+ * @param {number} py - Point Y
+ * @param {Object} triangle - {x1,y1,x2,y2,x3,y3}
+ * @returns {boolean}
+ */
+function isPointInTriangle(px, py, triangle) {
+  const { x1, y1, x2, y2, x3, y3 } = triangle;
+  const denominator = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
+  const a = ((y2 - y3) * (px - x3) + (x3 - x2) * (py - y3)) / denominator;
+  const b = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3)) / denominator;
+  const c = 1 - a - b;
+  return a >= 0 && a <= 1 && b >= 0 && b <= 1 && c >= 0 && c <= 1;
+}
+
+/**
+ * Generates a random test image as a data URL (gradient background + random triangles).
+ * Aspect ratio is random between 0.5 and 2.0.
+ * @returns {string} Data URL of the generated image
+ */
+function generateRandomTestImageDataUrl() {
+  const aspect = 0.5 + Math.random() * 1.5;
+  let width, height;
+  if (aspect >= 1) {
+    width = 256 * aspect;
+    height = 256;
+  } else {
+    width = 256;
+    height = 256 / aspect;
+  }
+  width = Math.round(width);
+  height = Math.round(height);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.createImageData(width, height);
+  const data = imageData.data;
+
+  const bgGradient = {
+    x1: Math.random() * width,
+    y1: Math.random() * height,
+    x2: Math.random() * width,
+    y2: Math.random() * height,
+    r1: Math.random() * 255,
+    g1: Math.random() * 255,
+    b1: Math.random() * 255,
+    r2: Math.random() * 255,
+    g2: Math.random() * 255,
+    b2: Math.random() * 255,
+  };
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const index = (y * width + x) * 4;
+      const dist =
+        Math.abs(
+          (bgGradient.y2 - bgGradient.y1) * x -
+            (bgGradient.x2 - bgGradient.x1) * y +
+            bgGradient.x2 * bgGradient.y1 -
+            bgGradient.y2 * bgGradient.x1,
+        ) /
+        Math.sqrt(
+          (bgGradient.y2 - bgGradient.y1) ** 2 +
+            (bgGradient.x2 - bgGradient.x1) ** 2,
+        );
+      const blend = Math.sin(dist * 0.05) * 0.5 + 0.5;
+      const r = Math.floor(
+        bgGradient.r1 * (1 - blend) + bgGradient.r2 * blend,
+      );
+      const g = Math.floor(
+        bgGradient.g1 * (1 - blend) + bgGradient.g2 * blend,
+      );
+      const b = Math.floor(
+        bgGradient.b1 * (1 - blend) + bgGradient.b2 * blend,
+      );
+      data[index] = r;
+      data[index + 1] = g;
+      data[index + 2] = b;
+      data[index + 3] = 255;
+    }
+  }
+
+  const triangles = [];
+  for (let i = 0; i < 5; i++) {
+    triangles.push({
+      x1: Math.random() * width,
+      y1: Math.random() * height,
+      x2: Math.random() * width,
+      y2: Math.random() * height,
+      x3: Math.random() * width,
+      y3: Math.random() * height,
+      r: Math.random() * 255,
+      g: Math.random() * 255,
+      b: Math.random() * 255,
+    });
+  }
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const index = (y * width + x) * 4;
+      for (const triangle of triangles) {
+        if (isPointInTriangle(x, y, triangle)) {
+          data[index] = triangle.r;
+          data[index + 1] = triangle.g;
+          data[index + 2] = triangle.b;
+          data[index + 3] = 255;
+          break;
+        }
+      }
+    }
+  }
+  ctx.putImageData(imageData, 0, 0);
+  return canvas.toDataURL();
 }
 
 /**
@@ -1838,3 +2002,6 @@ async function generateQRCodeOverlay(
 // Export for use in other modules
 window.generateQRCodeOverlay = generateQRCodeOverlay;
 window.computeBlockSizeFromImage = computeBlockSizeFromImage;
+window.calculateAveragePixelValue = calculateAveragePixelValue;
+window.calculateLuminance = calculateLuminance;
+window.generateRandomTestImageDataUrl = generateRandomTestImageDataUrl;
