@@ -4,37 +4,37 @@
  * @returns {ImageData} The scaled image data
  */
 function scale3Image(imageData) {
-    const oldWidth = imageData.width;
-    const oldHeight = imageData.height;
-    
-    const newWidth = oldWidth * 3;
-    const newHeight = oldHeight * 3;
-    const newImageData = new ImageData(newWidth, newHeight);
+  const oldWidth = imageData.width;
+  const oldHeight = imageData.height;
 
-    for (let y = 0; y < oldHeight; y++) {
-        for (let x = 0; x < oldWidth; x++) {
-            const oldIndex = (y * oldWidth + x) * 4;
-            const r = imageData.data[oldIndex];
-            const g = imageData.data[oldIndex + 1];
-            const b = imageData.data[oldIndex + 2];
-            const a = imageData.data[oldIndex + 3];
+  const newWidth = oldWidth * 3;
+  const newHeight = oldHeight * 3;
+  const newImageData = new ImageData(newWidth, newHeight);
 
-            for (let dy = 0; dy < 3; dy++) {
-                for (let dx = 0; dx < 3; dx++) {
-                    const newX = x * 3 + dx;
-                    const newY = y * 3 + dy;
-                    const newIndex = (newY * newWidth + newX) * 4;
+  for (let y = 0; y < oldHeight; y++) {
+    for (let x = 0; x < oldWidth; x++) {
+      const oldIndex = (y * oldWidth + x) * 4;
+      const r = imageData.data[oldIndex];
+      const g = imageData.data[oldIndex + 1];
+      const b = imageData.data[oldIndex + 2];
+      const a = imageData.data[oldIndex + 3];
 
-                    newImageData.data[newIndex] = r;     // Red
-                    newImageData.data[newIndex + 1] = g; // Green
-                    newImageData.data[newIndex + 2] = b; // Blue
-                    newImageData.data[newIndex + 3] = a; // Alpha
-                }
-            }
+      for (let dy = 0; dy < 3; dy++) {
+        for (let dx = 0; dx < 3; dx++) {
+          const newX = x * 3 + dx;
+          const newY = y * 3 + dy;
+          const newIndex = (newY * newWidth + newX) * 4;
+
+          newImageData.data[newIndex] = r; // Red
+          newImageData.data[newIndex + 1] = g; // Green
+          newImageData.data[newIndex + 2] = b; // Blue
+          newImageData.data[newIndex + 3] = a; // Alpha
         }
+      }
     }
+  }
 
-    return newImageData;
+  return newImageData;
 }
 
 /**
@@ -44,37 +44,37 @@ function scale3Image(imageData) {
  * @returns {ImageData} The scaled image data
  */
 function scaleImageByFactor(imageData, scaleFactor) {
-    const oldWidth = imageData.width;
-    const oldHeight = imageData.height;
-    
-    const newWidth = oldWidth * scaleFactor;
-    const newHeight = oldHeight * scaleFactor;
-    const newImageData = new ImageData(newWidth, newHeight);
+  const oldWidth = imageData.width;
+  const oldHeight = imageData.height;
 
-    for (let y = 0; y < oldHeight; y++) {
-        for (let x = 0; x < oldWidth; x++) {
-            const oldIndex = (y * oldWidth + x) * 4;
-            const r = imageData.data[oldIndex];
-            const g = imageData.data[oldIndex + 1];
-            const b = imageData.data[oldIndex + 2];
-            const a = imageData.data[oldIndex + 3];
+  const newWidth = oldWidth * scaleFactor;
+  const newHeight = oldHeight * scaleFactor;
+  const newImageData = new ImageData(newWidth, newHeight);
 
-            for (let dy = 0; dy < scaleFactor; dy++) {
-                for (let dx = 0; dx < scaleFactor; dx++) {
-                    const newX = x * scaleFactor + dx;
-                    const newY = y * scaleFactor + dy;
-                    const newIndex = (newY * newWidth + newX) * 4;
+  for (let y = 0; y < oldHeight; y++) {
+    for (let x = 0; x < oldWidth; x++) {
+      const oldIndex = (y * oldWidth + x) * 4;
+      const r = imageData.data[oldIndex];
+      const g = imageData.data[oldIndex + 1];
+      const b = imageData.data[oldIndex + 2];
+      const a = imageData.data[oldIndex + 3];
 
-                    newImageData.data[newIndex] = r;     // Red
-                    newImageData.data[newIndex + 1] = g; // Green
-                    newImageData.data[newIndex + 2] = b; // Blue
-                    newImageData.data[newIndex + 3] = a; // Alpha
-                }
-            }
+      for (let dy = 0; dy < scaleFactor; dy++) {
+        for (let dx = 0; dx < scaleFactor; dx++) {
+          const newX = x * scaleFactor + dx;
+          const newY = y * scaleFactor + dy;
+          const newIndex = (newY * newWidth + newX) * 4;
+
+          newImageData.data[newIndex] = r; // Red
+          newImageData.data[newIndex + 1] = g; // Green
+          newImageData.data[newIndex + 2] = b; // Blue
+          newImageData.data[newIndex + 3] = a; // Alpha
         }
+      }
     }
+  }
 
-    return newImageData;
+  return newImageData;
 }
 
 /**
@@ -84,40 +84,43 @@ function scaleImageByFactor(imageData, scaleFactor) {
  * @returns {ImageData} The image with margin
  */
 function addMargin(marginSize, imageData) {
-    const width = imageData.width;
-    const height = imageData.height;
-    
-    const newWidth = width + 2 * marginSize;
-    const newHeight = height + 2 * marginSize;
+  const width = imageData.width;
+  const height = imageData.height;
 
-    const result = new ImageData(newWidth, newHeight);
+  const newWidth = width + 2 * marginSize;
+  const newHeight = height + 2 * marginSize;
 
-    for (let y = 0; y < newHeight; y++) {
-        for (let x = 0; x < newWidth; x++) {
-            const isMargin = y < marginSize || y >= marginSize + height
-                          || x < marginSize || x >= marginSize + width;
+  const result = new ImageData(newWidth, newHeight);
 
-            const indexBaseNew = (y * newWidth + x) * 4;
-            const indexBaseOld = ((y - marginSize) * width + (x - marginSize)) * 4;
+  for (let y = 0; y < newHeight; y++) {
+    for (let x = 0; x < newWidth; x++) {
+      const isMargin =
+        y < marginSize ||
+        y >= marginSize + height ||
+        x < marginSize ||
+        x >= marginSize + width;
 
-            for (let ch = 0; ch < 4; ++ch) {
-                const indexNew = indexBaseNew + ch;
-                const indexOld = indexBaseOld + ch;
+      const indexBaseNew = (y * newWidth + x) * 4;
+      const indexBaseOld = ((y - marginSize) * width + (x - marginSize)) * 4;
 
-                let newValue = 0;
-                
-                if (isMargin) {
-                    newValue = 255.0;
-                } else {
-                    newValue = imageData.data[indexOld];
-                }
-                
-                result.data[indexNew] = newValue;
-            }
+      for (let ch = 0; ch < 4; ++ch) {
+        const indexNew = indexBaseNew + ch;
+        const indexOld = indexBaseOld + ch;
+
+        let newValue = 0;
+
+        if (isMargin) {
+          newValue = 255.0;
+        } else {
+          newValue = imageData.data[indexOld];
         }
-    }
 
-    return result;
+        result.data[indexNew] = newValue;
+      }
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -129,64 +132,75 @@ function addMargin(marginSize, imageData) {
  * @returns {ImageData} The mask image data
  */
 function generateMask(imageData, marginSize, rectSize, add4thSquare = true) {
-    const width = imageData.width;
-    const height = imageData.height;
-    
-    const mask = new ImageData(width, height);
+  const width = imageData.width;
+  const height = imageData.height;
 
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            let shouldBeMasked = false;
+  const mask = new ImageData(width, height);
 
-            // Mask the margin
-            if (y < marginSize || y >= height - marginSize
-             || x < marginSize || x >= width - marginSize) {
-                shouldBeMasked = true;
-            }
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let shouldBeMasked = false;
 
-            // Mask the control squares
-            const isLeftStripe = (x < marginSize + rectSize);
-            const isRightStripe = (x >= width - marginSize - rectSize);
-            const isUpperStripe = (y < marginSize + rectSize);
-            const isLowerStripe = (y >= height - marginSize - rectSize);
+      // Mask the margin
+      if (
+        y < marginSize ||
+        y >= height - marginSize ||
+        x < marginSize ||
+        x >= width - marginSize
+      ) {
+        shouldBeMasked = true;
+      }
 
-            if ((isLeftStripe && (isUpperStripe || isLowerStripe)) ||
-                (isRightStripe && isUpperStripe)) {
-                shouldBeMasked = true;
-            }
+      // Mask the control squares
+      const isLeftStripe = x < marginSize + rectSize;
+      const isRightStripe = x >= width - marginSize - rectSize;
+      const isUpperStripe = y < marginSize + rectSize;
+      const isLowerStripe = y >= height - marginSize - rectSize;
 
-            // Add 4th square in bottom-right corner if enabled
-            if (add4thSquare) {
-                const squareSize = 5;
-                const distanceFromBorder = 5;
-                const squareLeft = width - distanceFromBorder - squareSize;
-                const squareRight = width - distanceFromBorder;
-                const squareTop = height - distanceFromBorder - squareSize;
-                const squareBottom = height - distanceFromBorder;
-                
-                if (x >= squareLeft && x < squareRight && y >= squareTop && y < squareBottom) {
-                    shouldBeMasked = true;
-                }
-            }
+      if (
+        (isLeftStripe && (isUpperStripe || isLowerStripe)) ||
+        (isRightStripe && isUpperStripe)
+      ) {
+        shouldBeMasked = true;
+      }
 
-            const indexBase = (y * width + x) * 4;
+      // Add 4th square in bottom-right corner if enabled
+      if (add4thSquare) {
+        const squareSize = 5;
+        const distanceFromBorder = 5;
+        const squareLeft = width - distanceFromBorder - squareSize;
+        const squareRight = width - distanceFromBorder;
+        const squareTop = height - distanceFromBorder - squareSize;
+        const squareBottom = height - distanceFromBorder;
 
-            for (let ch = 0; ch < 4; ++ch) {
-                const index = indexBase + ch;
-                let newValue = 0;
-
-                if (shouldBeMasked) {
-                    newValue = 255;   
-                } else {
-                    newValue = 0;
-                }
-
-                mask.data[index] = newValue;
-            }
+        if (
+          x >= squareLeft &&
+          x < squareRight &&
+          y >= squareTop &&
+          y < squareBottom
+        ) {
+          shouldBeMasked = true;
         }
-    }
+      }
 
-    return mask;
+      const indexBase = (y * width + x) * 4;
+
+      for (let ch = 0; ch < 4; ++ch) {
+        const index = indexBase + ch;
+        let newValue = 0;
+
+        if (shouldBeMasked) {
+          newValue = 255;
+        } else {
+          newValue = 0;
+        }
+
+        mask.data[index] = newValue;
+      }
+    }
+  }
+
+  return mask;
 }
 
 /**
@@ -201,33 +215,39 @@ function generateMask(imageData, marginSize, rectSize, add4thSquare = true) {
  * @returns {ImageData} The masked image
  */
 function setWhereMasked(image, mask, r, g, b, a, invertMask) {
-    if (image.width != mask.width || image.height != mask.height) {
-        console.error("Size mismatch");
-        return image;   
+  if (image.width != mask.width || image.height != mask.height) {
+    console.error("Size mismatch");
+    return image;
+  }
+
+  const width = image.width;
+  const height = image.height;
+
+  const result = new ImageData(width, height);
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const indexBase = (y * width + x) * 4;
+
+      let shouldBeMasked = mask.data[indexBase] > 0;
+      if (invertMask) {
+        shouldBeMasked = !shouldBeMasked;
+      }
+
+      result.data[indexBase] = shouldBeMasked ? r : image.data[indexBase];
+      result.data[indexBase + 1] = shouldBeMasked
+        ? g
+        : image.data[indexBase + 1];
+      result.data[indexBase + 2] = shouldBeMasked
+        ? b
+        : image.data[indexBase + 2];
+      result.data[indexBase + 3] = shouldBeMasked
+        ? a
+        : image.data[indexBase + 3];
     }
+  }
 
-    const width = image.width;
-    const height = image.height;
-    
-    const result = new ImageData(width, height);
-
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            const indexBase = (y * width + x) * 4;
-
-            let shouldBeMasked = mask.data[indexBase] > 0;
-            if (invertMask) {
-                shouldBeMasked = !shouldBeMasked;
-            }
-
-            result.data[indexBase] = shouldBeMasked ? r : image.data[indexBase]; 
-            result.data[indexBase + 1] = shouldBeMasked ? g : image.data[indexBase + 1];
-            result.data[indexBase + 2] = shouldBeMasked ? b : image.data[indexBase + 2];
-            result.data[indexBase + 3] = shouldBeMasked ? a : image.data[indexBase + 3];
-        }
-    }
-
-    return result;
+  return result;
 }
 
 /**
@@ -236,30 +256,30 @@ function setWhereMasked(image, mask, r, g, b, a, invertMask) {
  * @returns {ImageData} The thinned image
  */
 function onlyKeepCenterPixelOf9x9Block(image) {
-    if (image.width % 3 != 0 || image.height % 3 != 0) {
-        console.error("Size mismatch - dimensions must be divisible by 3");
-        return image;   
+  if (image.width % 3 != 0 || image.height % 3 != 0) {
+    console.error("Size mismatch - dimensions must be divisible by 3");
+    return image;
+  }
+
+  const width = image.width;
+  const height = image.height;
+
+  const result = new ImageData(width, height);
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const indexBase = (y * width + x) * 4;
+
+      let shouldBeKept = x % 3 == 1 && y % 3 == 1;
+
+      result.data[indexBase] = shouldBeKept ? image.data[indexBase] : 0;
+      result.data[indexBase + 1] = shouldBeKept ? image.data[indexBase + 1] : 0;
+      result.data[indexBase + 2] = shouldBeKept ? image.data[indexBase + 2] : 0;
+      result.data[indexBase + 3] = shouldBeKept ? image.data[indexBase + 3] : 0;
     }
+  }
 
-    const width = image.width;
-    const height = image.height;
-    
-    const result = new ImageData(width, height);
-
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            const indexBase = (y * width + x) * 4;
-
-            let shouldBeKept = x % 3 == 1 && y % 3 == 1;
-            
-            result.data[indexBase] = shouldBeKept ? image.data[indexBase] : 0; 
-            result.data[indexBase + 1] = shouldBeKept ? image.data[indexBase + 1] : 0;
-            result.data[indexBase + 2] = shouldBeKept ? image.data[indexBase + 2] : 0;
-            result.data[indexBase + 3] = shouldBeKept ? image.data[indexBase + 3] : 0;
-        }
-    }
-
-    return result;
+  return result;
 }
 
 /**
@@ -272,81 +292,100 @@ function onlyKeepCenterPixelOf9x9Block(image) {
  *   are transparent (for padding that should match transparent borders). Default false.
  * @returns {number[]} RGBA background color array
  */
-function detectPaddingColor(sourceImage, useTransparencyOverride = true, allowTransparentPadding = false) {
-    function colorsAlmostEqual(a, b, tolerance = 10) {
-        return Math.abs(a[0] - b[0]) <= tolerance && Math.abs(a[1] - b[1]) <= tolerance && Math.abs(a[2] - b[2]) <= tolerance && Math.abs(a[3] - b[3]) <= tolerance;
+function detectPaddingColor(
+  sourceImage,
+  useTransparencyOverride = true,
+  allowTransparentPadding = false,
+) {
+  function colorsAlmostEqual(a, b, tolerance = 10) {
+    return (
+      Math.abs(a[0] - b[0]) <= tolerance &&
+      Math.abs(a[1] - b[1]) <= tolerance &&
+      Math.abs(a[2] - b[2]) <= tolerance &&
+      Math.abs(a[3] - b[3]) <= tolerance
+    );
+  }
+  function averageColors(colors) {
+    const avg = [0, 0, 0, 0];
+    for (const c of colors) {
+      for (let i = 0; i < 4; ++i) avg[i] += c[i];
     }
-    function averageColors(colors) {
-        const avg = [0, 0, 0, 0];
-        for (const c of colors) {
-            for (let i = 0; i < 4; ++i) avg[i] += c[i];
-        }
-        for (let i = 0; i < 4; ++i) avg[i] = Math.round(avg[i] / colors.length);
-        return avg;
-    }
+    for (let i = 0; i < 4; ++i) avg[i] = Math.round(avg[i] / colors.length);
+    return avg;
+  }
 
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = sourceImage.width;
-    tempCanvas.height = sourceImage.height;
-    const tempCtx = tempCanvas.getContext('2d');
-    tempCtx.drawImage(sourceImage, 0, 0);
-    const tempData = tempCtx.getImageData(0, 0, sourceImage.width, sourceImage.height).data;
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width = sourceImage.width;
+  tempCanvas.height = sourceImage.height;
+  const tempCtx = tempCanvas.getContext("2d");
+  tempCtx.drawImage(sourceImage, 0, 0);
+  const tempData = tempCtx.getImageData(
+    0,
+    0,
+    sourceImage.width,
+    sourceImage.height,
+  ).data;
 
-    function getPixel(x, y) {
-        const i = (y * sourceImage.width + x) * 4;
-        return [tempData[i], tempData[i+1], tempData[i+2], tempData[i+3]];
-    }
+  function getPixel(x, y) {
+    const i = (y * sourceImage.width + x) * 4;
+    return [tempData[i], tempData[i + 1], tempData[i + 2], tempData[i + 3]];
+  }
 
-    const corners = [
-        getPixel(0, 0),
-        getPixel(sourceImage.width - 1, 0),
-        getPixel(0, sourceImage.height - 1),
-        getPixel(sourceImage.width - 1, sourceImage.height - 1)
-    ];
+  const corners = [
+    getPixel(0, 0),
+    getPixel(sourceImage.width - 1, 0),
+    getPixel(0, sourceImage.height - 1),
+    getPixel(sourceImage.width - 1, sourceImage.height - 1),
+  ];
 
-    let bgColor = [255, 255, 255, 255];
-    let found = false;
-    for (let i = 0; i < 4; ++i) {
-        let count = 1;
-        for (let j = 0; j < 4; ++j) {
-            if (i !== j && colorsAlmostEqual(corners[i], corners[j])) count++;
-        }
-        if (count >= 2) {
-            bgColor = corners[i];
-            found = true;
-            break;
-        }
+  let bgColor = [255, 255, 255, 255];
+  let found = false;
+  for (let i = 0; i < 4; ++i) {
+    let count = 1;
+    for (let j = 0; j < 4; ++j) {
+      if (i !== j && colorsAlmostEqual(corners[i], corners[j])) count++;
     }
-    if (!found) {
-        const avg = averageColors(corners);
-        const brightness = 0.299 * avg[0] + 0.587 * avg[1] + 0.114 * avg[2];
-        bgColor = brightness < 128 ? [0, 0, 0, 255] : [255, 255, 255, 255];
+    if (count >= 2) {
+      bgColor = corners[i];
+      found = true;
+      break;
     }
+  }
+  if (!found) {
+    const avg = averageColors(corners);
+    const brightness = 0.299 * avg[0] + 0.587 * avg[1] + 0.114 * avg[2];
+    bgColor = brightness < 128 ? [0, 0, 0, 255] : [255, 255, 255, 255];
+  }
 
-    if (allowTransparentPadding) {
-        const avgCornerAlpha = (corners[0][3] + corners[1][3] + corners[2][3] + corners[3][3]) / 4;
-        if (avgCornerAlpha < 128) {
-            return [0, 0, 0, 0];
-        }
+  if (allowTransparentPadding) {
+    const avgCornerAlpha =
+      (corners[0][3] + corners[1][3] + corners[2][3] + corners[3][3]) / 4;
+    if (avgCornerAlpha < 128) {
+      return [0, 0, 0, 0];
     }
+  }
 
-    if (useTransparencyOverride) {
-        let sum = 0, count = 0;
-        let transparentPixels = 0;
-        for (let i = 0; i < tempData.length; i += 4) {
-            if (tempData[i + 3] < 255) transparentPixels++;
-            if (tempData[i + 3] > 0) {
-                sum += tempData[i] * 0.299 + tempData[i + 1] * 0.587 + tempData[i + 2] * 0.114;
-                count++;
-            }
-        }
-        const transparencyRatio = transparentPixels / (tempData.length / 4);
-        if (transparencyRatio > 0.1 && count > 0) {
-            const avg = sum / count;
-            return avg > 128 ? [0, 0, 0, 255] : [255, 255, 255, 255];
-        }
+  if (useTransparencyOverride) {
+    let sum = 0,
+      count = 0;
+    let transparentPixels = 0;
+    for (let i = 0; i < tempData.length; i += 4) {
+      if (tempData[i + 3] < 255) transparentPixels++;
+      if (tempData[i + 3] > 0) {
+        sum +=
+          tempData[i] * 0.299 +
+          tempData[i + 1] * 0.587 +
+          tempData[i + 2] * 0.114;
+        count++;
+      }
     }
-    return bgColor;
+    const transparencyRatio = transparentPixels / (tempData.length / 4);
+    if (transparencyRatio > 0.1 && count > 0) {
+      const avg = sum / count;
+      return avg > 128 ? [0, 0, 0, 255] : [255, 255, 255, 255];
+    }
+  }
+  return bgColor;
 }
 
 /**
@@ -355,13 +394,13 @@ function detectPaddingColor(sourceImage, useTransparencyOverride = true, allowTr
  * @returns {number[]} [r, g, b, 255]
  */
 function hexToRgba(hexColor) {
-    const hex = hexColor.replace('#', '');
-    return [
-        parseInt(hex.substring(0, 2), 16),
-        parseInt(hex.substring(2, 4), 16),
-        parseInt(hex.substring(4, 6), 16),
-        255
-    ];
+  const hex = hexColor.replace("#", "");
+  return [
+    parseInt(hex.substring(0, 2), 16),
+    parseInt(hex.substring(2, 4), 16),
+    parseInt(hex.substring(4, 6), 16),
+    255,
+  ];
 }
 
 /**
@@ -374,27 +413,28 @@ function hexToRgba(hexColor) {
  * @param {number} imgH - Height of the image content
  */
 function extendPaddingInImageData(imageData, imgX, imgY, imgW, imgH) {
-    const data = imageData.data;
-    const w = imageData.width;
-    const h = imageData.height;
-    // Use integer bounds - fractional coords can cause sampling from padding instead of image edge
-    const leftCol = Math.max(0, Math.floor(imgX));
-    const topRow = Math.max(0, Math.floor(imgY));
-    const rightCol = Math.min(w - 1, Math.ceil(imgX + imgW) - 1);
-    const bottomRow = Math.min(h - 1, Math.ceil(imgY + imgH) - 1);
-    for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-            if (x >= leftCol && x <= rightCol && y >= topRow && y <= bottomRow) continue;
-            const sampleX = Math.max(leftCol, Math.min(rightCol, x));
-            const sampleY = Math.max(topRow, Math.min(bottomRow, y));
-            const srcIdx = (sampleY * w + sampleX) * 4;
-            const dstIdx = (y * w + x) * 4;
-            data[dstIdx] = data[srcIdx];
-            data[dstIdx + 1] = data[srcIdx + 1];
-            data[dstIdx + 2] = data[srcIdx + 2];
-            data[dstIdx + 3] = data[srcIdx + 3];
-        }
+  const data = imageData.data;
+  const w = imageData.width;
+  const h = imageData.height;
+  // Use integer bounds - fractional coords can cause sampling from padding instead of image edge
+  const leftCol = Math.max(0, Math.floor(imgX));
+  const topRow = Math.max(0, Math.floor(imgY));
+  const rightCol = Math.min(w - 1, Math.ceil(imgX + imgW) - 1);
+  const bottomRow = Math.min(h - 1, Math.ceil(imgY + imgH) - 1);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (x >= leftCol && x <= rightCol && y >= topRow && y <= bottomRow)
+        continue;
+      const sampleX = Math.max(leftCol, Math.min(rightCol, x));
+      const sampleY = Math.max(topRow, Math.min(bottomRow, y));
+      const srcIdx = (sampleY * w + sampleX) * 4;
+      const dstIdx = (y * w + x) * 4;
+      data[dstIdx] = data[srcIdx];
+      data[dstIdx + 1] = data[srcIdx + 1];
+      data[dstIdx + 2] = data[srcIdx + 2];
+      data[dstIdx + 3] = data[srcIdx + 3];
     }
+  }
 }
 
 /**
@@ -410,153 +450,191 @@ function extendPaddingInImageData(imageData, imgX, imgY, imgW, imgH) {
  * @param {string} outsidePixelsColor - Hex color when outsidePixels is 'color'
  * @returns {ImageData} The scaled image data with padding
  */
-function scaleImageToDimensions(sourceImage, targetWidth, targetHeight, scalingMode = 'shrink', zoomValue = 0, offsetXValue = 0, offsetYValue = 0, outsidePixels = 'auto', outsidePixelsColor = '#000000') {
-    let bgColor;
-    if (outsidePixels === 'color') {
-        bgColor = hexToRgba(outsidePixelsColor);
-    } else if (outsidePixels === 'extend') {
-        bgColor = [0, 0, 0, 0]; // Transparent - avoids blending with fill that brightens edge pixels
-    } else {
-        bgColor = detectPaddingColor(sourceImage);
-    }
-    const canvas = document.createElement('canvas');
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = false; // Crisp edges for extend mode
+function scaleImageToDimensions(
+  sourceImage,
+  targetWidth,
+  targetHeight,
+  scalingMode = "shrink",
+  zoomValue = 0,
+  offsetXValue = 0,
+  offsetYValue = 0,
+  outsidePixels = "auto",
+  outsidePixelsColor = "#000000",
+) {
+  let bgColor;
+  if (outsidePixels === "color") {
+    bgColor = hexToRgba(outsidePixelsColor);
+  } else if (outsidePixels === "extend") {
+    bgColor = [0, 0, 0, 0]; // Transparent - avoids blending with fill that brightens edge pixels
+  } else {
+    bgColor = detectPaddingColor(sourceImage);
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = false; // Crisp edges for extend mode
 
-    ctx.fillStyle = `rgba(${bgColor[0]},${bgColor[1]},${bgColor[2]},${bgColor[3] / 255})`;
-    ctx.fillRect(0, 0, targetWidth, targetHeight);
-    
-    // Calculate scaling to maintain aspect ratio
-    const sourceAspect = sourceImage.width / sourceImage.height;
-    const targetAspect = targetWidth / targetHeight;
-    
-    let drawWidth, drawHeight, offsetX, offsetY;
-    
-    if (scalingMode === 'stretch') {
-        // Stretch: ignore aspect ratio
-        drawWidth = targetWidth;
-        drawHeight = targetHeight;
-        offsetX = 0;
-        offsetY = 0;
-    } else if (scalingMode === 'grow') {
-        // Grow: scale so the smallest dimension matches target, keep aspect ratio
-        if (sourceAspect > targetAspect) {
-            // Source is wider, so height is limiting
-            drawHeight = targetHeight;
-            drawWidth = targetHeight * sourceAspect;
-            offsetX = (targetWidth - drawWidth) / 2;
-            offsetY = 0;
-        } else {
-            // Source is taller, so width is limiting
-            drawWidth = targetWidth;
-            drawHeight = targetWidth / sourceAspect;
-            offsetX = 0;
-            offsetY = (targetHeight - drawHeight) / 2;
-        }
-    } else if (scalingMode === 'custom') {
-        // Custom: scale based on zoom value
-        // At zoom -1: biggest side = targetWidth * 0.5 (zoomed out)
-        // At zoom 0: biggest side = targetWidth
-        // At zoom 2: biggest side = targetWidth * 2 (zoomed in)
-        const zoomFactor = 1 + zoomValue; // 0.5 at zoom -1, 1 at zoom 0, 3 at zoom 2
-        
-        // Calculate the scaled dimensions while maintaining aspect ratio
-        let scaledWidth, scaledHeight;
-        if (sourceAspect > targetAspect) {
-            // Source is wider - scale to fit width
-            scaledWidth = targetWidth * zoomFactor;
-            scaledHeight = scaledWidth / sourceAspect;
-        } else {
-            // Source is taller - scale to fit height
-            scaledHeight = targetHeight * zoomFactor;
-            scaledWidth = scaledHeight * sourceAspect;
-        }
-        
-        // Calculate positioning
-        drawWidth = scaledWidth;
-        drawHeight = scaledHeight;
-        offsetX = (targetWidth - drawWidth) / 2;
-        offsetY = (targetHeight - drawHeight) / 2;
-        
-        // Apply offset values for custom mode - handle X and Y independently
-        // Calculate the scale factor between source and destination
-        const scaleX = sourceImage.width / drawWidth;
-        const scaleY = sourceImage.height / drawHeight;
-        
-        // Handle X dimension
-        let finalDrawWidth, finalOffsetX, finalSourceCropX, finalSourceCropWidth;
-        if (drawWidth <= targetWidth) {
-            // X dimension fits - apply offset to positioning
-            const maxOffsetX = (targetWidth - drawWidth) / 2;
-            finalDrawWidth = drawWidth;
-            finalOffsetX = offsetX + offsetXValue * maxOffsetX;
-            finalSourceCropX = 0;
-            finalSourceCropWidth = sourceImage.width;
-        } else {
-            // X dimension is too large - apply offset to cropping
-            const overflowX = drawWidth - targetWidth;
-            const sourceCropAmountX = overflowX * scaleX;
-            const sourceCropX = (sourceCropAmountX / 2) * (1 + offsetXValue);
-            finalDrawWidth = targetWidth;
-            finalOffsetX = 0;
-            finalSourceCropX = Math.max(0, Math.min(sourceImage.width - sourceCropAmountX, sourceCropX));
-            finalSourceCropWidth = Math.min(sourceImage.width - finalSourceCropX, sourceImage.width - sourceCropAmountX);
-        }
-        
-        // Handle Y dimension
-        let finalDrawHeight, finalOffsetY, finalSourceCropY, finalSourceCropHeight;
-        if (drawHeight <= targetHeight) {
-            // Y dimension fits - apply offset to positioning
-            const maxOffsetY = (targetHeight - drawHeight) / 2;
-            finalDrawHeight = drawHeight;
-            finalOffsetY = offsetY + offsetYValue * maxOffsetY;
-            finalSourceCropY = 0;
-            finalSourceCropHeight = sourceImage.height;
-        } else {
-            // Y dimension is too large - apply offset to cropping
-            const overflowY = drawHeight - targetHeight;
-            const sourceCropAmountY = overflowY * scaleY;
-            const sourceCropY = (sourceCropAmountY / 2) * (1 + offsetYValue);
-            finalDrawHeight = targetHeight;
-            finalOffsetY = 0;
-            finalSourceCropY = Math.max(0, Math.min(sourceImage.height - sourceCropAmountY, sourceCropY));
-            finalSourceCropHeight = Math.min(sourceImage.height - finalSourceCropY, sourceImage.height - sourceCropAmountY);
-        }
-        
-        // Use drawImage with source and destination parameters
-        ctx.drawImage(sourceImage, finalSourceCropX, finalSourceCropY, finalSourceCropWidth, finalSourceCropHeight, finalOffsetX, finalOffsetY, finalDrawWidth, finalDrawHeight);
-        const result = ctx.getImageData(0, 0, targetWidth, targetHeight);
-        if (outsidePixels === 'extend') {
-            extendPaddingInImageData(result, finalOffsetX, finalOffsetY, finalDrawWidth, finalDrawHeight);
-        }
-        return result;
+  ctx.fillStyle = `rgba(${bgColor[0]},${bgColor[1]},${bgColor[2]},${bgColor[3] / 255})`;
+  ctx.fillRect(0, 0, targetWidth, targetHeight);
+
+  // Calculate scaling to maintain aspect ratio
+  const sourceAspect = sourceImage.width / sourceImage.height;
+  const targetAspect = targetWidth / targetHeight;
+
+  let drawWidth, drawHeight, offsetX, offsetY;
+
+  if (scalingMode === "stretch") {
+    // Stretch: ignore aspect ratio
+    drawWidth = targetWidth;
+    drawHeight = targetHeight;
+    offsetX = 0;
+    offsetY = 0;
+  } else if (scalingMode === "grow") {
+    // Grow: scale so the smallest dimension matches target, keep aspect ratio
+    if (sourceAspect > targetAspect) {
+      // Source is wider, so height is limiting
+      drawHeight = targetHeight;
+      drawWidth = targetHeight * sourceAspect;
+      offsetX = (targetWidth - drawWidth) / 2;
+      offsetY = 0;
     } else {
-        // Shrink: scale so the largest dimension matches target, keep aspect ratio (default)
-        if (sourceAspect > targetAspect) {
-            // Source is wider - scale to fit width
-            drawWidth = targetWidth;
-            drawHeight = targetWidth / sourceAspect;
-            offsetX = 0;
-            offsetY = (targetHeight - drawHeight) / 2;
-        } else {
-            // Source is taller - scale to fit height
-            drawHeight = targetHeight;
-            drawWidth = targetHeight * sourceAspect;
-            offsetX = (targetWidth - drawWidth) / 2;
-            offsetY = 0;
-        }
+      // Source is taller, so width is limiting
+      drawWidth = targetWidth;
+      drawHeight = targetWidth / sourceAspect;
+      offsetX = 0;
+      offsetY = (targetHeight - drawHeight) / 2;
     }
-    
-    // Draw the image centered with aspect ratio maintained
-    ctx.drawImage(sourceImage, offsetX, offsetY, drawWidth, drawHeight);
-    
+  } else if (scalingMode === "custom") {
+    // Custom: scale based on zoom value
+    // At zoom -1: biggest side = targetWidth * 0.5 (zoomed out)
+    // At zoom 0: biggest side = targetWidth
+    // At zoom 2: biggest side = targetWidth * 2 (zoomed in)
+    const zoomFactor = 1 + zoomValue; // 0.5 at zoom -1, 1 at zoom 0, 3 at zoom 2
+
+    // Calculate the scaled dimensions while maintaining aspect ratio
+    let scaledWidth, scaledHeight;
+    if (sourceAspect > targetAspect) {
+      // Source is wider - scale to fit width
+      scaledWidth = targetWidth * zoomFactor;
+      scaledHeight = scaledWidth / sourceAspect;
+    } else {
+      // Source is taller - scale to fit height
+      scaledHeight = targetHeight * zoomFactor;
+      scaledWidth = scaledHeight * sourceAspect;
+    }
+
+    // Calculate positioning
+    drawWidth = scaledWidth;
+    drawHeight = scaledHeight;
+    offsetX = (targetWidth - drawWidth) / 2;
+    offsetY = (targetHeight - drawHeight) / 2;
+
+    // Apply offset values for custom mode - handle X and Y independently
+    // Calculate the scale factor between source and destination
+    const scaleX = sourceImage.width / drawWidth;
+    const scaleY = sourceImage.height / drawHeight;
+
+    // Handle X dimension
+    let finalDrawWidth, finalOffsetX, finalSourceCropX, finalSourceCropWidth;
+    if (drawWidth <= targetWidth) {
+      // X dimension fits - apply offset to positioning
+      const maxOffsetX = (targetWidth - drawWidth) / 2;
+      finalDrawWidth = drawWidth;
+      finalOffsetX = offsetX + offsetXValue * maxOffsetX;
+      finalSourceCropX = 0;
+      finalSourceCropWidth = sourceImage.width;
+    } else {
+      // X dimension is too large - apply offset to cropping
+      const overflowX = drawWidth - targetWidth;
+      const sourceCropAmountX = overflowX * scaleX;
+      const sourceCropX = (sourceCropAmountX / 2) * (1 + offsetXValue);
+      finalDrawWidth = targetWidth;
+      finalOffsetX = 0;
+      finalSourceCropX = Math.max(
+        0,
+        Math.min(sourceImage.width - sourceCropAmountX, sourceCropX),
+      );
+      finalSourceCropWidth = Math.min(
+        sourceImage.width - finalSourceCropX,
+        sourceImage.width - sourceCropAmountX,
+      );
+    }
+
+    // Handle Y dimension
+    let finalDrawHeight, finalOffsetY, finalSourceCropY, finalSourceCropHeight;
+    if (drawHeight <= targetHeight) {
+      // Y dimension fits - apply offset to positioning
+      const maxOffsetY = (targetHeight - drawHeight) / 2;
+      finalDrawHeight = drawHeight;
+      finalOffsetY = offsetY + offsetYValue * maxOffsetY;
+      finalSourceCropY = 0;
+      finalSourceCropHeight = sourceImage.height;
+    } else {
+      // Y dimension is too large - apply offset to cropping
+      const overflowY = drawHeight - targetHeight;
+      const sourceCropAmountY = overflowY * scaleY;
+      const sourceCropY = (sourceCropAmountY / 2) * (1 + offsetYValue);
+      finalDrawHeight = targetHeight;
+      finalOffsetY = 0;
+      finalSourceCropY = Math.max(
+        0,
+        Math.min(sourceImage.height - sourceCropAmountY, sourceCropY),
+      );
+      finalSourceCropHeight = Math.min(
+        sourceImage.height - finalSourceCropY,
+        sourceImage.height - sourceCropAmountY,
+      );
+    }
+
+    // Use drawImage with source and destination parameters
+    ctx.drawImage(
+      sourceImage,
+      finalSourceCropX,
+      finalSourceCropY,
+      finalSourceCropWidth,
+      finalSourceCropHeight,
+      finalOffsetX,
+      finalOffsetY,
+      finalDrawWidth,
+      finalDrawHeight,
+    );
     const result = ctx.getImageData(0, 0, targetWidth, targetHeight);
-    if (outsidePixels === 'extend') {
-        extendPaddingInImageData(result, offsetX, offsetY, drawWidth, drawHeight);
+    if (outsidePixels === "extend") {
+      extendPaddingInImageData(
+        result,
+        finalOffsetX,
+        finalOffsetY,
+        finalDrawWidth,
+        finalDrawHeight,
+      );
     }
     return result;
+  } else {
+    // Shrink: scale so the largest dimension matches target, keep aspect ratio (default)
+    if (sourceAspect > targetAspect) {
+      // Source is wider - scale to fit width
+      drawWidth = targetWidth;
+      drawHeight = targetWidth / sourceAspect;
+      offsetX = 0;
+      offsetY = (targetHeight - drawHeight) / 2;
+    } else {
+      // Source is taller - scale to fit height
+      drawHeight = targetHeight;
+      drawWidth = targetHeight * sourceAspect;
+      offsetX = (targetWidth - drawWidth) / 2;
+      offsetY = 0;
+    }
+  }
+
+  // Draw the image centered with aspect ratio maintained
+  ctx.drawImage(sourceImage, offsetX, offsetY, drawWidth, drawHeight);
+
+  const result = ctx.getImageData(0, 0, targetWidth, targetHeight);
+  if (outsidePixels === "extend") {
+    extendPaddingInImageData(result, offsetX, offsetY, drawWidth, drawHeight);
+  }
+  return result;
 }
 
 /**
@@ -566,38 +644,42 @@ function scaleImageToDimensions(sourceImage, targetWidth, targetHeight, scalingM
  * @returns {number} Block size (1-16)
  */
 function computeBlockSizeFromImage(image) {
-    const canvas = document.createElement('canvas');
-    canvas.width = image.width;
-    canvas.height = image.height;
-    const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(image, 0, 0);
-    const data = ctx.getImageData(0, 0, image.width, image.height);
-    const w = data.width;
-    const h = data.height;
-    const pixels = data.data;
+  const canvas = document.createElement("canvas");
+  canvas.width = image.width;
+  canvas.height = image.height;
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(image, 0, 0);
+  const data = ctx.getImageData(0, 0, image.width, image.height);
+  const w = data.width;
+  const h = data.height;
+  const pixels = data.data;
 
-    function pixelEquals(x1, y1, x2, y2) {
-        const i1 = (y1 * w + x1) * 4;
-        const i2 = (y2 * w + x2) * 4;
-        return pixels[i1] === pixels[i2] && pixels[i1 + 1] === pixels[i2 + 1] &&
-               pixels[i1 + 2] === pixels[i2 + 2] && pixels[i1 + 3] === pixels[i2 + 3];
-    }
+  function pixelEquals(x1, y1, x2, y2) {
+    const i1 = (y1 * w + x1) * 4;
+    const i2 = (y2 * w + x2) * 4;
+    return (
+      pixels[i1] === pixels[i2] &&
+      pixels[i1 + 1] === pixels[i2 + 1] &&
+      pixels[i1 + 2] === pixels[i2 + 2] &&
+      pixels[i1 + 3] === pixels[i2 + 3]
+    );
+  }
 
-    let minRun = Infinity;
-    for (let y = 0; y < h; y++) {
-        let x = 0;
-        while (x < w) {
-            let runLen = 1;
-            while (x + runLen < w && pixelEquals(x, y, x + runLen, y)) {
-                runLen++;
-            }
-            if (runLen < minRun) minRun = runLen;
-            x += runLen;
-        }
+  let minRun = Infinity;
+  for (let y = 0; y < h; y++) {
+    let x = 0;
+    while (x < w) {
+      let runLen = 1;
+      while (x + runLen < w && pixelEquals(x, y, x + runLen, y)) {
+        runLen++;
+      }
+      if (runLen < minRun) minRun = runLen;
+      x += runLen;
     }
-    const blockSize = minRun === Infinity ? 1 : minRun;
-    return Math.max(1, Math.min(blockSize, 16));
+  }
+  const blockSize = minRun === Infinity ? 1 : minRun;
+  return Math.max(1, Math.min(blockSize, 16));
 }
 
 /**
@@ -607,27 +689,27 @@ function computeBlockSizeFromImage(image) {
  * @returns {ImageData} The downsampled image data
  */
 function downsampleByBlockSize(imageData, blockSize) {
-    if (blockSize <= 1) return imageData;
-    const w = imageData.width;
-    const h = imageData.height;
-    const newW = Math.ceil(w / blockSize);
-    const newH = Math.ceil(h / blockSize);
-    const result = new ImageData(newW, newH);
-    const src = imageData.data;
-    const out = result.data;
-    for (let j = 0; j < newH; j++) {
-        for (let i = 0; i < newW; i++) {
-            const sx = Math.min(i * blockSize, w - 1);
-            const sy = Math.min(j * blockSize, h - 1);
-            const srcIdx = (sy * w + sx) * 4;
-            const outIdx = (j * newW + i) * 4;
-            out[outIdx]     = src[srcIdx];
-            out[outIdx + 1] = src[srcIdx + 1];
-            out[outIdx + 2] = src[srcIdx + 2];
-            out[outIdx + 3] = src[srcIdx + 3];
-        }
+  if (blockSize <= 1) return imageData;
+  const w = imageData.width;
+  const h = imageData.height;
+  const newW = Math.ceil(w / blockSize);
+  const newH = Math.ceil(h / blockSize);
+  const result = new ImageData(newW, newH);
+  const src = imageData.data;
+  const out = result.data;
+  for (let j = 0; j < newH; j++) {
+    for (let i = 0; i < newW; i++) {
+      const sx = Math.min(i * blockSize, w - 1);
+      const sy = Math.min(j * blockSize, h - 1);
+      const srcIdx = (sy * w + sx) * 4;
+      const outIdx = (j * newW + i) * 4;
+      out[outIdx] = src[srcIdx];
+      out[outIdx + 1] = src[srcIdx + 1];
+      out[outIdx + 2] = src[srcIdx + 2];
+      out[outIdx + 3] = src[srcIdx + 3];
     }
-    return result;
+  }
+  return result;
 }
 
 /**
@@ -644,74 +726,134 @@ function downsampleByBlockSize(imageData, blockSize) {
  * @param {string} outsidePixelsColor - Hex color when outsidePixels is 'color'
  * @returns {ImageData} The cropped/padded image data
  */
-function cropCenterPixels(sourceImage, targetSize, blockSize = 1, offsetXValue = 0, offsetYValue = 0, outsidePixels = 'extend', outsidePixelsColor = '#000000') {
-    let paddingColor;
-    if (outsidePixels === 'color') {
-        paddingColor = hexToRgba(outsidePixelsColor);
-    } else if (outsidePixels === 'auto') {
-        paddingColor = detectPaddingColor(sourceImage, true, true); // allowTransparentPadding for transparent borders
-    }
+function cropCenterPixels(
+  sourceImage,
+  targetSize,
+  blockSize = 1,
+  offsetXValue = 0,
+  offsetYValue = 0,
+  outsidePixels = "extend",
+  outsidePixelsColor = "#000000",
+) {
+  let paddingColor;
+  if (outsidePixels === "color") {
+    paddingColor = hexToRgba(outsidePixelsColor);
+  } else if (outsidePixels === "auto") {
+    paddingColor = detectPaddingColor(sourceImage, true, true); // allowTransparentPadding for transparent borders
+  }
 
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = sourceImage.width;
-    tempCanvas.height = sourceImage.height;
-    const tempCtx = tempCanvas.getContext('2d');
-    tempCtx.imageSmoothingEnabled = false;
-    tempCtx.drawImage(sourceImage, 0, 0, sourceImage.width, sourceImage.height, 0, 0, sourceImage.width, sourceImage.height);
-    let srcData = tempCtx.getImageData(0, 0, sourceImage.width, sourceImage.height);
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width = sourceImage.width;
+  tempCanvas.height = sourceImage.height;
+  const tempCtx = tempCanvas.getContext("2d");
+  tempCtx.imageSmoothingEnabled = false;
+  tempCtx.drawImage(
+    sourceImage,
+    0,
+    0,
+    sourceImage.width,
+    sourceImage.height,
+    0,
+    0,
+    sourceImage.width,
+    sourceImage.height,
+  );
+  let srcData = tempCtx.getImageData(
+    0,
+    0,
+    sourceImage.width,
+    sourceImage.height,
+  );
 
-    if (blockSize > 1) {
-        srcData = downsampleByBlockSize(srcData, blockSize);
-    }
+  if (blockSize > 1) {
+    srcData = downsampleByBlockSize(srcData, blockSize);
+  }
 
-    const w = srcData.width;
-    const h = srcData.height;
+  const w = srcData.width;
+  const h = srcData.height;
 
-    const srcX = Math.max(0, Math.floor((w - targetSize) / 2));
-    const srcY = Math.max(0, Math.floor((h - targetSize) / 2));
-    const cropW = Math.min(w, targetSize);
-    const cropH = Math.min(h, targetSize);
-    let dstX = Math.max(0, Math.floor((targetSize - w) / 2));
-    let dstY = Math.max(0, Math.floor((targetSize - h) / 2));
+  // Calculate source crop region based on offsets (similar to scaleImageToDimensions custom mode)
+  let srcX, srcY, cropW, cropH, dstX, dstY;
+
+  if (w >= targetSize && h >= targetSize) {
+    // Image is larger than or equal to target - apply offsets to cropping
+    // Similar to scaleImageToDimensions custom mode when image overflows
+    const overflowX = w - targetSize;
+    const overflowY = h - targetSize;
+
+    // Calculate source crop position based on offset
+    const sourceCropX = (overflowX / 2) * (1 + offsetXValue);
+    const sourceCropY = (overflowY / 2) * (1 + offsetYValue);
+
+    srcX = Math.max(0, Math.min(w - targetSize, Math.round(sourceCropX)));
+    srcY = Math.max(0, Math.min(h - targetSize, Math.round(sourceCropY)));
+    cropW = Math.min(w - srcX, targetSize);
+    cropH = Math.min(h - srcY, targetSize);
+
+    // Position at top-left when cropping
+    dstX = 0;
+    dstY = 0;
+  } else {
+    // Image is smaller than target - apply offsets to positioning (original behavior)
+    srcX = Math.max(0, Math.floor((w - targetSize) / 2));
+    srcY = Math.max(0, Math.floor((h - targetSize) / 2));
+    cropW = Math.min(w, targetSize);
+    cropH = Math.min(h, targetSize);
+
+    dstX = Math.max(0, Math.floor((targetSize - w) / 2));
+    dstY = Math.max(0, Math.floor((targetSize - h) / 2));
 
     if (w < targetSize || h < targetSize) {
-        const maxOffsetX = Math.max(0, Math.floor((targetSize - cropW) / 2));
-        const maxOffsetY = Math.max(0, Math.floor((targetSize - cropH) / 2));
-        dstX = Math.max(0, Math.min(targetSize - cropW, Math.round(dstX + offsetXValue * maxOffsetX)));
-        dstY = Math.max(0, Math.min(targetSize - cropH, Math.round(dstY + offsetYValue * maxOffsetY)));
+      const maxOffsetX = Math.max(0, Math.floor((targetSize - cropW) / 2));
+      const maxOffsetY = Math.max(0, Math.floor((targetSize - cropH) / 2));
+      dstX = Math.max(
+        0,
+        Math.min(
+          targetSize - cropW,
+          Math.round(dstX + offsetXValue * maxOffsetX),
+        ),
+      );
+      dstY = Math.max(
+        0,
+        Math.min(
+          targetSize - cropH,
+          Math.round(dstY + offsetYValue * maxOffsetY),
+        ),
+      );
     }
+  }
 
-    const result = new ImageData(targetSize, targetSize);
-    const out = result.data;
+  const result = new ImageData(targetSize, targetSize);
+  const out = result.data;
 
-    for (let y = 0; y < targetSize; y++) {
-        for (let x = 0; x < targetSize; x++) {
-            const relX = x - dstX;
-            const relY = y - dstY;
-            const inBounds = relX >= 0 && relX < cropW && relY >= 0 && relY < cropH;
+  for (let y = 0; y < targetSize; y++) {
+    for (let x = 0; x < targetSize; x++) {
+      const relX = x - dstX;
+      const relY = y - dstY;
+      const inBounds = relX >= 0 && relX < cropW && relY >= 0 && relY < cropH;
 
-            if (inBounds || outsidePixels === 'extend') {
-                const srcCol = Math.max(0, Math.min(relX, cropW - 1));
-                const srcRow = Math.max(0, Math.min(relY, cropH - 1));
-                const sx = srcX + srcCol;
-                const sy = srcY + srcRow;
-                const srcIdx = (sy * w + sx) * 4;
-                const outIdx = (y * targetSize + x) * 4;
-                out[outIdx]     = srcData.data[srcIdx];
-                out[outIdx + 1] = srcData.data[srcIdx + 1];
-                out[outIdx + 2] = srcData.data[srcIdx + 2];
-                out[outIdx + 3] = srcData.data[srcIdx + 3];
-            } else {
-                const outIdx = (y * targetSize + x) * 4;
-                out[outIdx]     = paddingColor[0];
-                out[outIdx + 1] = paddingColor[1];
-                out[outIdx + 2] = paddingColor[2];
-                out[outIdx + 3] = paddingColor[3];
-            }
-        }
+      if (inBounds || outsidePixels === "extend") {
+        const srcCol = Math.max(0, Math.min(relX, cropW - 1));
+        const srcRow = Math.max(0, Math.min(relY, cropH - 1));
+        const sx = srcX + srcCol;
+        const sy = srcY + srcRow;
+        const srcIdx = (sy * w + sx) * 4;
+        const outIdx = (y * targetSize + x) * 4;
+        out[outIdx] = srcData.data[srcIdx];
+        out[outIdx + 1] = srcData.data[srcIdx + 1];
+        out[outIdx + 2] = srcData.data[srcIdx + 2];
+        out[outIdx + 3] = srcData.data[srcIdx + 3];
+      } else {
+        const outIdx = (y * targetSize + x) * 4;
+        out[outIdx] = paddingColor[0];
+        out[outIdx + 1] = paddingColor[1];
+        out[outIdx + 2] = paddingColor[2];
+        out[outIdx + 3] = paddingColor[3];
+      }
     }
+  }
 
-    return result;
+  return result;
 }
 
 /**
@@ -721,24 +863,24 @@ function cropCenterPixels(sourceImage, targetSize, blockSize = 1, offsetXValue =
  * @returns {ImageData} The black and white image data
  */
 function convertToBlackAndWhite(imageData, threshold) {
-    const result = new ImageData(imageData.width, imageData.height);
-    const data = imageData.data;
-    const resultData = result.data;
-    
-    for (let i = 0; i < data.length; i += 4) {
-        // Calculate grayscale value (luminance)
-        const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
-        
-        // Apply threshold
-        const bw = gray > threshold ? 255 : 0;
-        
-        resultData[i] = bw;     // Red
-        resultData[i + 1] = bw; // Green
-        resultData[i + 2] = bw; // Blue
-        resultData[i + 3] = 255; // Alpha
-    }
-    
-    return result;
+  const result = new ImageData(imageData.width, imageData.height);
+  const data = imageData.data;
+  const resultData = result.data;
+
+  for (let i = 0; i < data.length; i += 4) {
+    // Calculate grayscale value (luminance)
+    const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+
+    // Apply threshold
+    const bw = gray > threshold ? 255 : 0;
+
+    resultData[i] = bw; // Red
+    resultData[i + 1] = bw; // Green
+    resultData[i + 2] = bw; // Blue
+    resultData[i + 3] = 255; // Alpha
+  }
+
+  return result;
 }
 
 /**
@@ -747,21 +889,21 @@ function convertToBlackAndWhite(imageData, threshold) {
  * @returns {ImageData} The dithered black and white image data
  */
 function ditherImage(imageData) {
-    const result = new ImageData(imageData.width, imageData.height);
-    const data = imageData.data;
-    const resultData = result.data;
-    for (let i = 0; i < data.length; i += 4) {
-        // Calculate grayscale value (luminance)
-        const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
-        // Probability to be white is gray/255
-        const isWhite = Math.random() < (gray / 255);
-        const bw = isWhite ? 255 : 0;
-        resultData[i] = bw;     // Red
-        resultData[i + 1] = bw; // Green
-        resultData[i + 2] = bw; // Blue
-        resultData[i + 3] = 255; // Alpha
-    }
-    return result;
+  const result = new ImageData(imageData.width, imageData.height);
+  const data = imageData.data;
+  const resultData = result.data;
+  for (let i = 0; i < data.length; i += 4) {
+    // Calculate grayscale value (luminance)
+    const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+    // Probability to be white is gray/255
+    const isWhite = Math.random() < gray / 255;
+    const bw = isWhite ? 255 : 0;
+    resultData[i] = bw; // Red
+    resultData[i + 1] = bw; // Green
+    resultData[i + 2] = bw; // Blue
+    resultData[i + 3] = 255; // Alpha
+  }
+  return result;
 }
 
 /**
@@ -770,60 +912,63 @@ function ditherImage(imageData) {
  * @returns {ImageData} The dithered black and white image data
  */
 function floydSteinbergDither(imageData) {
-    const width = imageData.width;
-    const height = imageData.height;
-    const data = new Float32Array(imageData.data.length);
-    // Copy grayscale values into data
-    for (let i = 0; i < imageData.data.length; i += 4) {
-        const gray = imageData.data[i] * 0.299 + imageData.data[i + 1] * 0.587 + imageData.data[i + 2] * 0.114;
-        data[i] = data[i + 1] = data[i + 2] = gray;
-        data[i + 3] = 255;
+  const width = imageData.width;
+  const height = imageData.height;
+  const data = new Float32Array(imageData.data.length);
+  // Copy grayscale values into data
+  for (let i = 0; i < imageData.data.length; i += 4) {
+    const gray =
+      imageData.data[i] * 0.299 +
+      imageData.data[i + 1] * 0.587 +
+      imageData.data[i + 2] * 0.114;
+    data[i] = data[i + 1] = data[i + 2] = gray;
+    data[i + 3] = 255;
+  }
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * 4;
+      const oldPixel = data[idx];
+      const newPixel = oldPixel < 128 ? 0 : 255;
+      const error = oldPixel - newPixel;
+      data[idx] = data[idx + 1] = data[idx + 2] = newPixel;
+      // Distribute error
+      // Right
+      if (x + 1 < width) {
+        data[idx + 4] += (error * 7) / 16;
+        data[idx + 5] += (error * 7) / 16;
+        data[idx + 6] += (error * 7) / 16;
+      }
+      // Bottom-left
+      if (x > 0 && y + 1 < height) {
+        const bLeft = idx + (width - 1) * 4;
+        data[bLeft] += (error * 3) / 16;
+        data[bLeft + 1] += (error * 3) / 16;
+        data[bLeft + 2] += (error * 3) / 16;
+      }
+      // Bottom
+      if (y + 1 < height) {
+        const b = idx + width * 4;
+        data[b] += (error * 5) / 16;
+        data[b + 1] += (error * 5) / 16;
+        data[b + 2] += (error * 5) / 16;
+      }
+      // Bottom-right
+      if (x + 1 < width && y + 1 < height) {
+        const bRight = idx + (width + 1) * 4;
+        data[bRight] += (error * 1) / 16;
+        data[bRight + 1] += (error * 1) / 16;
+        data[bRight + 2] += (error * 1) / 16;
+      }
     }
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            const idx = (y * width + x) * 4;
-            const oldPixel = data[idx];
-            const newPixel = oldPixel < 128 ? 0 : 255;
-            const error = oldPixel - newPixel;
-            data[idx] = data[idx + 1] = data[idx + 2] = newPixel;
-            // Distribute error
-            // Right
-            if (x + 1 < width) {
-                data[idx + 4] += error * 7 / 16;
-                data[idx + 5] += error * 7 / 16;
-                data[idx + 6] += error * 7 / 16;
-            }
-            // Bottom-left
-            if (x > 0 && y + 1 < height) {
-                const bLeft = idx + (width - 1) * 4;
-                data[bLeft] += error * 3 / 16;
-                data[bLeft + 1] += error * 3 / 16;
-                data[bLeft + 2] += error * 3 / 16;
-            }
-            // Bottom
-            if (y + 1 < height) {
-                const b = idx + width * 4;
-                data[b] += error * 5 / 16;
-                data[b + 1] += error * 5 / 16;
-                data[b + 2] += error * 5 / 16;
-            }
-            // Bottom-right
-            if (x + 1 < width && y + 1 < height) {
-                const bRight = idx + (width + 1) * 4;
-                data[bRight] += error * 1 / 16;
-                data[bRight + 1] += error * 1 / 16;
-                data[bRight + 2] += error * 1 / 16;
-            }
-        }
-    }
-    // Create output ImageData
-    const result = new ImageData(width, height);
-    for (let i = 0; i < data.length; i += 4) {
-        const bw = data[i] < 128 ? 0 : 255;
-        result.data[i] = result.data[i + 1] = result.data[i + 2] = bw;
-        result.data[i + 3] = 255;
-    }
-    return result;
+  }
+  // Create output ImageData
+  const result = new ImageData(width, height);
+  for (let i = 0; i < data.length; i += 4) {
+    const bw = data[i] < 128 ? 0 : 255;
+    result.data[i] = result.data[i + 1] = result.data[i + 2] = bw;
+    result.data[i + 3] = 255;
+  }
+  return result;
 }
 
 /**
@@ -832,11 +977,11 @@ function floydSteinbergDither(imageData) {
  * @returns {Object} Object with r, g, b values (0-255)
  */
 function hexToRgb(hexColor) {
-    const hex = hexColor.replace('#', '');
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
-    return { r, g, b };
+  const hex = hexColor.replace("#", "");
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+  return { r, g, b };
 }
 
 /**
@@ -847,32 +992,40 @@ function hexToRgb(hexColor) {
  * @returns {Object} Object with h, s, l values (h: 0-360, s: 0-100, l: 0-100)
  */
 function rgbToHsl(r, g, b) {
-    r /= 255;
-    g /= 255;
-    b /= 255;
+  r /= 255;
+  g /= 255;
+  b /= 255;
 
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let h, s, l = (max + min) / 2;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h,
+    s,
+    l = (max + min) / 2;
 
-    if (max === min) {
-        h = s = 0; // achromatic
-    } else {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch (max) {
-            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-            case g: h = (b - r) / d + 2; break;
-            case b: h = (r - g) / d + 4; break;
-        }
-        h /= 6;
+  if (max === min) {
+    h = s = 0; // achromatic
+  } else {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
     }
+    h /= 6;
+  }
 
-    return {
-        h: h * 360,
-        s: s * 100,
-        l: l * 100
-    };
+  return {
+    h: h * 360,
+    s: s * 100,
+    l: l * 100,
+  };
 }
 
 /**
@@ -883,36 +1036,36 @@ function rgbToHsl(r, g, b) {
  * @returns {Object} Object with r, g, b values (0-255)
  */
 function hslToRgb(h, s, l) {
-    h /= 360;
-    s /= 100;
-    l /= 100;
+  h /= 360;
+  s /= 100;
+  l /= 100;
 
-    const hue2rgb = (p, q, t) => {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1/6) return p + (q - p) * 6 * t;
-        if (t < 1/2) return q;
-        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-        return p;
-    };
+  const hue2rgb = (p, q, t) => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  };
 
-    let r, g, b;
+  let r, g, b;
 
-    if (s === 0) {
-        r = g = b = l; // achromatic
-    } else {
-        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        const p = 2 * l - q;
-        r = hue2rgb(p, q, h + 1/3);
-        g = hue2rgb(p, q, h);
-        b = hue2rgb(p, q, h - 1/3);
-    }
+  if (s === 0) {
+    r = g = b = l; // achromatic
+  } else {
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1 / 3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1 / 3);
+  }
 
-    return {
-        r: Math.round(r * 255),
-        g: Math.round(g * 255),
-        b: Math.round(b * 255)
-    };
+  return {
+    r: Math.round(r * 255),
+    g: Math.round(g * 255),
+    b: Math.round(b * 255),
+  };
 }
 
 /**
@@ -923,34 +1076,40 @@ function hslToRgb(h, s, l) {
  * @returns {Object} Object with h, s, b values (h: 0-360, s: 0-100, b: 0-100)
  */
 function rgbToHsb(r, g, b) {
-    r /= 255;
-    g /= 255;
-    b /= 255;
+  r /= 255;
+  g /= 255;
+  b /= 255;
 
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let h, s;
-    const v = max;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h, s;
+  const v = max;
 
-    const d = max - min;
-    s = max === 0 ? 0 : d / max;
+  const d = max - min;
+  s = max === 0 ? 0 : d / max;
 
-    if (max === min) {
-        h = 0;
-    } else {
-        switch (max) {
-            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-            case g: h = (b - r) / d + 2; break;
-            case b: h = (r - g) / d + 4; break;
-        }
-        h /= 6;
+  if (max === min) {
+    h = 0;
+  } else {
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
     }
+    h /= 6;
+  }
 
-    return {
-        h: h * 360,
-        s: s * 100,
-        b: v * 100
-    };
+  return {
+    h: h * 360,
+    s: s * 100,
+    b: v * 100,
+  };
 }
 
 /**
@@ -961,31 +1120,55 @@ function rgbToHsb(r, g, b) {
  * @returns {Object} Object with r, g, b values (0-255)
  */
 function hsbToRgb(h, s, bVal) {
-    h /= 360;
-    s /= 100;
-    bVal /= 100;
+  h /= 360;
+  s /= 100;
+  bVal /= 100;
 
-    const i = Math.floor(h * 6);
-    const f = h * 6 - i;
-    const p = bVal * (1 - s);
-    const q = bVal * (1 - f * s);
-    const t = bVal * (1 - (1 - f) * s);
+  const i = Math.floor(h * 6);
+  const f = h * 6 - i;
+  const p = bVal * (1 - s);
+  const q = bVal * (1 - f * s);
+  const t = bVal * (1 - (1 - f) * s);
 
-    let r, g, b;
-    switch (i % 6) {
-        case 0: r = bVal; g = t;    b = p;    break;
-        case 1: r = q;    g = bVal; b = p;    break;
-        case 2: r = p;    g = bVal; b = t;    break;
-        case 3: r = p;    g = q;    b = bVal; break;
-        case 4: r = t;    g = p;    b = bVal; break;
-        case 5: r = bVal; g = p;    b = q;    break;
-    }
+  let r, g, b;
+  switch (i % 6) {
+    case 0:
+      r = bVal;
+      g = t;
+      b = p;
+      break;
+    case 1:
+      r = q;
+      g = bVal;
+      b = p;
+      break;
+    case 2:
+      r = p;
+      g = bVal;
+      b = t;
+      break;
+    case 3:
+      r = p;
+      g = q;
+      b = bVal;
+      break;
+    case 4:
+      r = t;
+      g = p;
+      b = bVal;
+      break;
+    case 5:
+      r = bVal;
+      g = p;
+      b = q;
+      break;
+  }
 
-    return {
-        r: Math.round(r * 255),
-        g: Math.round(g * 255),
-        b: Math.round(b * 255)
-    };
+  return {
+    r: Math.round(r * 255),
+    g: Math.round(g * 255),
+    b: Math.round(b * 255),
+  };
 }
 
 /**
@@ -996,11 +1179,11 @@ function hsbToRgb(h, s, bVal) {
  * @returns {string} Hex color string (e.g., "#ff0000")
  */
 function rgbToHex(r, g, b) {
-    const toHex = (c) => {
-        const hex = Math.round(c).toString(16);
-        return hex.length === 1 ? '0' + hex : hex;
-    };
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  const toHex = (c) => {
+    const hex = Math.round(c).toString(16);
+    return hex.length === 1 ? "0" + hex : hex;
+  };
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
 /**
@@ -1011,29 +1194,29 @@ function rgbToHex(r, g, b) {
  * @returns {ImageData} The colored image data
  */
 function applyCustomColors(imageData, darkColor, brightColor) {
-    const result = new ImageData(imageData.width, imageData.height);
-    const data = imageData.data;
-    const resultData = result.data;
-    
-    const darkRgb = hexToRgb(darkColor);
-    const brightRgb = hexToRgb(brightColor);
-    
-    for (let i = 0; i < data.length; i += 4) {
-        const isBlack = data[i] === 0; // Since it's BW, we only need to check one channel
-        
-        if (isBlack) {
-            resultData[i] = darkRgb.r;     // Red
-            resultData[i + 1] = darkRgb.g; // Green
-            resultData[i + 2] = darkRgb.b; // Blue
-        } else {
-            resultData[i] = brightRgb.r;     // Red
-            resultData[i + 1] = brightRgb.g; // Green
-            resultData[i + 2] = brightRgb.b; // Blue
-        }
-        resultData[i + 3] = 255; // Alpha
+  const result = new ImageData(imageData.width, imageData.height);
+  const data = imageData.data;
+  const resultData = result.data;
+
+  const darkRgb = hexToRgb(darkColor);
+  const brightRgb = hexToRgb(brightColor);
+
+  for (let i = 0; i < data.length; i += 4) {
+    const isBlack = data[i] === 0; // Since it's BW, we only need to check one channel
+
+    if (isBlack) {
+      resultData[i] = darkRgb.r; // Red
+      resultData[i + 1] = darkRgb.g; // Green
+      resultData[i + 2] = darkRgb.b; // Blue
+    } else {
+      resultData[i] = brightRgb.r; // Red
+      resultData[i + 1] = brightRgb.g; // Green
+      resultData[i + 2] = brightRgb.b; // Blue
     }
-    
-    return result;
+    resultData[i + 3] = 255; // Alpha
+  }
+
+  return result;
 }
 
 /**
@@ -1047,77 +1230,94 @@ function applyCustomColors(imageData, darkColor, brightColor) {
  *   When provided, unaltered pixels keep original color; only altered pixels get luminance adjustment.
  * @returns {ImageData} The colored image data using original colors
  */
-function applyOriginalColors(bwImageData, originalImageData, maskImageData, clarity = 0, useHsl = false, unalteredBwImageData = null) {
-    const result = new ImageData(bwImageData.width, bwImageData.height);
-    const bwData = bwImageData.data;
-    const originalData = originalImageData.data;
-    const resultData = result.data;
-    const maskData = maskImageData ? maskImageData.data : null;
-    const unalteredBwData = unalteredBwImageData ? unalteredBwImageData.data : null;
-    const COLOR_BEND_BASE = 35;
-    const COLOR_BEND = COLOR_BEND_BASE * (1 - clarity / 100);
-    for (let i = 0; i < bwData.length; i += 4) {
-        if (maskData && maskData[i + 3] > 0) {
-            const originalR = originalData[i];
-            const originalG = originalData[i + 1];
-            const originalB = originalData[i + 2];
+function applyOriginalColors(
+  bwImageData,
+  originalImageData,
+  maskImageData,
+  clarity = 0,
+  useHsl = false,
+  unalteredBwImageData = null,
+) {
+  const result = new ImageData(bwImageData.width, bwImageData.height);
+  const bwData = bwImageData.data;
+  const originalData = originalImageData.data;
+  const resultData = result.data;
+  const maskData = maskImageData ? maskImageData.data : null;
+  const unalteredBwData = unalteredBwImageData
+    ? unalteredBwImageData.data
+    : null;
+  const COLOR_BEND_BASE = 35;
+  const COLOR_BEND = COLOR_BEND_BASE * (1 - clarity / 100);
+  for (let i = 0; i < bwData.length; i += 4) {
+    if (maskData && maskData[i + 3] > 0) {
+      const originalR = originalData[i];
+      const originalG = originalData[i + 1];
+      const originalB = originalData[i + 2];
 
-            const isUnaltered = unalteredBwData && (bwData[i] === unalteredBwData[i]);
-            if (isUnaltered) {
-                resultData[i] = originalR;
-                resultData[i + 1] = originalG;
-                resultData[i + 2] = originalB;
-                resultData[i + 3] = 255;
-                continue;
-            }
+      const isUnaltered = unalteredBwData && bwData[i] === unalteredBwData[i];
+      if (isUnaltered) {
+        resultData[i] = originalR;
+        resultData[i + 1] = originalG;
+        resultData[i + 2] = originalB;
+        resultData[i + 3] = 255;
+        continue;
+      }
 
-            const isBlack = bwData[i] === 0;
-            const MIN_GAP = 20;
-            let adjustedRgb;
-            if (useHsl) {
-                const originalHsl = rgbToHsl(originalR, originalG, originalB);
-                let darkLightness = Math.min(originalHsl.l, COLOR_BEND);
-                let brightLightness = Math.max(originalHsl.l, 100 - COLOR_BEND);
-                if (brightLightness - darkLightness < MIN_GAP) {
-                    const mid = (darkLightness + brightLightness) / 2;
-                    darkLightness = Math.max(0, mid - MIN_GAP / 2);
-                    brightLightness = Math.min(100, mid + MIN_GAP / 2);
-                }
-                if (isBlack) {
-                    adjustedRgb = hslToRgb(originalHsl.h, originalHsl.s, darkLightness);
-                } else {
-                    adjustedRgb = hslToRgb(originalHsl.h, originalHsl.s, brightLightness);
-                }
-            } else {
-                const originalHsb = rgbToHsb(originalR, originalG, originalB);
-                let adjustedSaturation = originalHsb.s;
-                let darkBrightness = Math.min(originalHsb.b, COLOR_BEND);
-                let brightBrightness = Math.max(originalHsb.b, 100 - COLOR_BEND);
-                if (brightBrightness - darkBrightness < MIN_GAP) {
-                    const mid = (darkBrightness + brightBrightness) / 2;
-                    darkBrightness = Math.max(0, mid - MIN_GAP / 2);
-                    brightBrightness = Math.min(100, mid + MIN_GAP / 2);
-                }
-                if (isBlack) {
-                    adjustedRgb = hsbToRgb(originalHsb.h, adjustedSaturation, darkBrightness);
-                } else {
-                    adjustedSaturation = Math.min(adjustedSaturation, COLOR_BEND);
-                    adjustedRgb = hsbToRgb(originalHsb.h, adjustedSaturation, brightBrightness);
-                }
-            }
-
-            resultData[i] = adjustedRgb.r;
-            resultData[i + 1] = adjustedRgb.g;
-            resultData[i + 2] = adjustedRgb.b;
-            resultData[i + 3] = 255;
-        } else {
-            resultData[i] = bwData[i];
-            resultData[i + 1] = bwData[i + 1];
-            resultData[i + 2] = bwData[i + 2];
-            resultData[i + 3] = 255;
+      const isBlack = bwData[i] === 0;
+      const MIN_GAP = 20;
+      let adjustedRgb;
+      if (useHsl) {
+        const originalHsl = rgbToHsl(originalR, originalG, originalB);
+        let darkLightness = Math.min(originalHsl.l, COLOR_BEND);
+        let brightLightness = Math.max(originalHsl.l, 100 - COLOR_BEND);
+        if (brightLightness - darkLightness < MIN_GAP) {
+          const mid = (darkLightness + brightLightness) / 2;
+          darkLightness = Math.max(0, mid - MIN_GAP / 2);
+          brightLightness = Math.min(100, mid + MIN_GAP / 2);
         }
+        if (isBlack) {
+          adjustedRgb = hslToRgb(originalHsl.h, originalHsl.s, darkLightness);
+        } else {
+          adjustedRgb = hslToRgb(originalHsl.h, originalHsl.s, brightLightness);
+        }
+      } else {
+        const originalHsb = rgbToHsb(originalR, originalG, originalB);
+        let adjustedSaturation = originalHsb.s;
+        let darkBrightness = Math.min(originalHsb.b, COLOR_BEND);
+        let brightBrightness = Math.max(originalHsb.b, 100 - COLOR_BEND);
+        if (brightBrightness - darkBrightness < MIN_GAP) {
+          const mid = (darkBrightness + brightBrightness) / 2;
+          darkBrightness = Math.max(0, mid - MIN_GAP / 2);
+          brightBrightness = Math.min(100, mid + MIN_GAP / 2);
+        }
+        if (isBlack) {
+          adjustedRgb = hsbToRgb(
+            originalHsb.h,
+            adjustedSaturation,
+            darkBrightness,
+          );
+        } else {
+          adjustedSaturation = Math.min(adjustedSaturation, COLOR_BEND);
+          adjustedRgb = hsbToRgb(
+            originalHsb.h,
+            adjustedSaturation,
+            brightBrightness,
+          );
+        }
+      }
+
+      resultData[i] = adjustedRgb.r;
+      resultData[i + 1] = adjustedRgb.g;
+      resultData[i + 2] = adjustedRgb.b;
+      resultData[i + 3] = 255;
+    } else {
+      resultData[i] = bwData[i];
+      resultData[i + 1] = bwData[i + 1];
+      resultData[i + 2] = bwData[i + 2];
+      resultData[i + 3] = 255;
     }
-    return result;
+  }
+  return result;
 }
 
 /**
@@ -1126,12 +1326,12 @@ function applyOriginalColors(bwImageData, originalImageData, maskImageData, clar
  * @returns {Function} A random number generator function
  */
 function mulberry32(seed) {
-    return function() {
-        let t = seed += 0x6D2B79F5;
-        t = Math.imul(t ^ t >>> 15, t | 1);
-        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-        return ((t ^ t >>> 14) >>> 0) / 4294967296;
-    }
+  return function () {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
 /**
@@ -1142,60 +1342,62 @@ function mulberry32(seed) {
  * @returns {ImageData} The image with noise added
  */
 function addNoiseToImage(imageData, noiseProbability, seed) {
-    const result = new ImageData(imageData.width, imageData.height);
-    const data = imageData.data;
-    const resultData = result.data;
-    const width = imageData.width;
-    const height = imageData.height;
-    // Use seeded random generator
-    const rand = mulberry32(seed);
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            const index = (y * width + x) * 4;
-            // Copy the original pixel
-            resultData[index] = data[index];     // Red
-            resultData[index + 1] = data[index + 1]; // Green
-            resultData[index + 2] = data[index + 2]; // Blue
-            resultData[index + 3] = data[index + 3]; // Alpha
-            // Check if all pixels in 3x3 neighborhood have the same color
-            let allSameColor = true;
-            const centerColor = data[index]; // Since it's BW, we only need to check one channel
-            // Check 3x3 neighborhood
-            for (let dy = -1; dy <= 1; dy++) {
-                for (let dx = -1; dx <= 1; dx++) {
-                    const nx = x + dx;
-                    const ny = y + dy;
-                    // Skip if outside image bounds
-                    if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
-                        continue;
-                    }
-                    const neighborIndex = (ny * width + nx) * 4;
-                    if (data[neighborIndex] !== centerColor) {
-                        allSameColor = false;
-                        break;
-                    }
-                }
-                if (!allSameColor) break;
-            }
-            // Adjust probability based on neighborhood uniformity
-            let adjustedProbability = allSameColor ? noiseProbability : noiseProbability * 0.15;
-            
-            // Halve probability if x % 3 == 1 or y % 3 == 1
-            if (x % 3 === 1 || y % 3 === 1) {
-                adjustedProbability *= 0.15;
-            }
-
-            // Apply noise with adjusted probability
-            if (rand() * 100 < adjustedProbability) {
-                // Invert the pixel (black becomes white, white becomes black)
-                resultData[index] = data[index] === 0 ? 255 : 0;     // Red
-                resultData[index + 1] = data[index + 1] === 0 ? 255 : 0; // Green
-                resultData[index + 2] = data[index + 2] === 0 ? 255 : 0; // Blue
-                // Alpha stays the same
-            }
+  const result = new ImageData(imageData.width, imageData.height);
+  const data = imageData.data;
+  const resultData = result.data;
+  const width = imageData.width;
+  const height = imageData.height;
+  // Use seeded random generator
+  const rand = mulberry32(seed);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const index = (y * width + x) * 4;
+      // Copy the original pixel
+      resultData[index] = data[index]; // Red
+      resultData[index + 1] = data[index + 1]; // Green
+      resultData[index + 2] = data[index + 2]; // Blue
+      resultData[index + 3] = data[index + 3]; // Alpha
+      // Check if all pixels in 3x3 neighborhood have the same color
+      let allSameColor = true;
+      const centerColor = data[index]; // Since it's BW, we only need to check one channel
+      // Check 3x3 neighborhood
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx;
+          const ny = y + dy;
+          // Skip if outside image bounds
+          if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
+            continue;
+          }
+          const neighborIndex = (ny * width + nx) * 4;
+          if (data[neighborIndex] !== centerColor) {
+            allSameColor = false;
+            break;
+          }
         }
+        if (!allSameColor) break;
+      }
+      // Adjust probability based on neighborhood uniformity
+      let adjustedProbability = allSameColor
+        ? noiseProbability
+        : noiseProbability * 0.15;
+
+      // Halve probability if x % 3 == 1 or y % 3 == 1
+      if (x % 3 === 1 || y % 3 === 1) {
+        adjustedProbability *= 0.15;
+      }
+
+      // Apply noise with adjusted probability
+      if (rand() * 100 < adjustedProbability) {
+        // Invert the pixel (black becomes white, white becomes black)
+        resultData[index] = data[index] === 0 ? 255 : 0; // Red
+        resultData[index + 1] = data[index + 1] === 0 ? 255 : 0; // Green
+        resultData[index + 2] = data[index + 2] === 0 ? 255 : 0; // Blue
+        // Alpha stays the same
+      }
     }
-    return result;
+  }
+  return result;
 }
 
 /**
@@ -1204,48 +1406,52 @@ function addNoiseToImage(imageData, noiseProbability, seed) {
  * @returns {Promise<ImageData>} The QR code as ImageData
  */
 async function getQRCodeImageData(text) {
-    if (text === "") {
-        text = " ";
-    }
+  if (text === "") {
+    text = " ";
+  }
 
-    return await new Promise((resolve, reject) => {
-        QRCode.toString(text, { errorCorrectionLevel: 'H' }, 
-            async function (error, qrString) {
-                if (error) {
-                    console.error('QR Code Generation Error: ' + error);
-                    reject(error);
-                    return;
-                }
+  return await new Promise((resolve, reject) => {
+    QRCode.toString(
+      text,
+      { errorCorrectionLevel: "H" },
+      async function (error, qrString) {
+        if (error) {
+          console.error("QR Code Generation Error: " + error);
+          reject(error);
+          return;
+        }
 
-                const modules = QRCode.create(text, { errorCorrectionLevel: 'H' }).modules;
-                const size = modules.size;
-                const imageData = new ImageData(size, size);
-                const data = imageData.data;
+        const modules = QRCode.create(text, {
+          errorCorrectionLevel: "H",
+        }).modules;
+        const size = modules.size;
+        const imageData = new ImageData(size, size);
+        const data = imageData.data;
 
-                for (let y = 0; y < size; y++) {
-                    for (let x = 0; x < size; x++) {
-                        const value = modules.get(x, y) ? 1 : 0;
-                        const index = y * size + x;
-                        const pixelIndex = index * 4;
+        for (let y = 0; y < size; y++) {
+          for (let x = 0; x < size; x++) {
+            const value = modules.get(x, y) ? 1 : 0;
+            const index = y * size + x;
+            const pixelIndex = index * 4;
 
-                        if (value === 1) {
-                            data[pixelIndex] = 0;     // Red
-                            data[pixelIndex + 1] = 0; // Green
-                            data[pixelIndex + 2] = 0; // Blue
-                            data[pixelIndex + 3] = 255; // Alpha
-                        } else {
-                            data[pixelIndex] = 255;     // Red
-                            data[pixelIndex + 1] = 255; // Green
-                            data[pixelIndex + 2] = 255; // Blue
-                            data[pixelIndex + 3] = 255; // Alpha
-                        }
-                    }
-                }
-
-                resolve(imageData);
+            if (value === 1) {
+              data[pixelIndex] = 0; // Red
+              data[pixelIndex + 1] = 0; // Green
+              data[pixelIndex + 2] = 0; // Blue
+              data[pixelIndex + 3] = 255; // Alpha
+            } else {
+              data[pixelIndex] = 255; // Red
+              data[pixelIndex + 1] = 255; // Green
+              data[pixelIndex + 2] = 255; // Blue
+              data[pixelIndex + 3] = 255; // Alpha
             }
-        );
-    });
+          }
+        }
+
+        resolve(imageData);
+      },
+    );
+  });
 }
 
 /**
@@ -1273,264 +1479,354 @@ async function getQRCodeImageData(text) {
  * @param {string} outsidePixelsColor - Hex color when outsidePixels is 'color'
  * @returns {Object} Object containing debug data including qrWithoutCtrlx3
  */
-async function generateQRCodeOverlay(uploadedImage, text, threshold = 128, scaleFactor = 3, noiseProbability = 15, darkColor = "#000000", brightColor = "#ffffff", useOriginalColors = false, noiseSeed = 12345, scalingMode = 'shrink', shine = false, bwMode = 'threshold', ditherGamma = 1.0, saturationBoost = 0, zoomValue = 0, offsetXValue = 0, offsetYValue = 0, clarity = 0, add4thSquare = true, blockSize = 1, outsidePixels = 'auto', outsidePixelsColor = '#000000', useHsl = false) {
-    try {
-        // Step 1: Generate QR code without margin using direct pixel access
-        const qr_noMargin = await getQRCodeImageData(text);
+async function generateQRCodeOverlay(
+  uploadedImage,
+  text,
+  threshold = 128,
+  scaleFactor = 3,
+  noiseProbability = 15,
+  darkColor = "#000000",
+  brightColor = "#ffffff",
+  useOriginalColors = false,
+  noiseSeed = 12345,
+  scalingMode = "shrink",
+  shine = false,
+  bwMode = "threshold",
+  ditherGamma = 1.0,
+  saturationBoost = 0,
+  zoomValue = 0,
+  offsetXValue = 0,
+  offsetYValue = 0,
+  clarity = 0,
+  add4thSquare = true,
+  blockSize = 1,
+  outsidePixels = "auto",
+  outsidePixelsColor = "#000000",
+  useHsl = false,
+) {
+  try {
+    // Step 1: Generate QR code without margin using direct pixel access
+    const qr_noMargin = await getQRCodeImageData(text);
 
-        // Only add 4th square if checkbox is checked AND QR code is at least 25 pixels
-        // (Regular Small QR codes don't have a 4th square)
-        const shouldAdd4thSquare = add4thSquare && qr_noMargin.width >= 25;
+    // Only add 4th square if checkbox is checked AND QR code is at least 25 pixels
+    // (Regular Small QR codes don't have a 4th square)
+    const shouldAdd4thSquare = add4thSquare && qr_noMargin.width >= 25;
 
-        // Step 2: Add 1 pixel margin
-        const qr = addMargin(1, qr_noMargin);
+    // Step 2: Add 1 pixel margin
+    const qr = addMargin(1, qr_noMargin);
 
-        // Step 3: Generate mask for control squares and margin
-        const qrCtrlMask = generateMask(qr, 1, 8, shouldAdd4thSquare);
+    // Step 3: Generate mask for control squares and margin
+    const qrCtrlMask = generateMask(qr, 1, 8, shouldAdd4thSquare);
 
-        // Step 4: Create QR with control squares (transparent where not masked)
-        const qrCtrl = setWhereMasked(qr, qrCtrlMask, 0, 0, 0, 0, true);
+    // Step 4: Create QR with control squares (transparent where not masked)
+    const qrCtrl = setWhereMasked(qr, qrCtrlMask, 0, 0, 0, 0, true);
 
-        // Step 5: Scale up control squares by factor of 3
-        const qrCtrlx3 = scale3Image(qrCtrl);
+    // Step 5: Scale up control squares by factor of 3
+    const qrCtrlx3 = scale3Image(qrCtrl);
 
-        // Step 6: Create QR without control squares (transparent where masked)
-        const qrWithoutCtrl = setWhereMasked(qr, qrCtrlMask, 0, 0, 0, 0, false);
+    // Step 6: Create QR without control squares (transparent where masked)
+    const qrWithoutCtrl = setWhereMasked(qr, qrCtrlMask, 0, 0, 0, 0, false);
 
-        // Step 7: Scale up by factor of 3
-        const qrWithoutCtrlx3 = scale3Image(qrWithoutCtrl);
+    // Step 7: Scale up by factor of 3
+    const qrWithoutCtrlx3 = scale3Image(qrWithoutCtrl);
 
-        // Step 6: Thin out by keeping only center pixels
-        const qrWithoutCtrlThinned = onlyKeepCenterPixelOf9x9Block(qrWithoutCtrlx3);
+    // Step 6: Thin out by keeping only center pixels
+    const qrWithoutCtrlThinned = onlyKeepCenterPixelOf9x9Block(qrWithoutCtrlx3);
 
-        // Step 7: Scale uploaded image to match QR dimensions
-        let scaledUploadedImage;
-        if (bwMode === 'pixelperfect') {
-            scaledUploadedImage = cropCenterPixels(uploadedImage, qrWithoutCtrlThinned.width, blockSize, offsetXValue, offsetYValue, outsidePixels, outsidePixelsColor);
-        } else {
-            scaledUploadedImage = scaleImageToDimensions(uploadedImage, qrWithoutCtrlThinned.width, qrWithoutCtrlThinned.height, scalingMode, zoomValue, offsetXValue, offsetYValue, outsidePixels, outsidePixelsColor);
-        }
-
-        // Step 7.5: Optionally apply gamma correction for dither mode
-        let scaledUploadedImage_Gamma = null;
-        let scaledUploadedImageBW;
-        if (bwMode === 'pixelperfect') {
-            scaledUploadedImageBW = convertToBlackAndWhite(scaledUploadedImage, 128);
-        } else if (bwMode === 'dither') {
-            // Apply brightness/contrast adjustment to grayscale before dithering
-            // ditherGamma now ranges from -1 (darken, more contrast), 0 (no change), 1 (brighten, more contrast)
-            scaledUploadedImage_Gamma = new ImageData(scaledUploadedImage.width, scaledUploadedImage.height);
-            for (let i = 0; i < scaledUploadedImage.data.length; i += 4) {
-                // Calculate grayscale value (luminance)
-                const gray = scaledUploadedImage.data[i] * 0.299 + scaledUploadedImage.data[i + 1] * 0.587 + scaledUploadedImage.data[i + 2] * 0.114;
-                // Apply brightness/contrast adjustment
-                // x = ditherGamma, range [-1, 1]
-                let x = ditherGamma;
-                let out = (gray - 128) * (1 + Math.abs(x)) + 128 + x * 128;
-                out = Math.max(0, Math.min(255, Math.round(out)));
-                scaledUploadedImage_Gamma.data[i] = out;
-                scaledUploadedImage_Gamma.data[i + 1] = out;
-                scaledUploadedImage_Gamma.data[i + 2] = out;
-                scaledUploadedImage_Gamma.data[i + 3] = 255;
-            }
-            // Dither the adjusted image
-            scaledUploadedImageBW = floydSteinbergDither(scaledUploadedImage_Gamma);
-        } else {
-            scaledUploadedImageBW = convertToBlackAndWhite(scaledUploadedImage, threshold);
-        }
-
-        // Step 7.5.5: Add noise to black and white image
-        const scaledUploadedImageBW_Noise = addNoiseToImage(scaledUploadedImageBW, noiseProbability, noiseSeed);
-
-        // Step 7.6: Create BW image with control squares (using noisy image as base)
-        const scaledUploadedImageBW_plusCtrl = new ImageData(scaledUploadedImageBW_Noise.width, scaledUploadedImageBW_Noise.height);
-        const bwPlusCtrlData = scaledUploadedImageBW_plusCtrl.data;
-        
-        // Copy the noisy black and white image
-        for (let i = 0; i < scaledUploadedImageBW_Noise.data.length; i++) {
-            bwPlusCtrlData[i] = scaledUploadedImageBW_Noise.data[i];
-        }
-        
-        // Overlay the control squares
-        const qrCtrlx3Data = qrCtrlx3.data;
-        for (let i = 0; i < qrCtrlx3Data.length; i += 4) {
-            if (qrCtrlx3Data[i + 3] > 0) { // If pixel is not transparent
-                bwPlusCtrlData[i] = qrCtrlx3Data[i];     // Red
-                bwPlusCtrlData[i + 1] = qrCtrlx3Data[i + 1]; // Green
-                bwPlusCtrlData[i + 2] = qrCtrlx3Data[i + 2]; // Blue
-                bwPlusCtrlData[i + 3] = qrCtrlx3Data[i + 3]; // Alpha
-            }
-        }
-
-        // Step 7.7: Create BW image with control squares and QR data
-        const scaledUploadedImageBW_plusAllQR = new ImageData(scaledUploadedImageBW_plusCtrl.width, scaledUploadedImageBW_plusCtrl.height);
-        const bwPlusAllQRData = scaledUploadedImageBW_plusAllQR.data;
-        
-        // Copy the BW image with control squares
-        for (let i = 0; i < scaledUploadedImageBW_plusCtrl.data.length; i++) {
-            bwPlusAllQRData[i] = scaledUploadedImageBW_plusCtrl.data[i];
-        }
-        
-        // Overlay the thinned QR code data
-        const qrWithoutCtrlThinnedData = qrWithoutCtrlThinned.data;
-        for (let i = 0; i < qrWithoutCtrlThinnedData.length; i += 4) {
-            if (qrWithoutCtrlThinnedData[i + 3] > 0) { // If pixel is not transparent
-                bwPlusAllQRData[i] = qrWithoutCtrlThinnedData[i];     // Red
-                bwPlusAllQRData[i + 1] = qrWithoutCtrlThinnedData[i + 1]; // Green
-                bwPlusAllQRData[i + 2] = qrWithoutCtrlThinnedData[i + 2]; // Blue
-                bwPlusAllQRData[i + 3] = qrWithoutCtrlThinnedData[i + 3]; // Alpha
-            }
-        }
-
-        // Step 7.8: Apply colors to create colored result
-        let result_colored;
-        if (useOriginalColors) {
-            let unalteredBw = null;
-            if (bwMode === 'pixelperfect') {
-                unalteredBw = new ImageData(
-                    new Uint8ClampedArray(scaledUploadedImageBW.data),
-                    scaledUploadedImageBW.width,
-                    scaledUploadedImageBW.height
-                );
-                const qrThinnedData = qrWithoutCtrlThinned.data;
-                for (let i = 0; i < qrThinnedData.length; i += 4) {
-                    if (qrThinnedData[i + 3] > 0) {
-                        const inv = bwPlusAllQRData[i] === 0 ? 255 : 0;
-                        unalteredBw.data[i] = inv;
-                        unalteredBw.data[i + 1] = inv;
-                        unalteredBw.data[i + 2] = inv;
-                        unalteredBw.data[i + 3] = 255;
-                    }
-                }
-            }
-            result_colored = applyOriginalColors(scaledUploadedImageBW_plusAllQR, scaledUploadedImage, qrWithoutCtrlx3, clarity, useHsl, unalteredBw);
-        } else {
-            result_colored = applyCustomColors(scaledUploadedImageBW_plusAllQR, darkColor, brightColor);
-        }
-        // Apply saturation boost as a post-processing step
-        if (result_colored && saturationBoost > 0 && useOriginalColors) {
-            const data = result_colored.data;
-            for (let i = 0; i < data.length; i += 4) {
-                const hsl = rgbToHsl(data[i], data[i + 1], data[i + 2]);
-                let s = hsl.s;
-                const vibranceAmount = 0.6 * saturationBoost;
-                const saturationAmount = 0.25 * saturationBoost;
-                const vibranceBoost = (1 - (s / 100)) * vibranceAmount * 100;
-                s = Math.min(s + vibranceBoost, 100);
-                s = Math.min(s * (1 + saturationAmount), 100);
-                const rgb = hslToRgb(hsl.h, s, hsl.l);
-                data[i] = rgb.r;
-                data[i + 1] = rgb.g;
-                data[i + 2] = rgb.b;
-            }
-        }
-
-        // Compute result_colored_shine before result_colored_xN
-        let result_colored_shine = null;
-        if (result_colored) {
-            let preShine = result_colored;
-            // If shine is enabled and darkColor is black and brightColor is white, gray the image a bit
-            if (shine && darkColor.toLowerCase() === '#000000' && brightColor.toLowerCase() === '#ffffff') {
-                preShine = new ImageData(result_colored.width, result_colored.height);
-                for (let i = 0; i < result_colored.data.length; i += 4) {
-                    const r = result_colored.data[i];
-                    const g = result_colored.data[i + 1];
-                    const b = result_colored.data[i + 2];
-                    const a = result_colored.data[i + 3];
-                    let hsl = rgbToHsl(r, g, b);
-                    // Lerp lightness toward 0.5 by 0.1
-                    hsl.l = hsl.l + (50 - hsl.l) * 0.1;
-                    const rgb = hslToRgb(hsl.h, hsl.s, hsl.l);
-                    preShine.data[i] = rgb.r;
-                    preShine.data[i + 1] = rgb.g;
-                    preShine.data[i + 2] = rgb.b;
-                    preShine.data[i + 3] = a;
-                }
-            }
-            if (shine) {
-                result_colored_shine = overlayDiagonalGradient(preShine, '#35456c', '#fffea0');
-            } else {
-                result_colored_shine = new ImageData(new Uint8ClampedArray(preShine.data), preShine.width, preShine.height);
-            }
-        }
-        // Step 7.9: Create scaled version of the colored result (from result_colored_shine)
-        const result_colored_xN = result_colored_shine ? scaleImageByFactor(result_colored_shine, scaleFactor) : null;
-
-        // Overlay a diagonal gradient on an ImageData
-        function overlayDiagonalGradient(imageData, colorBL, colorTR) {
-            const width = imageData.width;
-            const height = imageData.height;
-            const result = new ImageData(width, height);
-            // Parse hex colors
-            function hexToRgbArr(hex) {
-                hex = hex.replace('#', '');
-                return [
-                    parseInt(hex.substring(0, 2), 16),
-                    parseInt(hex.substring(2, 4), 16),
-                    parseInt(hex.substring(4, 6), 16)
-                ];
-            }
-            const rgbBL = hexToRgbArr(colorBL);
-            const rgbTR = hexToRgbArr(colorTR);
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    const t = ((x / (width - 1)) + (1 - y / (height - 1))) / 2; // 0 at BL, 1 at TR
-                    const rG = Math.round(rgbBL[0] * (1 - t) + rgbTR[0] * t);
-                    const gG = Math.round(rgbBL[1] * (1 - t) + rgbTR[1] * t);
-                    const bG = Math.round(rgbBL[2] * (1 - t) + rgbTR[2] * t);
-                    const idx = (y * width + x) * 4;
-                    // Photoshop overlay blend mode
-                    function overlayBlend(a, b) {
-                        a /= 255; b /= 255;
-                        return Math.round((a < 0.5 ? 2 * a * b : 1 - 2 * (1 - a) * (1 - b)) * 255);
-                    }
-                    result.data[idx] = overlayBlend(imageData.data[idx], rG);
-                    result.data[idx + 1] = overlayBlend(imageData.data[idx + 1], gG);
-                    result.data[idx + 2] = overlayBlend(imageData.data[idx + 2], bG);
-                    result.data[idx + 3] = imageData.data[idx + 3];
-                }
-            }
-            return result;
-        }
-
-        // Step 8: Create final canvas and overlay
-        const canvas = document.getElementById('resultCanvas');
-        const ctx = canvas.getContext('2d');
-        
-        canvas.width = result_colored_xN.width;
-        canvas.height = result_colored_xN.height;
-
-        // Draw the scaled colored composite image
-        ctx.putImageData(result_colored_xN, 0, 0);
-
-        // Return debug data
-        return {
-            qr_noMargin: qr_noMargin,
-            qr: qr,
-            qrCtrlMask: qrCtrlMask,
-            qrCtrl: qrCtrl,
-            qrCtrlx3: qrCtrlx3,
-            qrWithoutCtrl: qrWithoutCtrl,
-            qrWithoutCtrlx3: qrWithoutCtrlx3,
-            qrWithoutCtrlThinned: qrWithoutCtrlThinned,
-            scaledUploadedImage: scaledUploadedImage,
-            scaledUploadedImageBW: scaledUploadedImageBW,
-            scaledUploadedImageBW_Noise: scaledUploadedImageBW_Noise,
-            scaledUploadedImageBW_plusCtrl: scaledUploadedImageBW_plusCtrl,
-            scaledUploadedImageBW_plusAllQR: scaledUploadedImageBW_plusAllQR,
-            result_colored: result_colored,
-            result_colored_xN: result_colored_xN,
-            result_colored_shine: result_colored_shine,
-            // Add gamma debug image if present
-            ...(scaledUploadedImage_Gamma ? { scaledUploadedImage_Gamma } : {})
-        };
-
-    } catch (error) {
-        console.error('Error in QR code processing pipeline:', error);
-        throw error;
+    // Step 7: Scale uploaded image to match QR dimensions
+    let scaledUploadedImage;
+    if (bwMode === "pixelperfect") {
+      scaledUploadedImage = cropCenterPixels(
+        uploadedImage,
+        qrWithoutCtrlThinned.width,
+        blockSize,
+        offsetXValue,
+        offsetYValue,
+        outsidePixels,
+        outsidePixelsColor,
+      );
+    } else {
+      scaledUploadedImage = scaleImageToDimensions(
+        uploadedImage,
+        qrWithoutCtrlThinned.width,
+        qrWithoutCtrlThinned.height,
+        scalingMode,
+        zoomValue,
+        offsetXValue,
+        offsetYValue,
+        outsidePixels,
+        outsidePixelsColor,
+      );
     }
+
+    // Step 7.5: Optionally apply gamma correction for dither mode
+    let scaledUploadedImage_Gamma = null;
+    let scaledUploadedImageBW;
+    if (bwMode === "pixelperfect") {
+      scaledUploadedImageBW = convertToBlackAndWhite(scaledUploadedImage, 128);
+    } else if (bwMode === "dither") {
+      // Apply brightness/contrast adjustment to grayscale before dithering
+      // ditherGamma now ranges from -1 (darken, more contrast), 0 (no change), 1 (brighten, more contrast)
+      scaledUploadedImage_Gamma = new ImageData(
+        scaledUploadedImage.width,
+        scaledUploadedImage.height,
+      );
+      for (let i = 0; i < scaledUploadedImage.data.length; i += 4) {
+        // Calculate grayscale value (luminance)
+        const gray =
+          scaledUploadedImage.data[i] * 0.299 +
+          scaledUploadedImage.data[i + 1] * 0.587 +
+          scaledUploadedImage.data[i + 2] * 0.114;
+        // Apply brightness/contrast adjustment
+        // x = ditherGamma, range [-1, 1]
+        let x = ditherGamma;
+        let out = (gray - 128) * (1 + Math.abs(x)) + 128 + x * 128;
+        out = Math.max(0, Math.min(255, Math.round(out)));
+        scaledUploadedImage_Gamma.data[i] = out;
+        scaledUploadedImage_Gamma.data[i + 1] = out;
+        scaledUploadedImage_Gamma.data[i + 2] = out;
+        scaledUploadedImage_Gamma.data[i + 3] = 255;
+      }
+      // Dither the adjusted image
+      scaledUploadedImageBW = floydSteinbergDither(scaledUploadedImage_Gamma);
+    } else {
+      scaledUploadedImageBW = convertToBlackAndWhite(
+        scaledUploadedImage,
+        threshold,
+      );
+    }
+
+    // Step 7.5.5: Add noise to black and white image
+    const scaledUploadedImageBW_Noise = addNoiseToImage(
+      scaledUploadedImageBW,
+      noiseProbability,
+      noiseSeed,
+    );
+
+    // Step 7.6: Create BW image with control squares (using noisy image as base)
+    const scaledUploadedImageBW_plusCtrl = new ImageData(
+      scaledUploadedImageBW_Noise.width,
+      scaledUploadedImageBW_Noise.height,
+    );
+    const bwPlusCtrlData = scaledUploadedImageBW_plusCtrl.data;
+
+    // Copy the noisy black and white image
+    for (let i = 0; i < scaledUploadedImageBW_Noise.data.length; i++) {
+      bwPlusCtrlData[i] = scaledUploadedImageBW_Noise.data[i];
+    }
+
+    // Overlay the control squares
+    const qrCtrlx3Data = qrCtrlx3.data;
+    for (let i = 0; i < qrCtrlx3Data.length; i += 4) {
+      if (qrCtrlx3Data[i + 3] > 0) {
+        // If pixel is not transparent
+        bwPlusCtrlData[i] = qrCtrlx3Data[i]; // Red
+        bwPlusCtrlData[i + 1] = qrCtrlx3Data[i + 1]; // Green
+        bwPlusCtrlData[i + 2] = qrCtrlx3Data[i + 2]; // Blue
+        bwPlusCtrlData[i + 3] = qrCtrlx3Data[i + 3]; // Alpha
+      }
+    }
+
+    // Step 7.7: Create BW image with control squares and QR data
+    const scaledUploadedImageBW_plusAllQR = new ImageData(
+      scaledUploadedImageBW_plusCtrl.width,
+      scaledUploadedImageBW_plusCtrl.height,
+    );
+    const bwPlusAllQRData = scaledUploadedImageBW_plusAllQR.data;
+
+    // Copy the BW image with control squares
+    for (let i = 0; i < scaledUploadedImageBW_plusCtrl.data.length; i++) {
+      bwPlusAllQRData[i] = scaledUploadedImageBW_plusCtrl.data[i];
+    }
+
+    // Overlay the thinned QR code data
+    const qrWithoutCtrlThinnedData = qrWithoutCtrlThinned.data;
+    for (let i = 0; i < qrWithoutCtrlThinnedData.length; i += 4) {
+      if (qrWithoutCtrlThinnedData[i + 3] > 0) {
+        // If pixel is not transparent
+        bwPlusAllQRData[i] = qrWithoutCtrlThinnedData[i]; // Red
+        bwPlusAllQRData[i + 1] = qrWithoutCtrlThinnedData[i + 1]; // Green
+        bwPlusAllQRData[i + 2] = qrWithoutCtrlThinnedData[i + 2]; // Blue
+        bwPlusAllQRData[i + 3] = qrWithoutCtrlThinnedData[i + 3]; // Alpha
+      }
+    }
+
+    // Step 7.8: Apply colors to create colored result
+    let result_colored;
+    if (useOriginalColors) {
+      let unalteredBw = null;
+      if (bwMode === "pixelperfect") {
+        unalteredBw = new ImageData(
+          new Uint8ClampedArray(scaledUploadedImageBW.data),
+          scaledUploadedImageBW.width,
+          scaledUploadedImageBW.height,
+        );
+        const qrThinnedData = qrWithoutCtrlThinned.data;
+        for (let i = 0; i < qrThinnedData.length; i += 4) {
+          if (qrThinnedData[i + 3] > 0) {
+            const inv = bwPlusAllQRData[i] === 0 ? 255 : 0;
+            unalteredBw.data[i] = inv;
+            unalteredBw.data[i + 1] = inv;
+            unalteredBw.data[i + 2] = inv;
+            unalteredBw.data[i + 3] = 255;
+          }
+        }
+      }
+      result_colored = applyOriginalColors(
+        scaledUploadedImageBW_plusAllQR,
+        scaledUploadedImage,
+        qrWithoutCtrlx3,
+        clarity,
+        useHsl,
+        unalteredBw,
+      );
+    } else {
+      result_colored = applyCustomColors(
+        scaledUploadedImageBW_plusAllQR,
+        darkColor,
+        brightColor,
+      );
+    }
+    // Apply saturation boost as a post-processing step
+    if (result_colored && saturationBoost > 0 && useOriginalColors) {
+      const data = result_colored.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const hsl = rgbToHsl(data[i], data[i + 1], data[i + 2]);
+        let s = hsl.s;
+        const vibranceAmount = 0.6 * saturationBoost;
+        const saturationAmount = 0.25 * saturationBoost;
+        const vibranceBoost = (1 - s / 100) * vibranceAmount * 100;
+        s = Math.min(s + vibranceBoost, 100);
+        s = Math.min(s * (1 + saturationAmount), 100);
+        const rgb = hslToRgb(hsl.h, s, hsl.l);
+        data[i] = rgb.r;
+        data[i + 1] = rgb.g;
+        data[i + 2] = rgb.b;
+      }
+    }
+
+    // Compute result_colored_shine before result_colored_xN
+    let result_colored_shine = null;
+    if (result_colored) {
+      let preShine = result_colored;
+      // If shine is enabled and darkColor is black and brightColor is white, gray the image a bit
+      if (
+        shine &&
+        darkColor.toLowerCase() === "#000000" &&
+        brightColor.toLowerCase() === "#ffffff"
+      ) {
+        preShine = new ImageData(result_colored.width, result_colored.height);
+        for (let i = 0; i < result_colored.data.length; i += 4) {
+          const r = result_colored.data[i];
+          const g = result_colored.data[i + 1];
+          const b = result_colored.data[i + 2];
+          const a = result_colored.data[i + 3];
+          let hsl = rgbToHsl(r, g, b);
+          // Lerp lightness toward 0.5 by 0.1
+          hsl.l = hsl.l + (50 - hsl.l) * 0.1;
+          const rgb = hslToRgb(hsl.h, hsl.s, hsl.l);
+          preShine.data[i] = rgb.r;
+          preShine.data[i + 1] = rgb.g;
+          preShine.data[i + 2] = rgb.b;
+          preShine.data[i + 3] = a;
+        }
+      }
+      if (shine) {
+        result_colored_shine = overlayDiagonalGradient(
+          preShine,
+          "#35456c",
+          "#fffea0",
+        );
+      } else {
+        result_colored_shine = new ImageData(
+          new Uint8ClampedArray(preShine.data),
+          preShine.width,
+          preShine.height,
+        );
+      }
+    }
+    // Step 7.9: Create scaled version of the colored result (from result_colored_shine)
+    const result_colored_xN = result_colored_shine
+      ? scaleImageByFactor(result_colored_shine, scaleFactor)
+      : null;
+
+    // Overlay a diagonal gradient on an ImageData
+    function overlayDiagonalGradient(imageData, colorBL, colorTR) {
+      const width = imageData.width;
+      const height = imageData.height;
+      const result = new ImageData(width, height);
+      // Parse hex colors
+      function hexToRgbArr(hex) {
+        hex = hex.replace("#", "");
+        return [
+          parseInt(hex.substring(0, 2), 16),
+          parseInt(hex.substring(2, 4), 16),
+          parseInt(hex.substring(4, 6), 16),
+        ];
+      }
+      const rgbBL = hexToRgbArr(colorBL);
+      const rgbTR = hexToRgbArr(colorTR);
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const t = (x / (width - 1) + (1 - y / (height - 1))) / 2; // 0 at BL, 1 at TR
+          const rG = Math.round(rgbBL[0] * (1 - t) + rgbTR[0] * t);
+          const gG = Math.round(rgbBL[1] * (1 - t) + rgbTR[1] * t);
+          const bG = Math.round(rgbBL[2] * (1 - t) + rgbTR[2] * t);
+          const idx = (y * width + x) * 4;
+          // Photoshop overlay blend mode
+          function overlayBlend(a, b) {
+            a /= 255;
+            b /= 255;
+            return Math.round(
+              (a < 0.5 ? 2 * a * b : 1 - 2 * (1 - a) * (1 - b)) * 255,
+            );
+          }
+          result.data[idx] = overlayBlend(imageData.data[idx], rG);
+          result.data[idx + 1] = overlayBlend(imageData.data[idx + 1], gG);
+          result.data[idx + 2] = overlayBlend(imageData.data[idx + 2], bG);
+          result.data[idx + 3] = imageData.data[idx + 3];
+        }
+      }
+      return result;
+    }
+
+    // Step 8: Create final canvas and overlay
+    const canvas = document.getElementById("resultCanvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = result_colored_xN.width;
+    canvas.height = result_colored_xN.height;
+
+    // Draw the scaled colored composite image
+    ctx.putImageData(result_colored_xN, 0, 0);
+
+    // Return debug data
+    return {
+      qr_noMargin: qr_noMargin,
+      qr: qr,
+      qrCtrlMask: qrCtrlMask,
+      qrCtrl: qrCtrl,
+      qrCtrlx3: qrCtrlx3,
+      qrWithoutCtrl: qrWithoutCtrl,
+      qrWithoutCtrlx3: qrWithoutCtrlx3,
+      qrWithoutCtrlThinned: qrWithoutCtrlThinned,
+      scaledUploadedImage: scaledUploadedImage,
+      scaledUploadedImageBW: scaledUploadedImageBW,
+      scaledUploadedImageBW_Noise: scaledUploadedImageBW_Noise,
+      scaledUploadedImageBW_plusCtrl: scaledUploadedImageBW_plusCtrl,
+      scaledUploadedImageBW_plusAllQR: scaledUploadedImageBW_plusAllQR,
+      result_colored: result_colored,
+      result_colored_xN: result_colored_xN,
+      result_colored_shine: result_colored_shine,
+      // Add gamma debug image if present
+      ...(scaledUploadedImage_Gamma ? { scaledUploadedImage_Gamma } : {}),
+    };
+  } catch (error) {
+    console.error("Error in QR code processing pipeline:", error);
+    throw error;
+  }
 }
 
 // Export for use in other modules
 window.generateQRCodeOverlay = generateQRCodeOverlay;
-window.computeBlockSizeFromImage = computeBlockSizeFromImage; 
+window.computeBlockSizeFromImage = computeBlockSizeFromImage;
