@@ -787,6 +787,9 @@
     utils.addHiddenClass(add4thSquareControl);
   }
 
+  // Initialize Original mode visibility
+  updateOriginalModeVisibility();
+
   // Hide image controls when no image is present
   function hideImageUI() {
     utils.addHiddenClass(previewImage);
@@ -1095,6 +1098,7 @@
         }
         updateDitherBrightnessVisibility();
         updateZoomControlVisibility();
+        updateOriginalModeVisibility();
         if (window.uploadedImage) {
           updateResult();
         }
@@ -1265,6 +1269,26 @@
       return;
     }
     updateScalingModeAndZoomVisibility();
+  }
+
+  // Function to update visibility of sliders when Original mode is selected
+  function updateOriginalModeVisibility() {
+    const originalRadio = document.getElementById("bwModePixelArt");
+    const thresholdSliderDiv = thresholdSlider
+      ? thresholdSlider.parentElement.parentElement
+      : null;
+    const ditherSliderDiv = ditherBrightnessSlider
+      ? ditherBrightnessSlider.parentElement.parentElement
+      : null;
+
+    if (originalRadio && originalRadio.checked) {
+      // Hide both sliders when Original mode is selected
+      if (thresholdSliderDiv) utils.addHiddenClass(thresholdSliderDiv);
+      if (ditherSliderDiv) utils.addHiddenClass(ditherSliderDiv);
+    } else {
+      // Show sliders based on the current mode (dither or threshold)
+      updateDitherBrightnessVisibility();
+    }
   }
 
   // Add zoom and offset slider listeners
