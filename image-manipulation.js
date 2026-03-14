@@ -1538,53 +1538,42 @@ async function generateQRCodeOverlay(
     // Step 7: Scale uploaded image to match QR dimensions
     let scaledUploadedImage;
     if (bwMode === "original") {
-      // For original mode, first apply blockSize downsampling if needed
-      let processedImage = uploadedImage;
-      if (blockSize > 1) {
-        // Create temporary canvas for downsampling
-        const tempCanvas = document.createElement("canvas");
-        tempCanvas.width = uploadedImage.width;
-        tempCanvas.height = uploadedImage.height;
-        const tempCtx = tempCanvas.getContext("2d");
-        tempCtx.imageSmoothingEnabled = false;
-        tempCtx.drawImage(uploadedImage, 0, 0);
-        let tempImageData = tempCtx.getImageData(
-          0,
-          0,
-          uploadedImage.width,
-          uploadedImage.height,
+      // For original mode, we need to check if we're in pixel perfect mode
+      // Pixel perfect mode uses blockSize (discrete zoom), normal mode uses regular zoom
+      const isPixelPerfect = blockSize > 1; // Simple heuristic - if blockSize > 1, use pixel perfect
+
+      if (isPixelPerfect) {
+        // Pixel perfect mode: use cropCenterPixels with blockSize
+        scaledUploadedImage = cropCenterPixels(
+          uploadedImage,
+          qrWithoutCtrlThinned.width,
+          blockSize,
+          offsetXValue,
+          offsetYValue,
+          outsidePixels,
+          outsidePixelsColor,
         );
+      } else {
+        // Normal mode: use scaleImageToDimensions with zoom
+        // Zoom only works in "custom" mode
+        const effectiveZoomValue = scalingMode === "custom" ? zoomValue : 0;
+        const effectiveOffsetXValue =
+          scalingMode === "custom" ? offsetXValue : 0;
+        const effectiveOffsetYValue =
+          scalingMode === "custom" ? offsetYValue : 0;
 
-        // Apply blockSize downsampling
-        tempImageData = downsampleByBlockSize(tempImageData, blockSize);
-
-        // Create image from downsampled data
-        const downsampledCanvas = document.createElement("canvas");
-        downsampledCanvas.width = tempImageData.width;
-        downsampledCanvas.height = tempImageData.height;
-        const downsampledCtx = downsampledCanvas.getContext("2d");
-        downsampledCtx.putImageData(tempImageData, 0, 0);
-
-        processedImage = downsampledCanvas;
+        scaledUploadedImage = scaleImageToDimensions(
+          uploadedImage,
+          qrWithoutCtrlThinned.width,
+          qrWithoutCtrlThinned.height,
+          scalingMode,
+          effectiveZoomValue,
+          effectiveOffsetXValue,
+          effectiveOffsetYValue,
+          outsidePixels,
+          outsidePixelsColor,
+        );
       }
-
-      // Use scaleImageToDimensions with the selected scaling mode
-      // Zoom only works in "custom" mode, so pass zoomValue only when appropriate
-      const effectiveZoomValue = scalingMode === "custom" ? zoomValue : 0;
-      const effectiveOffsetXValue = scalingMode === "custom" ? offsetXValue : 0;
-      const effectiveOffsetYValue = scalingMode === "custom" ? offsetYValue : 0;
-
-      scaledUploadedImage = scaleImageToDimensions(
-        processedImage,
-        qrWithoutCtrlThinned.width,
-        qrWithoutCtrlThinned.height,
-        scalingMode, // Use the selected scaling mode (shrink/grow/stretch/custom)
-        effectiveZoomValue,
-        effectiveOffsetXValue,
-        effectiveOffsetYValue,
-        outsidePixels,
-        outsidePixelsColor,
-      );
     } else {
       scaledUploadedImage = scaleImageToDimensions(
         uploadedImage,
