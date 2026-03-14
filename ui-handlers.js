@@ -846,16 +846,16 @@
 
       // Get zoom or blockSize value for custom mode based on pixel perfect setting
       let zoomValue = 0;
-      let blockSize = 1;
+      let blockSize = 0; // Default to 0 for regular scaling mode
       if (customRadio && customRadio.checked) {
         if (pixelPerfectCheckbox && pixelPerfectCheckbox.checked) {
-          // Pixel perfect mode: use blockSize
+          // Pixel perfect mode: use blockSize (including blockSize = 1)
           zoomValue = 0;
           blockSize = parseInt(blockSizeSlider.value, 10);
         } else {
           // Normal mode: use zoom
           zoomValue = parseFloat(zoomSlider.value);
-          blockSize = 1;
+          blockSize = 0; // Use 0 to indicate regular scaling mode
         }
       }
 

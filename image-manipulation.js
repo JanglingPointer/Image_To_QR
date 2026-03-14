@@ -729,7 +729,7 @@ function computeBlockSizeFromImage(image) {
  * @returns {ImageData} The downsampled image data
  */
 function downsampleByBlockSize(imageData, blockSize) {
-  if (blockSize <= 1) return imageData;
+  if (blockSize < 1) return imageData;
   const w = imageData.width;
   const h = imageData.height;
   const newW = Math.ceil(w / blockSize);
@@ -807,39 +807,24 @@ function cropCenterPixels(
     sourceImage.height,
   );
 
-  if (blockSize > 1) {
-    srcData = downsampleByBlockSize(srcData, blockSize);
+  // Debug logging for blockSize processing
+  // Debug logging for blockSize processing
+  if (typeof window !== "undefined" && window.log_to_debug_output) {
+    window.log_to_debug_output(
+      `[DEBUG] Before blockSize=${blockSize}: ${sourceImage.width}x${sourceImage.height}`,
+    );
   }
+
+  // Apply downsampling for any blockSize (including 1, which will return original)
+  srcData = downsampleByBlockSize(srcData, blockSize);
 
   const w = srcData.width;
   const h = srcData.height;
 
-  // For blockSize = 1, we need special handling since no actual downsampling occurs
-  // but we still need to get to targetSize x targetSize with proper pixel mapping
-  if (blockSize === 1) {
-    // When blockSize = 1, we want 1:1 pixel mapping but still need to fit target size
-    // This means we need to crop/center if the image is larger, or scale up if smaller
-
-    const result = new ImageData(targetSize, targetSize);
-    const out = result.data;
-
-    // Calculate scaling factors
-    const scaleX = w / targetSize;
-    const scaleY = h / targetSize;
-
-    for (let y = 0; y < targetSize; y++) {
-      for (let x = 0; x < targetSize; x++) {
-        // Use nearest-neighbor scaling to preserve pixel relationships
-        const srcX = Math.min(Math.round(x * scaleX), w - 1);
-        const srcY = Math.min(Math.round(y * scaleY), h - 1);
-        const srcIdx = (srcY * w + srcX) * 4;
-        const dstIdx = (y * targetSize + x) * 4;
-        for (let ch = 0; ch < 4; ch++) {
-          out[dstIdx + ch] = srcData.data[srcIdx + ch];
-        }
-      }
-    }
-    return result;
+  if (typeof window !== "undefined" && window.log_to_debug_output) {
+    window.log_to_debug_output(
+      `[DEBUG] After blockSize=${blockSize}: ${w}x${h}`,
+    );
   }
 
   // Calculate source crop region based on offsets (similar to scaleImageToDimensions custom mode)
@@ -1605,9 +1590,9 @@ async function generateQRCodeOverlay(
     // Step 7: Scale uploaded image to match QR dimensions
     let scaledUploadedImage;
 
-    // Check if we're in pixel perfect mode (blockSize > 1)
-    // blockSize = 1 means regular scaling mode, blockSize > 1 means pixel-perfect mode
-    const isPixelPerfect = blockSize > 1;
+    // Check if we're in pixel perfect mode (blockSize >= 1)
+    // blockSize >= 1 means pixel-perfect mode, blockSize = 0 means regular scaling mode
+    const isPixelPerfect = blockSize >= 1;
 
     if (isPixelPerfect) {
       // For pixel perfect mode, use cropCenterPixels
@@ -1621,7 +1606,7 @@ async function generateQRCodeOverlay(
         outsidePixelsColor,
       );
     } else {
-      // Use regular scaling for non-pixel-perfect modes (blockSize === 1 or blockSize === 0)
+      // Use regular scaling for non-pixel-perfect modes (blockSize === 0)
       const effectiveZoomValue = scalingMode === "custom" ? zoomValue : 0;
       const effectiveOffsetXValue = scalingMode === "custom" ? offsetXValue : 0;
       const effectiveOffsetYValue = scalingMode === "custom" ? offsetYValue : 0;
