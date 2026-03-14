@@ -91,7 +91,7 @@
   const offsetYValue = document.getElementById("offsetYValue");
   const blockSizeSlider = document.getElementById("blockSizeSlider");
   const blockSizeValue = document.getElementById("blockSizeValue");
-  const blockSizeControl = document.querySelector(".block-size-control");
+  const blockSizeControl = document.querySelector(".zoom-control"); // Block Size is now in zoom-control group
 
   // Global variable to store the uploaded image
   window.uploadedImage = null;
@@ -1048,9 +1048,8 @@
       : null;
     if (pixelArtRadio && pixelArtRadio.checked) {
       if (thresholdControl) utils.addHiddenClass(thresholdControl);
-      if (blockSizeControl) utils.removeHiddenClass(blockSizeControl, "flex");
+      // Block Size is now in zoom-control group, visibility handled by updateZoomControlVisibility
     } else {
-      if (blockSizeControl) utils.addHiddenClass(blockSizeControl);
       if (thresholdControl) utils.removeHiddenClass(thresholdControl);
       if (ditherRadio && ditherRadio.checked) {
         if (ditherSliderDiv) utils.removeHiddenClass(ditherSliderDiv);
@@ -1110,20 +1109,31 @@
     const pixelPerfectRadio = document.getElementById("bwModePixelArt");
     const scalingModePresets = document.querySelector(".scaling-mode-presets");
     const customRadio = document.getElementById("scalingModeCustom");
+    const blockSizeSliderDiv = document.getElementById("blockSizeSlider")
+      ? document.getElementById("blockSizeSlider").parentElement
+      : null;
+    const zoomSliderDiv = document.getElementById("zoomSlider")
+      ? document.getElementById("zoomSlider").parentElement
+      : null;
 
     if (
       pixelPerfectRadio &&
       pixelPerfectRadio.checked &&
       window.uploadedImage
     ) {
+      // Original mode: show block size, hide zoom slider
       if (scalingModePresets) utils.addHiddenClass(scalingModePresets);
       if (customRadio) customRadio.checked = true;
       if (zoomControl) utils.removeHiddenClass(zoomControl, "inline-flex");
-      if (zoomSliderWrapper) utils.addHiddenClass(zoomSliderWrapper);
+      if (zoomSliderDiv) utils.addHiddenClass(zoomSliderDiv);
+      if (blockSizeSliderDiv)
+        utils.removeHiddenClass(blockSizeSliderDiv, "flex");
     } else {
+      // Dither/Threshold mode: show scaling presets and zoom slider, hide block size
       if (scalingModePresets)
         utils.removeHiddenClass(scalingModePresets, "contents");
-      if (zoomSliderWrapper) utils.removeHiddenClass(zoomSliderWrapper, "flex");
+      if (zoomSliderDiv) utils.removeHiddenClass(zoomSliderDiv, "flex");
+      if (blockSizeSliderDiv) utils.addHiddenClass(blockSizeSliderDiv);
       if (customRadio && customRadio.checked && window.uploadedImage) {
         if (zoomControl) utils.removeHiddenClass(zoomControl, "inline-flex");
       } else {

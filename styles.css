@@ -302,9 +302,22 @@ body {
     min-width: 0;
 }
 
-/* Hide value displays for zoom controls */
+/* Hide value displays for zoom controls, but show block size value */
 .image-upload-and-scaling .scaling-mode-group .zoom-control span[id$="Value"] {
     display: none;
+}
+.image-upload-and-scaling .scaling-mode-group .zoom-control #blockSizeValue {
+    display: inline;
+    min-width: 30px;
+    text-align: right;
+}
+
+/* Style for block size slider to match zoom control */
+.image-upload-and-scaling
+    .scaling-mode-group
+    .zoom-control
+    input#blockSizeSlider {
+    width: 80px;
 }
 
 .file-input-wrapper:hover {
