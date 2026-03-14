@@ -354,6 +354,17 @@
     thresholdValue.textContent = newThreshold;
   }
 
+  // Handle auto block size button click
+  function handleAutoBlockSize() {
+    if (!window.uploadedImage || !blockSizeSlider || !blockSizeValue) return;
+    const blockSize = window.computeBlockSizeFromImage(window.uploadedImage);
+    blockSizeSlider.value = String(blockSize);
+    blockSizeValue.textContent = String(blockSize);
+    if (window.uploadedImage) {
+      updateResult();
+    }
+  }
+
   // Handle file upload
   imageInput.addEventListener("change", function (e) {
     const file = e.target.files[0];
@@ -1051,7 +1062,6 @@
           saturationBoostSlider.value = "0";
         }
         updateDitherBrightnessVisibility();
-        autoComputeBlockSize();
         updateZoomControlVisibility();
         if (window.uploadedImage) {
           updateResult();
@@ -1093,6 +1103,12 @@
 
   // Block Size slider (Original mode)
   utils.addSliderListener(blockSizeSlider, blockSizeValue);
+
+  // Auto block size button
+  const autoBlockSizeBtn = document.getElementById("autoBlockSizeBtn");
+  if (autoBlockSizeBtn) {
+    autoBlockSizeBtn.addEventListener("click", handleAutoBlockSize);
+  }
 
   // Clarity slider event
   if (claritySlider) {
