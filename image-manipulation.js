@@ -1535,7 +1535,7 @@ async function generateQRCodeOverlay(
 
     // Step 7: Scale uploaded image to match QR dimensions
     let scaledUploadedImage;
-    if (bwMode === "pixelperfect") {
+    if (bwMode === "original") {
       scaledUploadedImage = cropCenterPixels(
         uploadedImage,
         qrWithoutCtrlThinned.width,
@@ -1562,7 +1562,7 @@ async function generateQRCodeOverlay(
     // Step 7.5: Optionally apply gamma correction for dither mode
     let scaledUploadedImage_Gamma = null;
     let scaledUploadedImageBW;
-    if (bwMode === "pixelperfect") {
+    if (bwMode === "original") {
       scaledUploadedImageBW = convertToBlackAndWhite(scaledUploadedImage, 128);
     } else if (bwMode === "dither") {
       // Apply brightness/contrast adjustment to grayscale before dithering
@@ -1655,7 +1655,7 @@ async function generateQRCodeOverlay(
     let result_colored;
     if (useOriginalColors) {
       let unalteredBw = null;
-      if (bwMode === "pixelperfect") {
+      if (bwMode === "original") {
         unalteredBw = new ImageData(
           new Uint8ClampedArray(scaledUploadedImageBW.data),
           scaledUploadedImageBW.width,

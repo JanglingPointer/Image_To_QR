@@ -5,7 +5,8 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     padding: 10px;
@@ -16,7 +17,7 @@ body {
     margin: 0 auto;
     background: white;
     border-radius: 15px;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
     overflow: hidden;
 }
 
@@ -119,7 +120,7 @@ body {
 }
 
 /* Center BW mode radio buttons vertically within their flex container */
-/* 2x2 grid layout: Top-Left=Dither, Top-Right=Pixel Perfect, Bottom-Left=Threshold */
+/* 2x2 grid layout: Top-Left=Dither, Top-Right=Original, Bottom-Left=Threshold */
 .bw-mode-group.bw-mode-grid {
     align-self: center;
     display: grid !important;
@@ -293,7 +294,10 @@ body {
     width: 100%;
 }
 
-.image-upload-and-scaling .scaling-mode-group .zoom-control input[type="range"] {
+.image-upload-and-scaling
+    .scaling-mode-group
+    .zoom-control
+    input[type="range"] {
     flex: 1;
     min-width: 0;
 }
@@ -703,7 +707,9 @@ body {
     font-size: 1.1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
     width: 100%;
 }
 
@@ -738,7 +744,9 @@ body {
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .download-btn:hover {
@@ -757,7 +765,7 @@ body {
     display: inline-block;
     border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 #resultCanvas {
@@ -872,129 +880,122 @@ body {
         margin: 10px;
         border-radius: 15px;
     }
-    
+
     .header {
         padding: 20px;
     }
-    
+
     .header h1 {
         font-size: 1.5rem;
     }
-    
+
     .content {
         padding: 20px;
     }
-    
+
     .layout-container {
         flex-direction: row;
         gap: 20px;
     }
-    
+
     .right-panel {
         position: relative;
     }
-    
-    
-    
-    
-    
-    
-    
+
     .right-panel {
         gap: 15px;
     }
-    
+
     .debug-section {
         min-width: 0;
     }
-    
+
     .debug-images-grid {
         flex-direction: column;
         gap: 15px;
         padding: 10px;
     }
-    
+
     .debug-column {
         gap: 10px;
     }
-    
+
     .input-group {
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
     }
-    
+
     .image-upload-and-scaling {
         gap: 10px;
     }
-    
+
     .test-image-btn {
         padding: 12px 20px;
     }
-    
+
     /* Color control responsive improvements */
     .color-control .color-row {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
     }
-    
+
     .custom-colors {
         gap: 2px;
         justify-content: flex-start;
         flex-wrap: wrap;
     }
-    
+
     .color-label-group {
         min-width: 35px;
     }
-    
+
     /* Stack brightness slider under radio buttons for dither/threshold control */
     .dither-and-threshold {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
     }
-    
+
     .bw-mode-group {
         align-self: flex-start;
     }
-    
+
     .threshold-control,
     .block-size-control {
         align-self: stretch;
         width: 100%;
     }
-    
+
     .block-size-control .flex-center {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
     }
-    
+
     .block-size-control .flex-center label {
         margin-bottom: 4px;
     }
-    
+
     .threshold-control .threshold-row {
         flex-direction: column;
         gap: 12px;
     }
-    
+
     .threshold-control .threshold-row > div {
         width: 100%;
     }
-    
+
     .threshold-control .threshold-row .flex-center {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
     }
-    
+
     .threshold-control .threshold-row .flex-center label {
         margin-bottom: 4px;
     }
-    
 }
 
 /* Medium screen responsive improvements */
@@ -1003,10 +1004,9 @@ body {
         flex-wrap: wrap;
         gap: 12px;
     }
-    
+
     .custom-colors {
         gap: 2px;
         flex-wrap: wrap;
     }
-    
-} 
+}
