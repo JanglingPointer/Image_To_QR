@@ -571,31 +571,6 @@ function scaleImageToDimensions(
     );
     const result = ctx.getImageData(0, 0, targetWidth, targetHeight);
     if (outsidePixels === "extend") {
-      // Debug logging for bottom-right corner analysis
-      if (typeof window !== "undefined" && window.log_to_debug_output) {
-        // FIX: Use integer coordinates to avoid undefined pixel values
-        const rightEdgeX = Math.round(finalOffsetX + finalDrawWidth - 1);
-        const rightEdgeY = Math.round(finalOffsetY + finalDrawHeight - 1);
-        if (
-          rightEdgeX >= 0 &&
-          rightEdgeX < targetWidth &&
-          rightEdgeY >= 0 &&
-          rightEdgeY < targetHeight
-        ) {
-          const rightEdgeIdx = (rightEdgeY * targetWidth + rightEdgeX) * 4;
-          const rightEdgeColor = `rgba(${result.data[rightEdgeIdx]}, ${result.data[rightEdgeIdx + 1]}, ${result.data[rightEdgeIdx + 2]}, ${result.data[rightEdgeIdx + 3]})`;
-          window.log_to_debug_output(
-            `⚠️ RIGHT EDGE DEBUG: Before extend, pixel at (${rightEdgeX},${rightEdgeY}) = ${rightEdgeColor}`,
-          );
-          window.log_to_debug_output(
-            `   This pixel will be extended to the right edge`,
-          );
-          window.log_to_debug_output(
-            `   Extend bounds: [${finalOffsetX},${finalOffsetY}] to [${finalOffsetX + finalDrawWidth - 1},${finalOffsetY + finalDrawHeight - 1}]`,
-          );
-        }
-      }
-
       // FIX: Use integer bounds for extendPaddingInImageData
       // Convert fractional coordinates to integers to avoid sampling issues
       const extendLeft = Math.round(finalOffsetX);
@@ -634,45 +609,20 @@ function scaleImageToDimensions(
 
   const result = ctx.getImageData(0, 0, targetWidth, targetHeight);
   if (outsidePixels === "extend") {
-    // Debug logging for bottom-right corner analysis (shrink path)
-    if (typeof window !== "undefined" && window.log_to_debug_output) {
-      // FIX: Use integer coordinates to avoid undefined pixel values
-      const rightEdgeX = Math.round(offsetX + drawWidth - 1);
-      const rightEdgeY = Math.round(offsetY + drawHeight - 1);
-      if (
-        rightEdgeX >= 0 &&
-        rightEdgeX < targetWidth &&
-        rightEdgeY >= 0 &&
-        rightEdgeY < targetHeight
-      ) {
-        const rightEdgeIdx = (rightEdgeY * targetWidth + rightEdgeX) * 4;
-        const rightEdgeColor = `rgba(${result.data[rightEdgeIdx]}, ${result.data[rightEdgeIdx + 1]}, ${result.data[rightEdgeIdx + 2]}, ${result.data[rightEdgeIdx + 3]})`;
-        window.log_to_debug_output(
-          `⚠️ RIGHT EDGE DEBUG (shrink): Before extend, pixel at (${rightEdgeX},${rightEdgeY}) = ${rightEdgeColor}`,
-        );
-        window.log_to_debug_output(
-          `   This pixel will be extended to the right edge`,
-        );
-        window.log_to_debug_output(
-          `   Extend bounds: [${offsetX},${offsetY}] to [${offsetX + drawWidth - 1},${offsetY + drawHeight - 1}]`,
-        );
-      }
+    // FIX: Use integer bounds for extendPaddingInImageData
+    // Convert fractional coordinates to integers to avoid sampling issues
+    const extendLeft = Math.round(offsetX);
+    const extendTop = Math.round(offsetY);
+    const extendRight = Math.round(offsetX + drawWidth);
+    const extendBottom = Math.round(offsetY + drawHeight);
 
-      // FIX: Use integer bounds for extendPaddingInImageData
-      // Convert fractional coordinates to integers to avoid sampling issues
-      const extendLeft = Math.round(offsetX);
-      const extendTop = Math.round(offsetY);
-      const extendRight = Math.round(offsetX + drawWidth);
-      const extendBottom = Math.round(offsetY + drawHeight);
-
-      extendPaddingInImageData(
-        result,
-        extendLeft,
-        extendTop,
-        extendRight - extendLeft,
-        extendBottom - extendTop,
-      );
-    }
+    extendPaddingInImageData(
+      result,
+      extendLeft,
+      extendTop,
+      extendRight - extendLeft,
+      extendBottom - extendTop,
+    );
   }
   return result;
 }
@@ -808,24 +758,11 @@ function cropCenterPixels(
   );
 
   // Debug logging for blockSize processing
-  // Debug logging for blockSize processing
-  if (typeof window !== "undefined" && window.log_to_debug_output) {
-    window.log_to_debug_output(
-      `[DEBUG] Before blockSize=${blockSize}: ${sourceImage.width}x${sourceImage.height}`,
-    );
-  }
-
   // Apply downsampling for any blockSize (including 1, which will return original)
   srcData = downsampleByBlockSize(srcData, blockSize);
 
   const w = srcData.width;
   const h = srcData.height;
-
-  if (typeof window !== "undefined" && window.log_to_debug_output) {
-    window.log_to_debug_output(
-      `[DEBUG] After blockSize=${blockSize}: ${w}x${h}`,
-    );
-  }
 
   // Calculate source crop region based on offsets (similar to scaleImageToDimensions custom mode)
   let srcX, srcY, cropW, cropH, dstX, dstY;

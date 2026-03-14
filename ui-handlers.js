@@ -907,6 +907,28 @@
           ? outsidePixelsColorPicker.value
           : "#000000";
       const useHsl = hslCheckbox && hslCheckbox.checked;
+
+      // Debug logging: list all user-selected modes and values (compact)
+      if (typeof window !== "undefined" && window.log_to_debug_output) {
+        window.log_to_debug_output("=== SETTINGS ===");
+        window.log_to_debug_output(
+          `BW: ${bwMode} | Thresh: ${threshold} | Dither: ${ditherGamma}`,
+        );
+        window.log_to_debug_output(
+          `Scale: ${scaleFactor}x | Noise: ${noiseProbability}% | Seed: ${noiseSeed}`,
+        );
+        window.log_to_debug_output(
+          `Colors: ${darkColor} / ${brightColor} | Orig: ${useOriginalColors} | Sat: ${saturationBoost} | Shine: ${shine} | HSL: ${useHsl}`,
+        );
+        window.log_to_debug_output(
+          `ScaleMode: ${scalingMode} | PP: ${pixelPerfectCheckbox ? pixelPerfectCheckbox.checked : false} | Zoom: ${zoomValue} | Offset: (${offsetXValue}, ${offsetYValue})`,
+        );
+        window.log_to_debug_output(
+          `Clarity: ${clarity} | 4thSqr: ${add4thSquare} | BlockSz: ${blockSize} | OutPx: ${outsidePixels}${outsidePixels === "color" ? ":" + outsidePixelsColor : ""}`,
+        );
+        window.log_to_debug_output("=================");
+      }
+
       const debugData = await generateQRCodeOverlay(
         window.uploadedImage,
         textToUse,
