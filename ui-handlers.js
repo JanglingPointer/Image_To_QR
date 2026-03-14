@@ -136,7 +136,7 @@
   // Centralized initial settings
   const initialSettings = {
     text: "https://example.com#enter_your_own_URL",
-    bwMode: "dither", // 'threshold' | 'dither' | 'original'
+    bwMode: "dither", // 'threshold' | 'dither' | 'original_colors'
     blockSize: 1, // 1-8 for pixel art mode
     threshold: 128,
     ditherBrightness: 0, // -1..1
@@ -187,7 +187,7 @@
     if (bwThreshold && bwDither && bwPixelArt) {
       bwThreshold.checked = settings.bwMode === "threshold";
       bwDither.checked = settings.bwMode === "dither";
-      bwPixelArt.checked = settings.bwMode === "original";
+      bwPixelArt.checked = settings.bwMode === "original_colors";
     }
     // Sliders and labels
     if (thresholdSlider) thresholdSlider.value = String(settings.threshold);
@@ -200,7 +200,7 @@
     if (noiseSlider) noiseSlider.value = String(settings.noise);
     if (saturationBoostSlider)
       saturationBoostSlider.value =
-        settings.bwMode === "original" ? "0" : String(settings.saturationBoost);
+        settings.bwMode === "original_colors" ? "0" : String(settings.saturationBoost);
     if (zoomSlider) zoomSlider.value = String(settings.zoom);
     if (offsetXSlider) offsetXSlider.value = String(settings.offsetX);
     if (offsetYSlider) offsetYSlider.value = String(settings.offsetY);
@@ -824,7 +824,7 @@
       const shine = shineCheckbox && shineCheckbox.checked;
       // In updateResult, get the selected black & white mode and pass it to generateQRCodeOverlay
       const bwMode = document.getElementById("bwModePixelArt").checked
-        ? "original"
+        ? "original_colors"
         : document.getElementById("bwModeDither").checked
           ? "dither"
           : "threshold";
@@ -854,8 +854,6 @@
         outsidePixelsColorPicker && outsidePixels === "color"
           ? outsidePixelsColorPicker.value
           : "#000000";
-      const useHsl = hslCheckbox && hslCheckbox.checked;
-
       // Debug logging: list all user-selected modes and values (compact)
       if (window.debugModule && window.debugModule.isEnabled()) {
         const log = window.debugModule.log;
@@ -867,7 +865,7 @@
           `Scale: ${scaleFactor}x | Noise: ${noiseProbability}% | Seed: ${noiseSeed}`,
         );
         log(
-          `Colors: ${darkColor} / ${brightColor} | Orig: ${useOriginalColors} | Sat: ${saturationBoost} | Shine: ${shine} | HSL: ${useHsl}`,
+          `Colors: ${darkColor} / ${brightColor} | Orig: ${useOriginalColors} | Sat: ${saturationBoost} | Shine: ${shine}`,
         );
         log(
           `ScaleMode: ${scalingMode} | PP: ${pixelPerfectCheckbox ? pixelPerfectCheckbox.checked : false} | Zoom: ${zoomValue} | Offset: (${offsetXValue}, ${offsetYValue})`,
@@ -901,8 +899,6 @@
         blockSize,
         outsidePixels,
         outsidePixelsColor,
-        useHsl,
-        zoomValue,
       );
       utils.removeHiddenClass(resultSection, "flex");
 
@@ -987,13 +983,6 @@
   updateOutsidePixelsColorPickerVisibility();
 
   shineCheckbox.addEventListener("change", function () {
-    if (window.uploadedImage) {
-      updateResult();
-    }
-  });
-
-  const hslCheckbox = document.getElementById("hslCheckbox");
-  hslCheckbox.addEventListener("change", function () {
     if (window.uploadedImage) {
       updateResult();
     }

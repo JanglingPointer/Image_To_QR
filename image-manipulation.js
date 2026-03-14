@@ -1211,14 +1211,15 @@ function applyCustomColors(imageData, darkColor, brightColor) {
 }
 
 /**
- * Transforms a black and white image to use original image colors with HSB or HSL adjustments
+ * Transforms a black and white image to use original image colors.
  * @param {ImageData} bwImageData - The input black and white image data (after noise + QR overlay)
  * @param {ImageData} originalImageData - The original colored image data
  * @param {ImageData} maskImageData - The mask image data (for useOriginalColors = true)
  * @param {number} clarity - Clarity value (0-100), controls COLOR_BEND
- * @param {boolean} useHsl - If true, use HSL color space; if false, use HSB (default)
  * @param {ImageData|null} unalteredBwImageData - Pre-noise/QR B&W image for detecting altered pixels.
  *   When provided, unaltered pixels keep original color; only altered pixels get luminance adjustment.
+ * @param {boolean} preserveSaturation - If true (dither/threshold), use HSL to preserve perceived saturation.
+ *   If false (original_colors mode), use HSB for pastel-friendly rendering.
  * @returns {ImageData} The colored image data using original colors
  */
 function applyOriginalColors(
@@ -1226,8 +1227,8 @@ function applyOriginalColors(
   originalImageData,
   maskImageData,
   clarity = 0,
-  useHsl = false,
   unalteredBwImageData = null,
+  preserveSaturation = false,
 ) {
   const result = new ImageData(bwImageData.width, bwImageData.height);
   const bwData = bwImageData.data;
@@ -1257,7 +1258,7 @@ function applyOriginalColors(
       const isBlack = bwData[i] === 0;
       const MIN_GAP = 20;
       let adjustedRgb;
-      if (useHsl) {
+      if (preserveSaturation) {
         const originalHsl = rgbToHsl(originalR, originalG, originalB);
         let darkLightness = Math.min(originalHsl.l, COLOR_BEND);
         let brightLightness = Math.max(originalHsl.l, 100 - COLOR_BEND);
@@ -1269,11 +1270,11 @@ function applyOriginalColors(
         if (isBlack) {
           adjustedRgb = hslToRgb(originalHsl.h, originalHsl.s, darkLightness);
         } else {
-          let s = originalHsl.s;
-          if (unalteredBwData) {
-            s = Math.min(s, COLOR_BEND);
-          }
-          adjustedRgb = hslToRgb(originalHsl.h, s, brightLightness);
+          adjustedRgb = hslToRgb(
+            originalHsl.h,
+            originalHsl.s,
+            brightLightness,
+          );
         }
       } else {
         const originalHsb = rgbToHsb(originalR, originalG, originalB);
@@ -1462,7 +1463,7 @@ async function getQRCodeImageData(text) {
  * @param {number} noiseSeed - Seed for the noise generation
  * @param {string} scalingMode - 'shrink', 'grow', or 'stretch' for uploaded image scaling
  * @param {boolean} shine - Whether to apply a diagonal gradient shine (default: false)
- * @param {string} bwMode - 'threshold' or 'dither' for black and white conversion
+ * @param {string} bwMode - 'threshold' | 'dither' | 'original_colors' for black and white conversion
  * @param {number} ditherGamma - Gamma value for dither brightness (default: 1.0)
  * @param {number} saturationBoost - Saturation boost value (0-1)
  * @param {number} zoomValue - Zoom factor for custom mode (0-2)
@@ -1497,7 +1498,6 @@ async function generateQRCodeOverlay(
   blockSize = 1,
   outsidePixels = "auto",
   outsidePixelsColor = "#000000",
-  useHsl = false,
 ) {
   try {
     // Step 1: Generate QR code without margin using direct pixel access
@@ -1568,7 +1568,7 @@ async function generateQRCodeOverlay(
     // Step 7.5: Optionally apply gamma correction for dither mode
     let scaledUploadedImage_Gamma = null;
     let scaledUploadedImageBW;
-    if (bwMode === "original") {
+    if (bwMode === "original_colors") {
       scaledUploadedImageBW = convertToBlackAndWhite(scaledUploadedImage, 128);
     } else if (bwMode === "dither") {
       // Apply brightness/contrast adjustment to grayscale before dithering
@@ -1661,7 +1661,7 @@ async function generateQRCodeOverlay(
     let result_colored;
     if (useOriginalColors) {
       let unalteredBw = null;
-      if (bwMode === "original") {
+      if (bwMode === "original_colors") {
         unalteredBw = new ImageData(
           new Uint8ClampedArray(scaledUploadedImageBW.data),
           scaledUploadedImageBW.width,
@@ -1678,13 +1678,15 @@ async function generateQRCodeOverlay(
           }
         }
       }
+      const preserveSaturation =
+        bwMode === "dither" || bwMode === "threshold";
       result_colored = applyOriginalColors(
         scaledUploadedImageBW_plusAllQR,
         scaledUploadedImage,
         qrWithoutCtrlx3,
         clarity,
-        useHsl,
         unalteredBw,
+        preserveSaturation,
       );
     } else {
       result_colored = applyCustomColors(
