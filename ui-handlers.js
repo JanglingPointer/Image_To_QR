@@ -66,6 +66,7 @@
     "debugScaledUploadedImageBW_Noise",
   );
   const scalingModeGroup = document.querySelector(".scaling-mode-group");
+  const debugOutputText = document.getElementById("debugOutputText");
   const bwModeGroup = document.querySelector(".bw-mode-group");
   const mainImageControls = document.querySelector(".main-image-controls");
   const downloadBtn = document.getElementById("downloadBtn");
@@ -98,6 +99,20 @@
 
   // Global variable for noise seed
   window.noiseSeed = 12345;
+
+  // Function to log messages to debug output textarea
+  function log_to_debug_output(message) {
+    const debugOutputText = document.getElementById("debugOutputText");
+    if (debugOutputText) {
+      const now = new Date();
+      const timestamp = now.toLocaleTimeString();
+      debugOutputText.value += `[${timestamp}] ${message}\n`;
+      debugOutputText.scrollTop = debugOutputText.scrollHeight;
+    }
+  }
+
+  // Make the function available globally
+  window.log_to_debug_output = log_to_debug_output;
 
   // Utility functions to reduce code duplication
   const utils = {
@@ -783,6 +798,12 @@
 
   // Update result automatically when image or text changes
   async function updateResult() {
+    // Clear debug output at the beginning of each recalculation
+    const debugOutputText = document.getElementById("debugOutputText");
+    if (debugOutputText) {
+      debugOutputText.value = "";
+    }
+
     if (!window.uploadedImage) {
       utils.addHiddenClass(resultSection);
       if (debugCheckbox.checked) {
@@ -971,6 +992,17 @@
         renderDebugImage(debugResultColoredXN, debugData.result_colored_xN);
       } else {
         utils.addHiddenClass(debugSection);
+      }
+
+      // Log input and output dimensions at the end of successful update
+      if (window.uploadedImage && debugData && debugData.result_colored_xN) {
+        const inputWidth = window.uploadedImage.width;
+        const inputHeight = window.uploadedImage.height;
+        const outputWidth = debugData.result_colored_xN.width;
+        const outputHeight = debugData.result_colored_xN.height;
+        log_to_debug_output(
+          `Input: ${inputWidth}x${inputHeight}, Output: ${outputWidth}x${outputHeight}`,
+        );
       }
     } catch (error) {
       console.error("Error generating QR code:", error);

@@ -6,6 +6,30 @@
         <title>Image To QR</title>
         <script src="3rd_party/qrcode.min.js"></script>
         <link rel="stylesheet" href="styles.css" />
+        <style>
+            .debug-log-container {
+                margin-top: 20px;
+                width: 100%;
+            }
+            .debug-output-textarea {
+                width: 100%;
+                height: 100px;
+                font-family: monospace;
+                font-size: 12px;
+                background-color: #1e1e1e;
+                color: #ffffff;
+                border: 1px solid #444;
+                border-radius: 4px;
+                padding: 8px;
+                resize: vertical;
+                min-height: 60px;
+                max-height: 200px;
+            }
+            .debug-log-container h4 {
+                margin-bottom: 8px;
+                color: #ffffff;
+            }
+        </style>
     </head>
     <body>
         <div class="container">
@@ -665,6 +689,14 @@
                                             ></canvas>
                                         </div>
                                     </div>
+                                </div>
+                                <div class="debug-log-container">
+                                    <h4>Debug Log</h4>
+                                    <textarea
+                                        id="debugOutputText"
+                                        class="debug-output-textarea"
+                                        readonly
+                                    ></textarea>
                                 </div>
                             </div>
                         </div>
