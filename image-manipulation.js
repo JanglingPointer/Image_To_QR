@@ -1269,7 +1269,11 @@ function applyOriginalColors(
         if (isBlack) {
           adjustedRgb = hslToRgb(originalHsl.h, originalHsl.s, darkLightness);
         } else {
-          adjustedRgb = hslToRgb(originalHsl.h, originalHsl.s, brightLightness);
+          let s = originalHsl.s;
+          if (unalteredBwData) {
+            s = Math.min(s, COLOR_BEND);
+          }
+          adjustedRgb = hslToRgb(originalHsl.h, s, brightLightness);
         }
       } else {
         const originalHsb = rgbToHsb(originalR, originalG, originalB);
