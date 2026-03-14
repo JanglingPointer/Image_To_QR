@@ -1506,52 +1506,35 @@ async function generateQRCodeOverlay(
 
     // Step 7: Scale uploaded image to match QR dimensions
     let scaledUploadedImage;
-    if (bwMode === "original") {
-      // For original mode, we need to check if we're in pixel perfect mode
-      // Pixel perfect mode uses blockSize (discrete zoom), normal mode uses regular zoom
-      const isPixelPerfect = blockSize > 1; // Simple heuristic - if blockSize > 1, use pixel perfect
 
-      if (isPixelPerfect) {
-        // Pixel perfect mode: use cropCenterPixels with blockSize
-        scaledUploadedImage = cropCenterPixels(
-          uploadedImage,
-          qrWithoutCtrlThinned.width,
-          blockSize,
-          offsetXValue,
-          offsetYValue,
-          outsidePixels,
-          outsidePixelsColor,
-        );
-      } else {
-        // Normal mode: use scaleImageToDimensions with zoom
-        // Zoom only works in "custom" mode
-        const effectiveZoomValue = scalingMode === "custom" ? zoomValue : 0;
-        const effectiveOffsetXValue =
-          scalingMode === "custom" ? offsetXValue : 0;
-        const effectiveOffsetYValue =
-          scalingMode === "custom" ? offsetYValue : 0;
+    // Check if blockSize > 1 (pixel perfect mode) regardless of bwMode
+    const isPixelPerfect = blockSize > 1;
 
-        scaledUploadedImage = scaleImageToDimensions(
-          uploadedImage,
-          qrWithoutCtrlThinned.width,
-          qrWithoutCtrlThinned.height,
-          scalingMode,
-          effectiveZoomValue,
-          effectiveOffsetXValue,
-          effectiveOffsetYValue,
-          outsidePixels,
-          outsidePixelsColor,
-        );
-      }
+    if (isPixelPerfect) {
+      // Use blockSize for ALL modes (original, dither, threshold)
+      scaledUploadedImage = cropCenterPixels(
+        uploadedImage,
+        qrWithoutCtrlThinned.width,
+        blockSize,
+        offsetXValue,
+        offsetYValue,
+        outsidePixels,
+        outsidePixelsColor,
+      );
     } else {
+      // Use regular scaling for all modes
+      const effectiveZoomValue = scalingMode === "custom" ? zoomValue : 0;
+      const effectiveOffsetXValue = scalingMode === "custom" ? offsetXValue : 0;
+      const effectiveOffsetYValue = scalingMode === "custom" ? offsetYValue : 0;
+
       scaledUploadedImage = scaleImageToDimensions(
         uploadedImage,
         qrWithoutCtrlThinned.width,
         qrWithoutCtrlThinned.height,
         scalingMode,
-        zoomValue,
-        offsetXValue,
-        offsetYValue,
+        effectiveZoomValue,
+        effectiveOffsetXValue,
+        effectiveOffsetYValue,
         outsidePixels,
         outsidePixelsColor,
       );
