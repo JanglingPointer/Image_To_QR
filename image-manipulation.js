@@ -740,6 +740,8 @@ function cropCenterPixels(
     paddingColor = hexToRgba(outsidePixelsColor);
   } else if (outsidePixels === "auto") {
     paddingColor = detectPaddingColor(sourceImage, true, true); // allowTransparentPadding for transparent borders
+  } else {
+    paddingColor = detectPaddingColor(sourceImage);
   }
 
   const tempCanvas = document.createElement("canvas");
@@ -1536,10 +1538,43 @@ async function generateQRCodeOverlay(
     // Step 7: Scale uploaded image to match QR dimensions
     let scaledUploadedImage;
     if (bwMode === "original") {
-      scaledUploadedImage = cropCenterPixels(
-        uploadedImage,
+      // For original mode, first apply blockSize downsampling if needed
+      let processedImage = uploadedImage;
+      if (blockSize > 1) {
+        // Create temporary canvas for downsampling
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = uploadedImage.width;
+        tempCanvas.height = uploadedImage.height;
+        const tempCtx = tempCanvas.getContext("2d");
+        tempCtx.imageSmoothingEnabled = false;
+        tempCtx.drawImage(uploadedImage, 0, 0);
+        let tempImageData = tempCtx.getImageData(
+          0,
+          0,
+          uploadedImage.width,
+          uploadedImage.height,
+        );
+
+        // Apply blockSize downsampling
+        tempImageData = downsampleByBlockSize(tempImageData, blockSize);
+
+        // Create image from downsampled data
+        const downsampledCanvas = document.createElement("canvas");
+        downsampledCanvas.width = tempImageData.width;
+        downsampledCanvas.height = tempImageData.height;
+        const downsampledCtx = downsampledCanvas.getContext("2d");
+        downsampledCtx.putImageData(tempImageData, 0, 0);
+
+        processedImage = downsampledCanvas;
+      }
+
+      // Then use scaleImageToDimensions with "custom" mode for zoom support
+      scaledUploadedImage = scaleImageToDimensions(
+        processedImage,
         qrWithoutCtrlThinned.width,
-        blockSize,
+        qrWithoutCtrlThinned.height,
+        "custom", // Always use custom mode for original to enable zoom
+        zoomValue,
         offsetXValue,
         offsetYValue,
         outsidePixels,
