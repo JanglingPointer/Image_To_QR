@@ -91,7 +91,7 @@
   const offsetYValue = document.getElementById("offsetYValue");
   const blockSizeSlider = document.getElementById("blockSizeSlider");
   const blockSizeValue = document.getElementById("blockSizeValue");
-  const blockSizeControl = document.querySelector(".zoom-control"); // Block Size is now in zoom-control group
+  const pixelPerfectCheckbox = document.getElementById("pixelPerfectCheckbox");
 
   // Global variable to store the uploaded image
   window.uploadedImage = null;
@@ -190,6 +190,7 @@
     outsidePixels: "auto", // 'auto' | 'extend' | 'color'
     outsidePixelsColor: "#000000",
     debug: false,
+    pixelPerfect: false, // New setting for pixel perfect mode
   };
 
   function setOriginalColorsState(useOriginalColors) {
@@ -238,6 +239,8 @@
     if (offsetXSlider) offsetXSlider.value = String(settings.offsetX);
     if (offsetYSlider) offsetYSlider.value = String(settings.offsetY);
     if (blockSizeSlider) blockSizeSlider.value = String(settings.blockSize);
+    if (pixelPerfectCheckbox)
+      pixelPerfectCheckbox.checked = settings.pixelPerfect;
     // Color pickers
     if (colorDark) {
       colorDark.value = settings.colorDark;
@@ -334,11 +337,10 @@
     return totalValue / pixelCount;
   }
 
-  // Auto-compute block size when Original is selected (min horizontal run length)
+  // Auto-compute block size when Pixel Perfect is active
   function autoComputeBlockSize() {
     if (!window.uploadedImage || !blockSizeSlider || !blockSizeValue) return;
-    const pixelPerfectRadio = document.getElementById("bwModePixelArt");
-    if (!pixelPerfectRadio || !pixelPerfectRadio.checked) return;
+    if (!pixelPerfectCheckbox || !pixelPerfectCheckbox.checked) return;
     const blockSize = window.computeBlockSizeFromImage(window.uploadedImage);
     blockSizeSlider.value = String(blockSize);
     blockSizeValue.textContent = String(blockSize);
@@ -809,9 +811,22 @@
       if (growRadio && growRadio.checked) scalingMode = "grow";
       if (stretchRadio && stretchRadio.checked) scalingMode = "stretch";
       if (customRadio && customRadio.checked) scalingMode = "custom";
-      // Get zoom value for custom mode
-      const zoomValue =
-        customRadio && customRadio.checked ? parseFloat(zoomSlider.value) : 0;
+
+      // Get zoom or blockSize value for custom mode based on pixel perfect setting
+      let zoomValue = 0;
+      let blockSize = 1;
+      if (customRadio && customRadio.checked) {
+        if (pixelPerfectCheckbox && pixelPerfectCheckbox.checked) {
+          // Pixel perfect mode: use blockSize
+          zoomValue = 0;
+          blockSize = parseInt(blockSizeSlider.value, 10);
+        } else {
+          // Normal mode: use zoom
+          zoomValue = parseFloat(zoomSlider.value);
+          blockSize = 1;
+        }
+      }
+
       // Get offset values for custom mode
       const offsetXValue =
         customRadio && customRadio.checked
@@ -838,9 +853,7 @@
       const add4thSquare = add4thSquareCheckbox
         ? add4thSquareCheckbox.checked
         : true;
-      const blockSize = blockSizeSlider
-        ? parseInt(blockSizeSlider.value, 10)
-        : 1;
+      // blockSize already declared above, no need to redeclare
       const outsidePixelsExtend = document.getElementById(
         "outsidePixelsExtend",
       );
@@ -883,6 +896,7 @@
         outsidePixels,
         outsidePixelsColor,
         useHsl,
+        zoomValue,
       );
       utils.removeHiddenClass(resultSection, "flex");
 
@@ -1017,6 +1031,17 @@
     }
   });
 
+  // Add event listener to pixel perfect checkbox
+  if (pixelPerfectCheckbox) {
+    pixelPerfectCheckbox.addEventListener("change", function () {
+      updateScalingModeRadioButtons();
+      updateScalingModeAndZoomVisibility();
+      if (window.uploadedImage) {
+        updateResult();
+      }
+    });
+  }
+
   // Add event listeners to black & white mode radio buttons to trigger updateResult
   ["bwModeThreshold", "bwModeDither", "bwModePixelArt"].forEach(function (id) {
     const element = document.getElementById(id);
@@ -1035,29 +1060,24 @@
     }
   });
 
-  // Show/hide DitherBrightness / Block Size slider based on BW mode
+  // Show/hide DitherBrightness slider based on BW mode
   function updateDitherBrightnessVisibility() {
     const ditherRadio = document.getElementById("bwModeDither");
     const thresholdRadio = document.getElementById("bwModeThreshold");
-    const pixelArtRadio = document.getElementById("bwModePixelArt");
     const thresholdSliderDiv = thresholdSlider
       ? thresholdSlider.parentElement.parentElement
       : null;
     const ditherSliderDiv = ditherBrightnessSlider
       ? ditherBrightnessSlider.parentElement.parentElement
       : null;
-    if (pixelArtRadio && pixelArtRadio.checked) {
-      if (thresholdControl) utils.addHiddenClass(thresholdControl);
-      // Block Size is now in zoom-control group, visibility handled by updateZoomControlVisibility
-    } else {
-      if (thresholdControl) utils.removeHiddenClass(thresholdControl);
-      if (ditherRadio && ditherRadio.checked) {
-        if (ditherSliderDiv) utils.removeHiddenClass(ditherSliderDiv);
-        if (thresholdSliderDiv) utils.addHiddenClass(thresholdSliderDiv);
-      } else if (thresholdRadio && thresholdRadio.checked) {
-        if (thresholdSliderDiv) utils.removeHiddenClass(thresholdSliderDiv);
-        if (ditherSliderDiv) utils.addHiddenClass(ditherSliderDiv);
-      }
+
+    if (thresholdControl) utils.removeHiddenClass(thresholdControl);
+    if (ditherRadio && ditherRadio.checked) {
+      if (ditherSliderDiv) utils.removeHiddenClass(ditherSliderDiv);
+      if (thresholdSliderDiv) utils.addHiddenClass(thresholdSliderDiv);
+    } else if (thresholdRadio && thresholdRadio.checked) {
+      if (thresholdSliderDiv) utils.removeHiddenClass(thresholdSliderDiv);
+      if (ditherSliderDiv) utils.addHiddenClass(ditherSliderDiv);
     }
   }
   // On page load, set initial visibility
@@ -1095,7 +1115,7 @@
   // Handle scaling mode radio buttons
   document.querySelectorAll('input[name="scalingMode"]').forEach((radio) => {
     radio.addEventListener("change", function () {
-      updateZoomControlVisibility();
+      updateScalingModeAndZoomVisibility();
       if (window.uploadedImage) {
         updateResult();
       }
@@ -1104,10 +1124,63 @@
 
   const zoomSliderWrapper = document.getElementById("zoomSliderWrapper");
 
+  // Function to update scaling mode radio buttons based on pixel perfect setting
+  function updateScalingModeRadioButtons() {
+    const shrinkRadio = document.getElementById("scalingModeShrink");
+    const growRadio = document.getElementById("scalingModeGrow");
+    const stretchRadio = document.getElementById("scalingModeStretch");
+    const customRadio = document.getElementById("scalingModeCustom");
+
+    if (pixelPerfectCheckbox && pixelPerfectCheckbox.checked) {
+      // Pixel perfect mode: only Custom should be available and selected
+      if (shrinkRadio) {
+        shrinkRadio.disabled = true;
+        shrinkRadio.parentElement.style.opacity = "0.5";
+        shrinkRadio.parentElement.style.cursor = "not-allowed";
+      }
+      if (growRadio) {
+        growRadio.disabled = true;
+        growRadio.parentElement.style.opacity = "0.5";
+        growRadio.parentElement.style.cursor = "not-allowed";
+      }
+      if (stretchRadio) {
+        stretchRadio.disabled = true;
+        stretchRadio.parentElement.style.opacity = "0.5";
+        stretchRadio.parentElement.style.cursor = "not-allowed";
+      }
+      if (customRadio) {
+        customRadio.disabled = false;
+        customRadio.checked = true;
+        customRadio.parentElement.style.opacity = "1";
+        customRadio.parentElement.style.cursor = "";
+      }
+    } else {
+      // Normal mode: all radio buttons available
+      if (shrinkRadio) {
+        shrinkRadio.disabled = false;
+        shrinkRadio.parentElement.style.opacity = "1";
+        shrinkRadio.parentElement.style.cursor = "";
+      }
+      if (growRadio) {
+        growRadio.disabled = false;
+        growRadio.parentElement.style.opacity = "1";
+        growRadio.parentElement.style.cursor = "";
+      }
+      if (stretchRadio) {
+        stretchRadio.disabled = false;
+        stretchRadio.parentElement.style.opacity = "1";
+        stretchRadio.parentElement.style.cursor = "";
+      }
+      if (customRadio) {
+        customRadio.disabled = false;
+        customRadio.parentElement.style.opacity = "1";
+        customRadio.parentElement.style.cursor = "";
+      }
+    }
+  }
+
   // Function to update scaling mode and zoom control visibility
   function updateScalingModeAndZoomVisibility() {
-    const pixelPerfectRadio = document.getElementById("bwModePixelArt");
-    const scalingModePresets = document.querySelector(".scaling-mode-presets");
     const customRadio = document.getElementById("scalingModeCustom");
     const blockSizeSliderDiv = document.getElementById("blockSizeSlider")
       ? document.getElementById("blockSizeSlider").parentElement
@@ -1116,29 +1189,24 @@
       ? document.getElementById("zoomSlider").parentElement
       : null;
 
-    if (
-      pixelPerfectRadio &&
-      pixelPerfectRadio.checked &&
-      window.uploadedImage
-    ) {
-      // Original mode: show block size, hide zoom slider
-      if (scalingModePresets) utils.addHiddenClass(scalingModePresets);
-      if (customRadio) customRadio.checked = true;
+    if (customRadio && customRadio.checked && window.uploadedImage) {
+      // Custom mode: show zoom control
       if (zoomControl) utils.removeHiddenClass(zoomControl, "inline-flex");
-      if (zoomSliderDiv) utils.addHiddenClass(zoomSliderDiv);
-      if (blockSizeSliderDiv)
-        utils.removeHiddenClass(blockSizeSliderDiv, "flex");
-    } else {
-      // Dither/Threshold mode: show scaling presets and zoom slider, hide block size
-      if (scalingModePresets)
-        utils.removeHiddenClass(scalingModePresets, "contents");
-      if (zoomSliderDiv) utils.removeHiddenClass(zoomSliderDiv, "flex");
-      if (blockSizeSliderDiv) utils.addHiddenClass(blockSizeSliderDiv);
-      if (customRadio && customRadio.checked && window.uploadedImage) {
-        if (zoomControl) utils.removeHiddenClass(zoomControl, "inline-flex");
+
+      // Show/hide block size or zoom based on pixel perfect checkbox
+      if (pixelPerfectCheckbox && pixelPerfectCheckbox.checked) {
+        // Pixel perfect mode: show block size, hide zoom
+        if (zoomSliderDiv) utils.addHiddenClass(zoomSliderDiv);
+        if (blockSizeSliderDiv)
+          utils.removeHiddenClass(blockSizeSliderDiv, "flex");
       } else {
-        if (zoomControl) utils.addHiddenClass(zoomControl);
+        // Normal mode: show zoom, hide block size
+        if (zoomSliderDiv) utils.removeHiddenClass(zoomSliderDiv, "flex");
+        if (blockSizeSliderDiv) utils.addHiddenClass(blockSizeSliderDiv);
       }
+    } else {
+      // Non-custom mode: hide zoom control
+      if (zoomControl) utils.addHiddenClass(zoomControl);
     }
   }
 
@@ -1162,8 +1230,9 @@
     parseFloat(val).toFixed(2),
   );
 
-  // On page load, ensure zoom control is shown/hidden correctly
-  updateZoomControlVisibility();
+  // On page load, ensure radio buttons and zoom control are shown/hidden correctly
+  updateScalingModeRadioButtons();
+  updateScalingModeAndZoomVisibility();
 
   // Ensure result and debug sections are hidden on page load
   utils.addHiddenClass(resultSection);

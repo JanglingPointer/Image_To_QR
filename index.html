@@ -51,6 +51,19 @@
                                     <span class="font-weight-600"
                                         >Scaling Mode:</span
                                     >
+                                    <div
+                                        class="pixel-perfect-group flex-center gap-8"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            id="pixelPerfectCheckbox"
+                                        />
+                                        <label
+                                            for="pixelPerfectCheckbox"
+                                            class="margin-bottom-0"
+                                            >Pixel Perfect</label
+                                        >
+                                    </div>
                                     <div class="scaling-mode-grid">
                                         <div class="scaling-mode-presets">
                                             <label
@@ -72,6 +85,8 @@
                                                 />
                                                 Grow</label
                                             >
+                                        </div>
+                                        <div class="scaling-mode-presets">
                                             <label
                                                 ><input
                                                     type="radio"
@@ -81,16 +96,16 @@
                                                 />
                                                 Stretch</label
                                             >
+                                            <label
+                                                ><input
+                                                    type="radio"
+                                                    name="scalingMode"
+                                                    id="scalingModeCustom"
+                                                    value="custom"
+                                                />
+                                                Custom</label
+                                            >
                                         </div>
-                                        <label
-                                            ><input
-                                                type="radio"
-                                                name="scalingMode"
-                                                id="scalingModeCustom"
-                                                value="custom"
-                                            />
-                                            Custom</label
-                                        >
                                     </div>
                                     <div
                                         class="zoom-control flex-center gap-16 margin-top-8 hidden"
