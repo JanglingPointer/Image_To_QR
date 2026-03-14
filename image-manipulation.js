@@ -1568,15 +1568,20 @@ async function generateQRCodeOverlay(
         processedImage = downsampledCanvas;
       }
 
-      // Then use scaleImageToDimensions with "custom" mode for zoom support
+      // Use scaleImageToDimensions with the selected scaling mode
+      // Zoom only works in "custom" mode, so pass zoomValue only when appropriate
+      const effectiveZoomValue = scalingMode === "custom" ? zoomValue : 0;
+      const effectiveOffsetXValue = scalingMode === "custom" ? offsetXValue : 0;
+      const effectiveOffsetYValue = scalingMode === "custom" ? offsetYValue : 0;
+
       scaledUploadedImage = scaleImageToDimensions(
         processedImage,
         qrWithoutCtrlThinned.width,
         qrWithoutCtrlThinned.height,
-        "custom", // Always use custom mode for original to enable zoom
-        zoomValue,
-        offsetXValue,
-        offsetYValue,
+        scalingMode, // Use the selected scaling mode (shrink/grow/stretch/custom)
+        effectiveZoomValue,
+        effectiveOffsetXValue,
+        effectiveOffsetYValue,
         outsidePixels,
         outsidePixelsColor,
       );
