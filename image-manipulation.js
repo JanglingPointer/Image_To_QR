@@ -1,43 +1,4 @@
 /**
- * Scales an image by a factor of 3 (every pixel becomes a 3x3 block)
- * @param {ImageData} imageData - The input image data
- * @returns {ImageData} The scaled image data
- */
-function scale3Image(imageData) {
-  const oldWidth = imageData.width;
-  const oldHeight = imageData.height;
-
-  const newWidth = oldWidth * 3;
-  const newHeight = oldHeight * 3;
-  const newImageData = new ImageData(newWidth, newHeight);
-
-  for (let y = 0; y < oldHeight; y++) {
-    for (let x = 0; x < oldWidth; x++) {
-      const oldIndex = (y * oldWidth + x) * 4;
-      const r = imageData.data[oldIndex];
-      const g = imageData.data[oldIndex + 1];
-      const b = imageData.data[oldIndex + 2];
-      const a = imageData.data[oldIndex + 3];
-
-      for (let dy = 0; dy < 3; dy++) {
-        for (let dx = 0; dx < 3; dx++) {
-          const newX = x * 3 + dx;
-          const newY = y * 3 + dy;
-          const newIndex = (newY * newWidth + newX) * 4;
-
-          newImageData.data[newIndex] = r; // Red
-          newImageData.data[newIndex + 1] = g; // Green
-          newImageData.data[newIndex + 2] = b; // Blue
-          newImageData.data[newIndex + 3] = a; // Alpha
-        }
-      }
-    }
-  }
-
-  return newImageData;
-}
-
-/**
  * Scales an image by a given factor (each pixel becomes NxN pixels)
  * @param {ImageData} imageData - The input image data
  * @param {number} scaleFactor - The scaling factor (N)
@@ -75,6 +36,15 @@ function scaleImageByFactor(imageData, scaleFactor) {
   }
 
   return newImageData;
+}
+
+/**
+ * Scales an image by a factor of 3 (every pixel becomes a 3x3 block)
+ * @param {ImageData} imageData - The input image data
+ * @returns {ImageData} The scaled image data
+ */
+function scale3Image(imageData) {
+  return scaleImageByFactor(imageData, 3);
 }
 
 /**
@@ -1052,7 +1022,6 @@ function hslToRgb(h, s, l) {
   };
 
   let r, g, b;
-
   if (s === 0) {
     r = g = b = l; // achromatic
   } else {
