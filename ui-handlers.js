@@ -62,6 +62,9 @@
   const blockSizeValue = document.getElementById("blockSizeValue");
   const pixelPerfectCheckbox = document.getElementById("pixelPerfectCheckbox");
 
+  /** True after the user clicks Dither / Threshold / Original (trusted pointer/keyboard). */
+  let userManuallySelectedBwMode = false;
+
   // Global variable to store the uploaded image
   window.uploadedImage = null;
 
@@ -139,7 +142,7 @@
   // Centralized initial settings
   const initialSettings = {
     text: "https://example.com#enter_your_own_URL",
-    bwMode: "dither", // 'threshold' | 'dither' | 'original_colors'
+    bwMode: "original_colors", // 'threshold' | 'dither' | 'original_colors'
     blockSize: 1, // 1-8 for pixel art mode
     threshold: 128,
     ditherBrightness: 0, // -1..1
@@ -179,6 +182,28 @@
       // Duo tone mode: show color pickers, hide saturation boost
       utils.removeHiddenClass(customColorsSection, "flex");
       utils.addHiddenClass(saturationBoostGroup);
+    }
+  }
+
+  /** Duo Tone is incompatible with BW "Original"; gray out and disable that option. */
+  function syncBwModeOriginalAvailability() {
+    const bwDither = document.getElementById("bwModeDither");
+    const bwPixelArt = document.getElementById("bwModePixelArt");
+    if (!bwPixelArt) return;
+
+    const duoSelected = colorAppearanceDuoTone && colorAppearanceDuoTone.checked;
+
+    if (duoSelected) {
+      bwPixelArt.disabled = true;
+      const label = bwPixelArt.closest("label");
+      if (label) label.classList.add("bw-mode-option-disabled");
+      if (bwPixelArt.checked && bwDither) {
+        bwDither.checked = true;
+      }
+    } else {
+      bwPixelArt.disabled = false;
+      const label = bwPixelArt.closest("label");
+      if (label) label.classList.remove("bw-mode-option-disabled");
     }
   }
 
@@ -266,6 +291,7 @@
     updateDitherBrightnessVisibility();
     updateZoomControlVisibility();
     updateClarityVisibility();
+    syncBwModeOriginalAvailability();
     // Initially hide main image controls until image is uploaded
     utils.addHiddenClass(mainImageControls);
     // Ensure slider value labels reflect current values
@@ -545,6 +571,20 @@
   });
 
   function onColorAppearanceChange() {
+    syncBwModeOriginalAvailability();
+    if (!userManuallySelectedBwMode) {
+      const bwDither = document.getElementById("bwModeDither");
+      const bwPixelArt = document.getElementById("bwModePixelArt");
+      if (colorAppearanceDuoTone && colorAppearanceDuoTone.checked && bwDither) {
+        bwDither.checked = true;
+      } else if (
+        colorAppearanceColorful &&
+        colorAppearanceColorful.checked &&
+        bwPixelArt
+      ) {
+        bwPixelArt.checked = true;
+      }
+    }
     const saturationBoostGroup = document.querySelector(
       ".saturation-boost-group",
     );
@@ -567,6 +607,17 @@
       "change",
       onColorAppearanceChange,
     );
+
+  ["bwModeThreshold", "bwModeDither", "bwModePixelArt"].forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener("click", function (e) {
+        if (e.isTrusted) {
+          userManuallySelectedBwMode = true;
+        }
+      });
+    }
+  });
 
   // On page load, apply centralized initial settings to ensure UI matches defaults
   applySettingsToUI(initialSettings);
