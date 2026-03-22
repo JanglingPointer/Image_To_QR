@@ -29,9 +29,39 @@
                 margin-bottom: 8px;
                 color: #ffffff;
             }
+
+            .landscape-orientation-warning {
+                display: none;
+                width: 100%;
+                max-width: 1200px;
+                margin: 0 auto 10px;
+                box-sizing: border-box;
+                padding: 10px 14px;
+                background: rgba(0, 0, 0, 0.35);
+                color: #fff;
+                text-align: center;
+                font-size: 0.95rem;
+                line-height: 1.4;
+                border-radius: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.25);
+            }
+
+            .landscape-orientation-warning.is-visible {
+                display: block;
+            }
         </style>
     </head>
     <body>
+        <div
+            id="landscapeOrientationWarning"
+            class="landscape-orientation-warning"
+            role="status"
+            aria-live="polite"
+            aria-hidden="true"
+        >
+            This app works best in landscape mode — rotate your device for a better
+            layout.
+        </div>
         <div class="container">
             <div class="content">
                 <div class="layout-container">
@@ -692,6 +722,24 @@
             </div>
         </div>
 
+        <script>
+            (function () {
+                var el = document.getElementById("landscapeOrientationWarning");
+                if (!el) return;
+
+                function updateLandscapeWarning() {
+                    var portrait = window.innerWidth < window.innerHeight;
+                    el.classList.toggle("is-visible", portrait);
+                    el.setAttribute("aria-hidden", portrait ? "false" : "true");
+                }
+
+                updateLandscapeWarning();
+                window.addEventListener("resize", updateLandscapeWarning);
+                window.addEventListener("orientationchange", function () {
+                    setTimeout(updateLandscapeWarning, 150);
+                });
+            })();
+        </script>
         <script src="image-manipulation_color_conversions.js"></script>
         <script src="image-manipulation_padding.js"></script>
         <script src="image-manipulation_scaling.js"></script>
