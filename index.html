@@ -380,6 +380,106 @@
                                     </div>
                                 </div>
                                 <div
+                                    class="color-control color-customization hidden"
+                                >
+                                    <div class="color-row flex-center gap-16">
+                                        <div
+                                            class="duo-tone-group flex-center gap-8"
+                                            role="radiogroup"
+                                            aria-label="Color appearance"
+                                        >
+                                        <div class="flex-center gap-4">
+                                            <input
+                                                type="radio"
+                                                name="colorAppearance"
+                                                id="colorAppearanceColorful"
+                                                value="colorful"
+                                                checked
+                                            />
+                                            <label
+                                                for="colorAppearanceColorful"
+                                                class="margin-bottom-0"
+                                                >Colorful</label
+                                            >
+                                        </div>
+                                            <div class="flex-center gap-4">
+                                                <input
+                                                    type="radio"
+                                                    name="colorAppearance"
+                                                    id="colorAppearanceDuoTone"
+                                                    value="duo"
+                                                />
+                                                <label
+                                                    for="colorAppearanceDuoTone"
+                                                    class="margin-bottom-0"
+                                                    >Duo Tone</label
+                                                >
+                                            </div>
+                                            
+                                        </div>
+                                        <div
+                                            class="custom-colors"
+                                            id="customColorsSection"
+                                        >
+                                            <label
+                                                for="colorDark"
+                                                class="sr-only"
+                                                >Dark Color</label
+                                            >
+                                            <input
+                                                type="color"
+                                                id="colorDark"
+                                                value="#211e59"
+                                                class="color-picker"
+                                            />
+                                            <label
+                                                for="colorBright"
+                                                class="sr-only"
+                                                >Bright Color</label
+                                            >
+                                            <input
+                                                type="color"
+                                                id="colorBright"
+                                                value="#f9f7dd"
+                                                class="color-picker"
+                                            />
+                                        </div>
+                                        <div
+                                            class="saturation-boost-group flex-center gap-4 hidden"
+                                        >
+                                            <label
+                                                for="saturationBoostSlider"
+                                                id="saturationBoostLabel"
+                                                class="margin-bottom-0"
+                                                >Saturation</label
+                                            >
+                                            <input
+                                                type="range"
+                                                id="saturationBoostSlider"
+                                                min="0"
+                                                max="1"
+                                                step="0.01"
+                                                value="0"
+                                                class="threshold-slider width-100"
+                                            />
+                                        </div>
+                                        <div
+                                            class="shine-group flex-center gap-4"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                id="shineCheckbox"
+                                            />
+                                            <label
+                                                for="shineCheckbox"
+                                                class="margin-bottom-0"
+                                                >Shine</label
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div
                                     class="dither-and-threshold flex-start gap-16"
                                 >
                                     <div
@@ -459,85 +559,6 @@
                                                     />
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div
-                                    class="color-control color-customization hidden"
-                                >
-                                    <div class="color-row flex-center gap-16">
-                                        <div
-                                            class="duo-tone-group flex-center gap-4"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                id="originalColorsCheckbox"
-                                            />
-                                            <label
-                                                for="originalColorsCheckbox"
-                                                class="margin-bottom-0"
-                                                >Duo Tone</label
-                                            >
-                                        </div>
-                                        <div
-                                            class="custom-colors"
-                                            id="customColorsSection"
-                                        >
-                                            <label
-                                                for="colorDark"
-                                                class="sr-only"
-                                                >Dark Color</label
-                                            >
-                                            <input
-                                                type="color"
-                                                id="colorDark"
-                                                value="#211e59"
-                                                class="color-picker"
-                                            />
-                                            <label
-                                                for="colorBright"
-                                                class="sr-only"
-                                                >Bright Color</label
-                                            >
-                                            <input
-                                                type="color"
-                                                id="colorBright"
-                                                value="#f9f7dd"
-                                                class="color-picker"
-                                            />
-                                        </div>
-                                        <div
-                                            class="saturation-boost-group flex-center gap-4 hidden"
-                                        >
-                                            <label
-                                                for="saturationBoostSlider"
-                                                id="saturationBoostLabel"
-                                                class="margin-bottom-0"
-                                                >Saturation</label
-                                            >
-                                            <input
-                                                type="range"
-                                                id="saturationBoostSlider"
-                                                min="0"
-                                                max="1"
-                                                step="0.01"
-                                                value="0"
-                                                class="threshold-slider width-100"
-                                            />
-                                        </div>
-                                        <div
-                                            class="shine-group flex-center gap-4"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                id="shineCheckbox"
-                                            />
-                                            <label
-                                                for="shineCheckbox"
-                                                class="margin-bottom-0"
-                                                >Shine</label
-                                            >
                                         </div>
                                     </div>
                                 </div>

@@ -31,8 +31,11 @@
   const colorDark = document.getElementById("colorDark");
   const colorBright = document.getElementById("colorBright");
   const colorControl = document.querySelector(".color-control");
-  const originalColorsCheckbox = document.getElementById(
-    "originalColorsCheckbox",
+  const colorAppearanceDuoTone = document.getElementById(
+    "colorAppearanceDuoTone",
+  );
+  const colorAppearanceColorful = document.getElementById(
+    "colorAppearanceColorful",
   );
   const customColorsSection = document.getElementById("customColorsSection");
   const scalingModeGroup = document.querySelector(".scaling-mode-group");
@@ -160,8 +163,10 @@
   };
 
   function setOriginalColorsState(useOriginalColors) {
-    // Set checkbox state: checked = duo tone mode, unchecked = original colors mode
-    originalColorsCheckbox.checked = !useOriginalColors;
+    if (colorAppearanceDuoTone)
+      colorAppearanceDuoTone.checked = !useOriginalColors;
+    if (colorAppearanceColorful)
+      colorAppearanceColorful.checked = useOriginalColors;
     const saturationBoostGroup = document.querySelector(
       ".saturation-boost-group",
     );
@@ -432,7 +437,7 @@
   function updateClarityVisibility() {
     const debugChecked = debugCheckbox && debugCheckbox.checked;
     const duoToneSelected =
-      originalColorsCheckbox && originalColorsCheckbox.checked;
+      colorAppearanceDuoTone && colorAppearanceDuoTone.checked;
     // Show clarity when debug is checked AND duo tone is NOT selected
     if (debugChecked && !duoToneSelected) {
       if (clarityControl) utils.removeHiddenClass(clarityControl);
@@ -539,13 +544,11 @@
     }
   });
 
-  // Handle duo tone checkbox (inverted logic from original colors)
-  originalColorsCheckbox.addEventListener("change", function () {
+  function onColorAppearanceChange() {
     const saturationBoostGroup = document.querySelector(
       ".saturation-boost-group",
     );
-    // Inverted logic: checked = duo tone mode (show color pickers), unchecked = original colors mode
-    if (this.checked) {
+    if (colorAppearanceDuoTone && colorAppearanceDuoTone.checked) {
       utils.removeHiddenClass(customColorsSection, "flex");
       utils.addHiddenClass(saturationBoostGroup);
     } else {
@@ -556,7 +559,14 @@
     if (window.uploadedImage) {
       updateResult();
     }
-  });
+  }
+  if (colorAppearanceDuoTone)
+    colorAppearanceDuoTone.addEventListener("change", onColorAppearanceChange);
+  if (colorAppearanceColorful)
+    colorAppearanceColorful.addEventListener(
+      "change",
+      onColorAppearanceChange,
+    );
 
   // On page load, apply centralized initial settings to ensure UI matches defaults
   applySettingsToUI(initialSettings);
@@ -625,7 +635,8 @@
       const noiseProbability = parseInt(noiseSlider.value);
       const darkColor = colorDark.value;
       const brightColor = colorBright.value;
-      const useOriginalColors = !originalColorsCheckbox.checked; // Inverted: unchecked = original colors
+      const useOriginalColors =
+        colorAppearanceColorful && colorAppearanceColorful.checked;
       const saturationBoost = useOriginalColors
         ? parseFloat(saturationBoostSlider.value)
         : 0;
