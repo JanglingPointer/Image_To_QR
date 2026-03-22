@@ -498,7 +498,7 @@ function applyCustomColors(imageData, darkColor, brightColor) {
  * @param {number} clarity - Clarity value (0-100), controls COLOR_BEND
  * @param {ImageData|null} unalteredBwImageData - Pre-noise/QR B&W image for detecting altered pixels.
  *   When provided, unaltered pixels keep original color; only altered pixels get luminance adjustment.
- * @param {boolean} preserveSaturation - If true (dither/threshold), use HSL to preserve perceived saturation.
+ * @param {boolean} preserveSaturation - deprecated
  *   If false (original_colors mode), use HSB for pastel-friendly rendering.
  * @returns {ImageData} The colored image data using original colors
  */
@@ -538,49 +538,30 @@ function applyOriginalColors(
       const isBlack = bwData[i] === 0;
       const MIN_GAP = 20;
       let adjustedRgb;
-      if (preserveSaturation) {
-        const originalHsl = rgbToHsl(originalR, originalG, originalB);
-        let darkLightness = Math.min(originalHsl.l, COLOR_BEND);
-        let brightLightness = Math.max(originalHsl.l, 100 - COLOR_BEND);
-        if (brightLightness - darkLightness < MIN_GAP) {
-          const mid = (darkLightness + brightLightness) / 2;
-          darkLightness = Math.max(0, mid - MIN_GAP / 2);
-          brightLightness = Math.min(100, mid + MIN_GAP / 2);
-        }
-        if (isBlack) {
-          adjustedRgb = hslToRgb(originalHsl.h, originalHsl.s, darkLightness);
-        } else {
-          adjustedRgb = hslToRgb(
-            originalHsl.h,
-            originalHsl.s,
-            brightLightness,
-          );
-        }
-      } else {
-        const originalHsb = rgbToHsb(originalR, originalG, originalB);
-        let adjustedSaturation = originalHsb.s;
-        let darkBrightness = Math.min(originalHsb.b, COLOR_BEND);
-        let brightBrightness = Math.max(originalHsb.b, 100 - COLOR_BEND);
-        if (brightBrightness - darkBrightness < MIN_GAP) {
-          const mid = (darkBrightness + brightBrightness) / 2;
-          darkBrightness = Math.max(0, mid - MIN_GAP / 2);
-          brightBrightness = Math.min(100, mid + MIN_GAP / 2);
-        }
-        if (isBlack) {
-          adjustedRgb = hsbToRgb(
-            originalHsb.h,
-            adjustedSaturation,
-            darkBrightness,
-          );
-        } else {
-          adjustedSaturation = Math.min(adjustedSaturation, COLOR_BEND);
-          adjustedRgb = hsbToRgb(
-            originalHsb.h,
-            adjustedSaturation,
-            brightBrightness,
-          );
-        }
+     
+      const originalHsb = rgbToHsb(originalR, originalG, originalB);
+      let adjustedSaturation = originalHsb.s;
+      let darkBrightness = Math.min(originalHsb.b, COLOR_BEND);
+      let brightBrightness = Math.max(originalHsb.b, 100 - COLOR_BEND);
+      if (brightBrightness - darkBrightness < MIN_GAP) {
+        const mid = (darkBrightness + brightBrightness) / 2;
+        darkBrightness = Math.max(0, mid - MIN_GAP / 2);
+        brightBrightness = Math.min(100, mid + MIN_GAP / 2);
       }
+      if (isBlack) {
+        adjustedRgb = hsbToRgb(
+          originalHsb.h,
+          adjustedSaturation,
+          darkBrightness,
+        );
+      } else {
+        adjustedRgb = hsbToRgb(
+          originalHsb.h,
+          adjustedSaturation,
+          brightBrightness,
+        );
+      }
+      
 
       resultData[i] = adjustedRgb.r;
       resultData[i + 1] = adjustedRgb.g;
