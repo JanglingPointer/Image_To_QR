@@ -851,10 +851,10 @@ async function generateQRCodeOverlay(
     // Step 7: Scale up by factor of 3
     const qrWithoutCtrlx3 = scale3Image(qrWithoutCtrl);
 
-    // Step 6: Thin out by keeping only center pixels
+    // Step 8: Thin out by keeping only center pixels
     const qrWithoutCtrlThinned = onlyKeepCenterPixelOf9x9Block(qrWithoutCtrlx3);
 
-    // Step 7: Scale uploaded image to match QR dimensions
+    // Step 9: Scale uploaded image to match QR dimensions
     let scaledUploadedImage;
 
     // Check if we're in pixel perfect mode (blockSize >= 1)
@@ -891,7 +891,7 @@ async function generateQRCodeOverlay(
       );
     }
 
-    // Step 7.5: Optionally apply gamma correction for dither mode
+    // Step 10: Convert uploaded image to BW (with optional dither gamma)
     let scaledUploadedImage_Gamma = null;
     let scaledUploadedImageBW;
     if (bwMode === "original_colors") {
@@ -928,14 +928,14 @@ async function generateQRCodeOverlay(
       );
     }
 
-    // Step 7.5.5: Add noise to black and white image
+    // Step 11: Add noise to black and white image
     const scaledUploadedImageBW_Noise = addNoiseToImage(
       scaledUploadedImageBW,
       noiseProbability,
       noiseSeed,
     );
 
-    // Step 7.6: Create BW image with control squares (using noisy image as base)
+    // Step 12: Create BW image with control squares (using noisy image as base)
     const scaledUploadedImageBW_plusCtrl = new ImageData(
       scaledUploadedImageBW_Noise.width,
       scaledUploadedImageBW_Noise.height,
@@ -959,7 +959,7 @@ async function generateQRCodeOverlay(
       }
     }
 
-    // Step 7.7: Create BW image with control squares and QR data
+    // Step 13: Create BW image with control squares and QR data
     const scaledUploadedImageBW_plusAllQR = new ImageData(
       scaledUploadedImageBW_plusCtrl.width,
       scaledUploadedImageBW_plusCtrl.height,
@@ -983,7 +983,7 @@ async function generateQRCodeOverlay(
       }
     }
 
-    // Step 7.8: Apply colors to create colored result
+    // Step 14: Apply colors to create colored result
     let result_colored;
     if (useOriginalColors) {
       let unalteredBw = null;
@@ -1021,7 +1021,7 @@ async function generateQRCodeOverlay(
         brightColor,
       );
     }
-    // Apply saturation boost as a post-processing step
+    // Step 15: Apply saturation boost as a post-processing step
     if (result_colored && saturationBoost > 0 && useOriginalColors) {
       const data = result_colored.data;
       for (let i = 0; i < data.length; i += 4) {
@@ -1039,7 +1039,7 @@ async function generateQRCodeOverlay(
       }
     }
 
-    // Compute result_colored_shine before result_colored_xN
+    // Step 16: Build shine-adjusted colored result
     let result_colored_shine = null;
     if (result_colored) {
       let preShine = result_colored;
@@ -1080,6 +1080,7 @@ async function generateQRCodeOverlay(
       }
     }
 
+    // Step 17: Optionally tint control pixels based on trimmed image lightness bounds
     if (result_colored_shine && tintCtrlPixels) {
       // qrCtrlx3 has the exact control-pixel footprint in result_colored_shine resolution.
       result_colored_shine = tintControlPixelsByTrimmedLightness(
@@ -1088,7 +1089,7 @@ async function generateQRCodeOverlay(
       );
     }
 
-    // Step 7.9: Create scaled version of the colored result (from result_colored_shine)
+    // Step 18: Create scaled version of the colored result (from result_colored_shine)
     const result_colored_xN = result_colored_shine
       ? scaleImageByFactor(result_colored_shine, scaleFactor)
       : null;
@@ -1133,7 +1134,7 @@ async function generateQRCodeOverlay(
       return result;
     }
 
-    // Step 8: Create final canvas and overlay
+    // Step 19: Create final canvas and overlay
     const canvas = document.getElementById("resultCanvas");
     const ctx = canvas.getContext("2d");
 
