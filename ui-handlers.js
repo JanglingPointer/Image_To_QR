@@ -27,6 +27,7 @@
   const add4thSquareControl = document.querySelector(".add-4th-square-control");
   const oklchHsbControl = document.querySelector(".oklch-hsb-control");
   const tintCtrlPixelsCheckbox = document.getElementById("tintCtrlPixelsCheckbox");
+  const robustColorsCheckbox = document.getElementById("robustColorsCheckbox");
   const scaleSlider = document.getElementById("scaleSlider");
   const scaleValue = document.getElementById("scaleValue");
   const scaleControl = document.querySelector(".scale-control");
@@ -156,6 +157,7 @@
     clarity: 90, // 0..100
     add4thSquare: true, // Whether to add 4th square
     tintCtrlPixels: false,
+    robustColors: true,
     scale: 3,
     noise: 10,
     colorDark: "#211e59",
@@ -237,6 +239,8 @@
       add4thSquareCheckbox.checked = settings.add4thSquare;
     if (tintCtrlPixelsCheckbox)
       tintCtrlPixelsCheckbox.checked = !!settings.tintCtrlPixels;
+    if (robustColorsCheckbox)
+      robustColorsCheckbox.checked = settings.robustColors !== false;
     if (scaleSlider) scaleSlider.value = String(settings.scale);
     if (noiseSlider) noiseSlider.value = String(settings.noise);
     if (saturationBoostSlider)
@@ -295,6 +299,7 @@
     if (debugCheckbox) debugCheckbox.checked = settings.debug;
     if (oklchToHsbSlider)
       oklchToHsbSlider.value = String(settings.oklchToHsbBlend ?? 0);
+    updateRobustColorsState(false);
     if (settings.debug) {
       utils.removeHiddenClass(testImageBtn);
     } else {
@@ -331,10 +336,29 @@
   function updateRobustnessWarning() {
     if (!claritySlider || !clarityWarning) return;
     const robustness = parseFloat(claritySlider.value);
-    if (robustness < 80) {
+    const robustColorsOff = robustColorsCheckbox && !robustColorsCheckbox.checked;
+    if (robustness < 80 || robustColorsOff) {
       clarityWarning.classList.remove("clarity-warning-hidden");
     } else {
       clarityWarning.classList.add("clarity-warning-hidden");
+    }
+  }
+
+  function updateRobustColorsState(triggerUpdate = true) {
+    if (!robustColorsCheckbox || !oklchToHsbSlider) return;
+    if (robustColorsCheckbox.checked) {
+      oklchToHsbSlider.value = "0";
+      oklchToHsbSlider.disabled = true;
+    } else {
+      oklchToHsbSlider.disabled = false;
+      oklchToHsbSlider.value = "0.5";
+    }
+    utils.updateSliderValue(oklchToHsbSlider, oklchToHsbValue, (v) =>
+      parseFloat(v).toFixed(2),
+    );
+    updateRobustnessWarning();
+    if (triggerUpdate && window.uploadedImage) {
+      updateResult();
     }
   }
 
@@ -508,6 +532,11 @@
   utils.addSliderListener(oklchToHsbSlider, oklchToHsbValue, (v) =>
     parseFloat(v).toFixed(2),
   );
+  if (robustColorsCheckbox) {
+    robustColorsCheckbox.addEventListener("change", function () {
+      updateRobustColorsState(true);
+    });
+  }
 
   // Add slider listeners using utility function
   utils.addSliderListener(thresholdSlider, thresholdValue);
@@ -766,9 +795,13 @@
       const add4thSquare = add4thSquareCheckbox
         ? add4thSquareCheckbox.checked
         : true;
-      const oklchToHsbBlend = oklchToHsbSlider
-        ? parseFloat(oklchToHsbSlider.value)
-        : 0;
+      const robustColors = robustColorsCheckbox
+        ? robustColorsCheckbox.checked
+        : true;
+      const oklchToHsbBlend =
+        robustColors || !oklchToHsbSlider
+          ? 0
+          : parseFloat(oklchToHsbSlider.value);
       const tintCtrlPixels = tintCtrlPixelsCheckbox
         ? tintCtrlPixelsCheckbox.checked
         : false;
@@ -807,7 +840,7 @@
           `ScaleMode: ${scalingMode} | PP: ${pixelPerfectCheckbox ? pixelPerfectCheckbox.checked : false} | Zoom: ${zoomValue} | Offset: (${offsetXValue}, ${offsetYValue})`,
         );
         log(
-          `Clarity: ${clarity} | 4thSqr: ${add4thSquare} | OKLCH->HSB: ${oklchToHsbBlend.toFixed(2)} | TintCtrl: ${tintCtrlPixels} | BlockSz: ${blockSize} | OutPx: ${outsidePixels}${outsidePixels === "color" ? ":" + outsidePixelsColor : ""}`,
+          `Clarity: ${clarity} | 4thSqr: ${add4thSquare} | RobustColors: ${robustColors} | OKLCH->HSB: ${oklchToHsbBlend.toFixed(2)} | TintCtrl: ${tintCtrlPixels} | BlockSz: ${blockSize} | OutPx: ${outsidePixels}${outsidePixels === "color" ? ":" + outsidePixelsColor : ""}`,
         );
         log("=================");
       }
