@@ -51,6 +51,7 @@
   );
   const customColorsSection = document.getElementById("customColorsSection");
   const scalingModeGroup = document.querySelector(".scaling-mode-group");
+  const outsidePixelsGroup = document.querySelector(".outside-pixels-group");
   const bwModeGroup = document.querySelector(".bw-mode-group");
   const mainImageControls = document.querySelector(".main-image-controls");
   const downloadBtn = document.getElementById("downloadBtn");
@@ -76,6 +77,7 @@
 
   /** True after the user clicks Dither / Threshold / Original (trusted pointer/keyboard). */
   let userManuallySelectedBwMode = false;
+  let lastInnerTargetSize = null;
 
   // Global variable to store the uploaded image
   window.uploadedImage = null;
@@ -882,6 +884,9 @@
         outsidePixels,
         outsidePixelsColor,
       );
+      if (debugData && debugData.qrCtrlx3) {
+        lastInnerTargetSize = Math.max(0, debugData.qrCtrlx3.width - 6);
+      }
       utils.removeHiddenClass(resultSection, "flex");
 
       // Handle debug output
@@ -1032,6 +1037,9 @@
 
   // Block Size slider (Original mode)
   utils.addSliderListener(blockSizeSlider, blockSizeValue);
+  if (blockSizeSlider) {
+    blockSizeSlider.addEventListener("input", updateOutsidePixelsGroupVisibility);
+  }
 
   // Auto block size button
   const autoBlockSizeBtn = document.getElementById("autoBlockSizeBtn");
@@ -1167,6 +1175,61 @@
       // Non-custom mode: hide zoom control
       if (zoomControl) utils.addHiddenClass(zoomControl);
     }
+    updateOutsidePixelsGroupVisibility();
+  }
+
+  function updateOutsidePixelsGroupVisibility() {
+    if (!outsidePixelsGroup || !window.uploadedImage) {
+      if (outsidePixelsGroup) utils.addHiddenClass(outsidePixelsGroup);
+      return;
+    }
+
+    const shrinkRadio = document.getElementById("scalingModeShrink");
+    const growRadio = document.getElementById("scalingModeGrow");
+    const stretchRadio = document.getElementById("scalingModeStretch");
+    const customRadio = document.getElementById("scalingModeCustom");
+
+    const sourceAspect = window.uploadedImage.width / window.uploadedImage.height;
+    const EPS = 1e-6;
+    let hasOutsidePixels = false;
+
+    if (stretchRadio && stretchRadio.checked) {
+      hasOutsidePixels = false;
+    } else if (growRadio && growRadio.checked) {
+      hasOutsidePixels = false;
+    } else if (shrinkRadio && shrinkRadio.checked) {
+      hasOutsidePixels = Math.abs(sourceAspect - 1) > EPS;
+    } else if (customRadio && customRadio.checked) {
+      if (pixelPerfectCheckbox && pixelPerfectCheckbox.checked) {
+        if (blockSizeSlider && lastInnerTargetSize) {
+          const blockSize = Math.max(1, parseInt(blockSizeSlider.value, 10) || 1);
+          const downsampledW = Math.ceil(window.uploadedImage.width / blockSize);
+          const downsampledH = Math.ceil(window.uploadedImage.height / blockSize);
+          hasOutsidePixels =
+            downsampledW < lastInnerTargetSize || downsampledH < lastInnerTargetSize;
+        } else {
+          // Target size is not known yet (before first render), keep visible temporarily.
+          hasOutsidePixels = true;
+        }
+      } else {
+        const zoomValueUsed =
+          pixelPerfectCheckbox && pixelPerfectCheckbox.checked
+            ? 0
+            : parseFloat(zoomSlider.value || "0");
+        const zoomFactor = 1 + zoomValueUsed;
+        const requiredToFill = Math.max(sourceAspect, 1 / sourceAspect);
+        hasOutsidePixels = zoomFactor + EPS < requiredToFill;
+      }
+    }
+
+    if (hasOutsidePixels) {
+      utils.removeHiddenClass(outsidePixelsGroup);
+    } else {
+      utils.addHiddenClass(outsidePixelsGroup);
+      const outsidePixelsAutoEl = document.getElementById("outsidePixelsAuto");
+      if (outsidePixelsAutoEl) outsidePixelsAutoEl.checked = true;
+    }
+    updateOutsidePixelsColorPickerVisibility();
   }
 
   // Function to update zoom control visibility
@@ -1202,6 +1265,9 @@
   utils.addSliderListener(zoomSlider, zoomValue, (val) =>
     parseFloat(val).toFixed(2),
   );
+  if (zoomSlider) {
+    zoomSlider.addEventListener("input", updateOutsidePixelsGroupVisibility);
+  }
   utils.addSliderListener(offsetXSlider, offsetXValue, (val) =>
     parseFloat(val).toFixed(2),
   );
@@ -1212,6 +1278,7 @@
   // On page load, ensure radio buttons and zoom control are shown/hidden correctly
   updateScalingModeRadioButtons();
   updateScalingModeAndZoomVisibility();
+  updateOutsidePixelsGroupVisibility();
 
   // Ensure result and debug sections are hidden on page load
   utils.addHiddenClass(resultSection);
