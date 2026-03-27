@@ -518,7 +518,7 @@ function applyOriginalColors(
   const unalteredBwData = unalteredBwImageData
     ? unalteredBwImageData.data
     : null;
-  const COLOR_BEND_BASE = 32;
+  const COLOR_BEND_BASE = 26;
   const COLOR_BEND = COLOR_BEND_BASE * (1 - clarity / 100);
   for (let i = 0; i < bwData.length; i += 4) {
     if (maskData && maskData[i + 3] > 0) {
