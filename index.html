@@ -561,8 +561,20 @@
                                             class="noise-slider"
                                         />
                                     </div>
-                                    <div class="robustness-control hidden flex-1">
-                                        <div class="robustness-content-row flex-center gap-8">
+                                    <div
+                                        class="robustness-control hidden flex-1 expert-collapsed"
+                                    >
+                                        <button
+                                            id="showExpertValuesBtn"
+                                            class="show-expert-values-btn"
+                                            type="button"
+                                        >
+                                            Show expert values
+                                        </button>
+                                        <div
+                                            id="robustnessExpertContent"
+                                            class="robustness-content-row flex-center gap-8"
+                                        >
                                             <div class="robustness-main flex-1">
                                                 <div class="flex-center">
                                                     <label

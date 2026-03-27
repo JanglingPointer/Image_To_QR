@@ -211,6 +211,39 @@ body {
     min-width: 0;
 }
 
+.show-expert-values-btn {
+    display: none;
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 8px;
+    bottom: 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #333;
+    font-weight: 600;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.show-expert-values-btn:hover {
+    background: #f3f5ff;
+}
+
+.robustness-control {
+    position: relative;
+}
+
+.robustness-control.expert-collapsed .robustness-content-row {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.robustness-control.expert-collapsed .show-expert-values-btn {
+    display: block;
+}
+
 .robust-squares-label {
     white-space: nowrap;
     align-self: center;

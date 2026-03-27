@@ -26,6 +26,10 @@
   const add4thSquareCheckbox = document.getElementById("add4thSquareCheckbox");
   const add4thSquareControl = document.querySelector(".add-4th-square-control");
   const oklchHsbControl = document.querySelector(".oklch-hsb-control");
+  const showExpertValuesBtn = document.getElementById("showExpertValuesBtn");
+  const robustnessExpertContent = document.getElementById(
+    "robustnessExpertContent",
+  );
   const tintCtrlPixelsCheckbox = document.getElementById("tintCtrlPixelsCheckbox");
   const robustColorsCheckbox = document.getElementById("robustColorsCheckbox");
   const scaleSlider = document.getElementById("scaleSlider");
@@ -529,6 +533,13 @@
       utils.addHiddenClass(oklchHsbControl);
     }
   });
+  if (showExpertValuesBtn && robustnessExpertContent) {
+    showExpertValuesBtn.addEventListener("click", function () {
+      if (robustnessControl) {
+        robustnessControl.classList.remove("expert-collapsed");
+      }
+    });
+  }
   utils.addSliderListener(oklchToHsbSlider, oklchToHsbValue, (v) =>
     parseFloat(v).toFixed(2),
   );
