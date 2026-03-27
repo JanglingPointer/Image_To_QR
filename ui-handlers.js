@@ -24,9 +24,6 @@
   const add4thSquareCheckbox = document.getElementById("add4thSquareCheckbox");
   const add4thSquareControl = document.querySelector(".add-4th-square-control");
   const tintCtrlPixelsCheckbox = document.getElementById("tintCtrlPixelsCheckbox");
-  const tintCtrlPixelsControl = document.querySelector(
-    ".tint-ctrl-pixels-control",
-  );
   const scaleSlider = document.getElementById("scaleSlider");
   const scaleValue = document.getElementById("scaleValue");
   const scaleControl = document.querySelector(".scale-control");
@@ -488,7 +485,6 @@
       utils.removeHiddenClass(debugSection);
       utils.removeHiddenClass(testImageBtn);
       utils.removeHiddenClass(add4thSquareControl);
-      utils.removeHiddenClass(tintCtrlPixelsControl);
       if (window.uploadedImage) {
         updateResult();
       }
@@ -496,7 +492,6 @@
       utils.addHiddenClass(debugSection);
       utils.addHiddenClass(testImageBtn);
       utils.addHiddenClass(add4thSquareControl);
-      utils.addHiddenClass(tintCtrlPixelsControl);
     }
   });
 
@@ -651,11 +646,9 @@
   if (debugCheckbox.checked) {
     utils.removeHiddenClass(testImageBtn);
     utils.removeHiddenClass(add4thSquareControl);
-    utils.removeHiddenClass(tintCtrlPixelsControl);
   } else {
     utils.addHiddenClass(testImageBtn);
     utils.addHiddenClass(add4thSquareControl);
-    utils.addHiddenClass(tintCtrlPixelsControl);
   }
 
   // Initialize Original mode visibility

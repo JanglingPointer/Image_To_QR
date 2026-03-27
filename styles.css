@@ -198,6 +198,24 @@ body {
     margin-bottom: 0 !important;
 }
 
+/* Give robustness a bit more room than scale/noise in this row */
+.scale-factor-and-noise-probability .robustness-control {
+    flex: 1.25;
+}
+
+.robustness-slider-row input[type="range"] {
+    width: 100%;
+}
+
+.robustness-main {
+    min-width: 0;
+}
+
+.robust-squares-label {
+    white-space: nowrap;
+    align-self: center;
+}
+
 .image-upload-and-scaling {
     display: flex;
     flex-direction: row;

@@ -562,39 +562,55 @@
                                         />
                                     </div>
                                     <div class="robustness-control hidden flex-1">
-                                        <div class="flex-center">
+                                        <div class="robustness-content-row flex-center gap-8">
+                                            <div class="robustness-main flex-1">
+                                                <div class="flex-center">
+                                                    <label
+                                                        for="claritySlider"
+                                                        class="margin-right-8"
+                                                        >Robustness</label
+                                                    >
+                                                    <span
+                                                        id="clarityWarning"
+                                                        class="margin-right-8 hidden"
+                                                        title="The code may be hard to scan. It may also work fine depending on your image."
+                                                        >⚠️</span
+                                                    >
+                                                    <span
+                                                        id="clarityValue"
+                                                        class="margin-left-auto"
+                                                        >90</span
+                                                    >
+                                                    <button
+                                                        id="robustnessResetBtn"
+                                                        title="Reset robustness to default"
+                                                        class="margin-left-8"
+                                                    >
+                                                        🪄
+                                                    </button>
+                                                </div>
+                                                <div class="robustness-slider-row">
+                                                    <input
+                                                        type="range"
+                                                        id="claritySlider"
+                                                        min="0"
+                                                        max="100"
+                                                        value="90"
+                                                        class="noise-slider"
+                                                    />
+                                                </div>
+                                            </div>
                                             <label
-                                                for="claritySlider"
-                                                class="margin-right-8"
-                                                >Robustness</label
+                                                for="tintCtrlPixelsCheckbox"
+                                                class="robust-squares-label flex-center gap-4 margin-bottom-0"
                                             >
-                                            <span
-                                                id="clarityWarning"
-                                                class="margin-right-8 hidden"
-                                                title="The code may be hard to scan. It may also work fine depending on your image."
-                                                >⚠️</span
-                                            >
-                                            <span
-                                                id="clarityValue"
-                                                class="margin-left-auto"
-                                                >90</span
-                                            >
-                                            <button
-                                                id="robustnessResetBtn"
-                                                title="Reset robustness to default"
-                                                class="margin-left-8"
-                                            >
-                                                🪄
-                                            </button>
+                                                <input
+                                                    type="checkbox"
+                                                    id="tintCtrlPixelsCheckbox"
+                                                />
+                                                Robust<br />Squares
+                                            </label>
                                         </div>
-                                        <input
-                                            type="range"
-                                            id="claritySlider"
-                                            min="0"
-                                            max="100"
-                                            value="90"
-                                            class="noise-slider"
-                                        />
                                     </div>
                                 </div>
                             </div>
@@ -623,19 +639,6 @@
                                         for="add4thSquareCheckbox"
                                         class="margin-bottom-0"
                                         >4th square</label
-                                    >
-                                </div>
-                                <div
-                                    class="flex-center gap-4 tint-ctrl-pixels-control hidden"
-                                >
-                                    <input
-                                        type="checkbox"
-                                        id="tintCtrlPixelsCheckbox"
-                                    />
-                                    <label
-                                        for="tintCtrlPixelsCheckbox"
-                                        class="margin-bottom-0"
-                                        >Tint Ctrl Pixels</label
                                     >
                                 </div>
                             </div>
