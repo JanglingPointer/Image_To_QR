@@ -323,9 +323,9 @@
     if (!claritySlider || !clarityWarning) return;
     const robustness = parseFloat(claritySlider.value);
     if (robustness < 80) {
-      utils.removeHiddenClass(clarityWarning, "inline");
+      clarityWarning.classList.remove("clarity-warning-hidden");
     } else {
-      utils.addHiddenClass(clarityWarning);
+      clarityWarning.classList.add("clarity-warning-hidden");
     }
   }
 
