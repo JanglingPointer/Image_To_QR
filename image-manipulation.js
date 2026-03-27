@@ -661,6 +661,66 @@ function addNoiseToImage(imageData, noiseProbability, seed) {
 }
 
 /**
+ * Tints control pixels using trimmed OKLCH lightness bounds from non-control pixels.
+ * Uses full RGB colors from darkest/brightest retained samples.
+ * @param {ImageData} imageData - Colored image to modify
+ * @param {ImageData} controlMaskImageData - Mask of control pixels (alpha > 0)
+ * @returns {ImageData} Tinted image
+ */
+function tintControlPixelsByTrimmedLightness(imageData, controlMaskImageData) {
+  const result = new ImageData(
+    new Uint8ClampedArray(imageData.data),
+    imageData.width,
+    imageData.height,
+  );
+  if (!controlMaskImageData) return result;
+
+  const data = result.data;
+  const maskData = controlMaskImageData.data;
+  const samples = [];
+
+  // Analyze only non-control pixels.
+  for (let i = 0; i < data.length; i += 4) {
+    const isControlPixel = maskData[i + 3] > 0;
+    if (!isControlPixel && data[i + 3] > 0) {
+      const oklch = rgbToOklch(data[i], data[i + 1], data[i + 2]);
+      samples.push({
+        l: oklch.l,
+        r: data[i],
+        g: data[i + 1],
+        b: data[i + 2],
+      });
+    }
+  }
+
+  if (samples.length === 0) return result;
+
+  samples.sort((a, b) => a.l - b.l);
+  const trimCount = Math.floor(samples.length * 0.1);
+  const start = Math.min(trimCount, samples.length - 1);
+  const end = Math.max(start + 1, samples.length - trimCount);
+  const trimmed = samples.slice(start, end);
+  const analyzedSamples = trimmed.length > 0 ? trimmed : samples;
+
+  const darkRgb = analyzedSamples[0];
+  const brightRgb = analyzedSamples[analyzedSamples.length - 1];
+
+  // Map control black/white pixels to A/B.
+  for (let i = 0; i < data.length; i += 4) {
+    if (maskData[i + 3] > 0) {
+      const isBlack = maskData[i] < 128;
+      const mapped = isBlack ? darkRgb : brightRgb;
+      data[i] = mapped.r;
+      data[i + 1] = mapped.g;
+      data[i + 2] = mapped.b;
+      data[i + 3] = 255;
+    }
+  }
+
+  return result;
+}
+
+/**
  * Generates QR code ImageData directly from modules without any scaling
  * @param {string} text - The text to encode in the QR code
  * @returns {Promise<ImageData>} The QR code as ImageData
@@ -735,6 +795,7 @@ async function getQRCodeImageData(text) {
  * @param {number} offsetYValue - Vertical offset for custom mode (-1 to 1)
  * @param {number} clarity - Robustness value (0-100), controls COLOR_BEND
  * @param {boolean} add4thSquare - Whether to add a 4th square in the bottom-right corner
+ * @param {boolean} tintCtrlPixels - Whether to tint control pixels from image lightness statistics
  * @param {string} outsidePixels - 'auto' | 'extend' | 'color' for padding treatment
  * @param {string} outsidePixelsColor - Hex color when outsidePixels is 'color'
  * @returns {Object} Object containing debug data including qrWithoutCtrlx3
@@ -759,6 +820,7 @@ async function generateQRCodeOverlay(
   offsetYValue = 0,
   clarity = 90,
   add4thSquare = true,
+  tintCtrlPixels = false,
   blockSize = 1,
   outsidePixels = "auto",
   outsidePixelsColor = "#000000",
@@ -1017,6 +1079,15 @@ async function generateQRCodeOverlay(
         );
       }
     }
+
+    if (result_colored_shine && tintCtrlPixels) {
+      // qrCtrlx3 has the exact control-pixel footprint in result_colored_shine resolution.
+      result_colored_shine = tintControlPixelsByTrimmedLightness(
+        result_colored_shine,
+        qrCtrlx3,
+      );
+    }
+
     // Step 7.9: Create scaled version of the colored result (from result_colored_shine)
     const result_colored_xN = result_colored_shine
       ? scaleImageByFactor(result_colored_shine, scaleFactor)

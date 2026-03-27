@@ -23,6 +23,10 @@
   const clarityWarning = document.getElementById("clarityWarning");
   const add4thSquareCheckbox = document.getElementById("add4thSquareCheckbox");
   const add4thSquareControl = document.querySelector(".add-4th-square-control");
+  const tintCtrlPixelsCheckbox = document.getElementById("tintCtrlPixelsCheckbox");
+  const tintCtrlPixelsControl = document.querySelector(
+    ".tint-ctrl-pixels-control",
+  );
   const scaleSlider = document.getElementById("scaleSlider");
   const scaleValue = document.getElementById("scaleValue");
   const scaleControl = document.querySelector(".scale-control");
@@ -151,6 +155,7 @@
     ditherBrightness: 0, // -1..1
     clarity: 90, // 0..100
     add4thSquare: true, // Whether to add 4th square
+    tintCtrlPixels: false,
     scale: 3,
     noise: 10,
     colorDark: "#211e59",
@@ -229,6 +234,8 @@
     if (claritySlider) claritySlider.value = String(settings.clarity);
     if (add4thSquareCheckbox)
       add4thSquareCheckbox.checked = settings.add4thSquare;
+    if (tintCtrlPixelsCheckbox)
+      tintCtrlPixelsCheckbox.checked = !!settings.tintCtrlPixels;
     if (scaleSlider) scaleSlider.value = String(settings.scale);
     if (noiseSlider) noiseSlider.value = String(settings.noise);
     if (saturationBoostSlider)
@@ -481,6 +488,7 @@
       utils.removeHiddenClass(debugSection);
       utils.removeHiddenClass(testImageBtn);
       utils.removeHiddenClass(add4thSquareControl);
+      utils.removeHiddenClass(tintCtrlPixelsControl);
       if (window.uploadedImage) {
         updateResult();
       }
@@ -488,6 +496,7 @@
       utils.addHiddenClass(debugSection);
       utils.addHiddenClass(testImageBtn);
       utils.addHiddenClass(add4thSquareControl);
+      utils.addHiddenClass(tintCtrlPixelsControl);
     }
   });
 
@@ -642,9 +651,11 @@
   if (debugCheckbox.checked) {
     utils.removeHiddenClass(testImageBtn);
     utils.removeHiddenClass(add4thSquareControl);
+    utils.removeHiddenClass(tintCtrlPixelsControl);
   } else {
     utils.addHiddenClass(testImageBtn);
     utils.addHiddenClass(add4thSquareControl);
+    utils.addHiddenClass(tintCtrlPixelsControl);
   }
 
   // Initialize Original mode visibility
@@ -746,6 +757,9 @@
       const add4thSquare = add4thSquareCheckbox
         ? add4thSquareCheckbox.checked
         : true;
+      const tintCtrlPixels = tintCtrlPixelsCheckbox
+        ? tintCtrlPixelsCheckbox.checked
+        : false;
       // blockSize already declared above, no need to redeclare
       const outsidePixelsExtend = document.getElementById(
         "outsidePixelsExtend",
@@ -781,7 +795,7 @@
           `ScaleMode: ${scalingMode} | PP: ${pixelPerfectCheckbox ? pixelPerfectCheckbox.checked : false} | Zoom: ${zoomValue} | Offset: (${offsetXValue}, ${offsetYValue})`,
         );
         log(
-          `Clarity: ${clarity} | 4thSqr: ${add4thSquare} | BlockSz: ${blockSize} | OutPx: ${outsidePixels}${outsidePixels === "color" ? ":" + outsidePixelsColor : ""}`,
+          `Clarity: ${clarity} | 4thSqr: ${add4thSquare} | TintCtrl: ${tintCtrlPixels} | BlockSz: ${blockSize} | OutPx: ${outsidePixels}${outsidePixels === "color" ? ":" + outsidePixelsColor : ""}`,
         );
         log("=================");
       }
@@ -806,6 +820,7 @@
         offsetYValue,
         clarity,
         add4thSquare,
+        tintCtrlPixels,
         blockSize,
         outsidePixels,
         outsidePixelsColor,
@@ -985,6 +1000,14 @@
   // Add 4th Square checkbox event
   if (add4thSquareCheckbox) {
     add4thSquareCheckbox.addEventListener("change", function () {
+      if (window.uploadedImage) {
+        updateResult();
+      }
+    });
+  }
+
+  if (tintCtrlPixelsCheckbox) {
+    tintCtrlPixelsCheckbox.addEventListener("change", function () {
       if (window.uploadedImage) {
         updateResult();
       }
