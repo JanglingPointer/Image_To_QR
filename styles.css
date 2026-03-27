@@ -190,6 +190,7 @@ body {
 /* Remove all margins from control elements - let containers handle spacing */
 .scale-control,
 .noise-control,
+.robustness-control,
 .threshold-control,
 .block-size-control,
 .checkbox-label {
@@ -598,6 +599,7 @@ body {
 #thresholdValue,
 #scaleValue,
 #noiseValue,
+#clarityValue,
 #blockSizeValue {
     font-weight: 600;
     color: #667eea;
@@ -608,6 +610,7 @@ body {
 .threshold-control,
 .scale-control,
 .noise-control,
+.robustness-control,
 .color-control {
     margin-top: 0;
     margin-bottom: 15px;
@@ -641,6 +644,7 @@ body {
 .block-size-control label,
 .scale-control label,
 .noise-control label,
+.robustness-control label,
 .color-control label {
     display: block;
     font-weight: 600;

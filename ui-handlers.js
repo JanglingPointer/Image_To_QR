@@ -19,7 +19,8 @@
     "ditherBrightnessValue",
   );
   const claritySlider = document.getElementById("claritySlider");
-  const clarityControl = document.querySelector(".clarity-control");
+  const clarityValue = document.getElementById("clarityValue");
+  const clarityWarning = document.getElementById("clarityWarning");
   const add4thSquareCheckbox = document.getElementById("add4thSquareCheckbox");
   const add4thSquareControl = document.querySelector(".add-4th-square-control");
   const scaleSlider = document.getElementById("scaleSlider");
@@ -28,6 +29,8 @@
   const noiseSlider = document.getElementById("noiseSlider");
   const noiseValue = document.getElementById("noiseValue");
   const noiseControl = document.querySelector(".noise-control");
+  const robustnessResetBtn = document.getElementById("robustnessResetBtn");
+  const robustnessControl = document.querySelector(".robustness-control");
   const colorDark = document.getElementById("colorDark");
   const colorBright = document.getElementById("colorBright");
   const colorControl = document.querySelector(".color-control");
@@ -146,7 +149,7 @@
     blockSize: 1, // 1-8 for pixel art mode
     threshold: 128,
     ditherBrightness: 0, // -1..1
-    clarity: 0, // 0..100
+    clarity: 90, // 0..100
     add4thSquare: true, // Whether to add 4th square
     scale: 3,
     noise: 10,
@@ -290,7 +293,7 @@
     // Update computed UI visibility
     updateDitherBrightnessVisibility();
     updateZoomControlVisibility();
-    updateClarityVisibility();
+    updateRobustnessWarning();
     syncBwModeOriginalAvailability();
     // Initially hide main image controls until image is uploaded
     utils.addHiddenClass(mainImageControls);
@@ -298,6 +301,7 @@
     utils.updateSliderValue(thresholdSlider, thresholdValue);
     utils.updateSliderValue(scaleSlider, scaleValue);
     utils.updateSliderValue(noiseSlider, noiseValue);
+    utils.updateSliderValue(claritySlider, clarityValue);
     // saturationBoostValue element was removed, so no need to update it
     utils.updateSliderValue(zoomSlider, zoomValue, (v) =>
       parseFloat(v).toFixed(2),
@@ -309,6 +313,16 @@
       parseFloat(v).toFixed(2),
     );
     utils.updateSliderValue(blockSizeSlider, blockSizeValue);
+  }
+
+  function updateRobustnessWarning() {
+    if (!claritySlider || !clarityWarning) return;
+    const robustness = parseFloat(claritySlider.value);
+    if (robustness < 80) {
+      utils.removeHiddenClass(clarityWarning, "inline");
+    } else {
+      utils.addHiddenClass(clarityWarning);
+    }
   }
 
   // Auto-compute block size when Pixel Perfect is active
@@ -370,6 +384,7 @@
             utils.removeHiddenClass(mainImageControls);
             utils.removeHiddenClass(scaleControl);
             utils.removeHiddenClass(noiseControl);
+            utils.removeHiddenClass(robustnessControl);
             utils.removeHiddenClass(colorControl);
             utils.removeHiddenClass(scalingModeGroup, "flex");
             utils.removeHiddenClass(bwModeGroup);
@@ -444,6 +459,7 @@
       utils.removeHiddenClass(mainImageControls);
       utils.removeHiddenClass(scaleControl);
       utils.removeHiddenClass(noiseControl);
+      utils.removeHiddenClass(robustnessControl);
       utils.removeHiddenClass(colorControl);
       utils.removeHiddenClass(scalingModeGroup, "flex");
       utils.removeHiddenClass(bwModeGroup);
@@ -459,19 +475,6 @@
   // Handle test image button
   testImageBtn.addEventListener("click", generateTestImage);
 
-  // Function to update clarity control visibility
-  function updateClarityVisibility() {
-    const debugChecked = debugCheckbox && debugCheckbox.checked;
-    const duoToneSelected =
-      colorAppearanceDuoTone && colorAppearanceDuoTone.checked;
-    // Show clarity when debug is checked AND duo tone is NOT selected
-    if (debugChecked && !duoToneSelected) {
-      if (clarityControl) utils.removeHiddenClass(clarityControl);
-    } else {
-      if (clarityControl) utils.addHiddenClass(clarityControl);
-    }
-  }
-
   // Handle debug checkbox
   debugCheckbox.addEventListener("change", function () {
     if (this.checked) {
@@ -486,13 +489,14 @@
       utils.addHiddenClass(testImageBtn);
       utils.addHiddenClass(add4thSquareControl);
     }
-    updateClarityVisibility();
   });
 
   // Add slider listeners using utility function
   utils.addSliderListener(thresholdSlider, thresholdValue);
   utils.addSliderListener(scaleSlider, scaleValue);
   utils.addSliderListener(noiseSlider, noiseValue);
+  utils.addSliderListener(claritySlider, clarityValue);
+  updateRobustnessWarning();
 
   // Add event listener for noise seed button
   const noiseSeedBtn = document.getElementById("noiseSeedBtn");
@@ -595,7 +599,6 @@
       utils.addHiddenClass(customColorsSection);
       utils.removeHiddenClass(saturationBoostGroup, "flex");
     }
-    updateClarityVisibility();
     if (window.uploadedImage) {
       updateResult();
     }
@@ -739,7 +742,7 @@
       if (bwMode === "dither" && ditherBrightnessSlider) {
         ditherGamma = parseFloat(ditherBrightnessSlider.value);
       }
-      const clarity = claritySlider ? parseFloat(claritySlider.value) : 0;
+      const clarity = claritySlider ? parseFloat(claritySlider.value) : 90;
       const add4thSquare = add4thSquareCheckbox
         ? add4thSquareCheckbox.checked
         : true;
@@ -964,9 +967,15 @@
     autoBlockSizeBtn.addEventListener("click", handleAutoBlockSize);
   }
 
-  // Clarity slider event
   if (claritySlider) {
-    claritySlider.addEventListener("input", function () {
+    claritySlider.addEventListener("input", updateRobustnessWarning);
+  }
+
+  if (robustnessResetBtn && claritySlider) {
+    robustnessResetBtn.addEventListener("click", function () {
+      claritySlider.value = "90";
+      utils.updateSliderValue(claritySlider, clarityValue);
+      updateRobustnessWarning();
       if (window.uploadedImage) {
         updateResult();
       }

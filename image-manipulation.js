@@ -495,7 +495,7 @@ function applyCustomColors(imageData, darkColor, brightColor) {
  * @param {ImageData} bwImageData - The input black and white image data (after noise + QR overlay)
  * @param {ImageData} originalImageData - The original colored image data
  * @param {ImageData} maskImageData - The mask image data (for useOriginalColors = true)
- * @param {number} clarity - Clarity value (0-100), controls COLOR_BEND
+ * @param {number} clarity - Robustness value (0-100), controls COLOR_BEND
  * @param {ImageData|null} unalteredBwImageData - Pre-noise/QR B&W image for detecting altered pixels.
  *   When provided, unaltered pixels keep original color; only altered pixels get luminance adjustment.
  * @param {boolean} preserveSaturation - deprecated
@@ -506,7 +506,7 @@ function applyOriginalColors(
   bwImageData,
   originalImageData,
   maskImageData,
-  clarity = 0,
+  clarity = 90,
   unalteredBwImageData = null,
   preserveSaturation = false,
 ) {
@@ -519,7 +519,11 @@ function applyOriginalColors(
     ? unalteredBwImageData.data
     : null;
   const COLOR_BEND_BASE = 26;
-  const COLOR_BEND = COLOR_BEND_BASE * (1 - clarity / 100);
+  const robustness = Math.max(0, Math.min(100, clarity));
+  const COLOR_BEND =
+    robustness <= 90
+      ? 40 + ((COLOR_BEND_BASE - 40) * robustness) / 90
+      : COLOR_BEND_BASE + ((20 - COLOR_BEND_BASE) * (robustness - 90)) / 10;
   for (let i = 0; i < bwData.length; i += 4) {
     if (maskData && maskData[i + 3] > 0) {
       const originalR = originalData[i];
@@ -729,7 +733,7 @@ async function getQRCodeImageData(text) {
  * @param {number} zoomValue - Zoom factor for custom mode (0-2)
  * @param {number} offsetXValue - Horizontal offset for custom mode (-1 to 1)
  * @param {number} offsetYValue - Vertical offset for custom mode (-1 to 1)
- * @param {number} clarity - Clarity value (0-100) for color adjustment, controls COLOR_BEND
+ * @param {number} clarity - Robustness value (0-100), controls COLOR_BEND
  * @param {boolean} add4thSquare - Whether to add a 4th square in the bottom-right corner
  * @param {string} outsidePixels - 'auto' | 'extend' | 'color' for padding treatment
  * @param {string} outsidePixelsColor - Hex color when outsidePixels is 'color'
@@ -753,7 +757,7 @@ async function generateQRCodeOverlay(
   zoomValue = 0,
   offsetXValue = 0,
   offsetYValue = 0,
-  clarity = 0,
+  clarity = 90,
   add4thSquare = true,
   blockSize = 1,
   outsidePixels = "auto",

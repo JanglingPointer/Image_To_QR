@@ -508,7 +508,7 @@
                                     </div>
                                 </div>
                                 <div
-                                    class="scale-factor-and-noise-probability flex gap-24 margin-top-15"
+                                    class="scale-factor-and-noise-probability flex gap-16 margin-top-15"
                                 >
                                     <div class="scale-control hidden flex-1">
                                         <div class="flex-center">
@@ -561,6 +561,41 @@
                                             class="noise-slider"
                                         />
                                     </div>
+                                    <div class="robustness-control hidden flex-1">
+                                        <div class="flex-center">
+                                            <label
+                                                for="claritySlider"
+                                                class="margin-right-8"
+                                                >Robustness</label
+                                            >
+                                            <span
+                                                id="clarityWarning"
+                                                class="margin-right-8 hidden"
+                                                title="The code may be hard to scan. It may also work fine depending on your image."
+                                                >⚠️</span
+                                            >
+                                            <span
+                                                id="clarityValue"
+                                                class="margin-left-auto"
+                                                >90</span
+                                            >
+                                            <button
+                                                id="robustnessResetBtn"
+                                                title="Reset robustness to default"
+                                                class="margin-left-8"
+                                            >
+                                                🪄
+                                            </button>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            id="claritySlider"
+                                            min="0"
+                                            max="100"
+                                            value="90"
+                                            class="noise-slider"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -589,21 +624,6 @@
                                         class="margin-bottom-0"
                                         >4th square</label
                                     >
-                                </div>
-                                <div
-                                    class="flex-center gap-4 clarity-control hidden"
-                                >
-                                    <label for="claritySlider"
-                                        >Color Robustness</label
-                                    >
-                                    <input
-                                        type="range"
-                                        id="claritySlider"
-                                        min="0"
-                                        max="100"
-                                        value="0"
-                                        class="threshold-slider"
-                                    />
                                 </div>
                             </div>
                         </div>
