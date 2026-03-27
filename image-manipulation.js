@@ -499,7 +499,7 @@ function applyCustomColors(imageData, darkColor, brightColor) {
  * @param {ImageData|null} unalteredBwImageData - Pre-noise/QR B&W image for detecting altered pixels.
  *   When provided, unaltered pixels keep original color; only altered pixels get luminance adjustment.
  * @param {boolean} preserveSaturation - deprecated
- *   If false (original_colors mode), use HSB for pastel-friendly rendering.
+ *   If false (original_colors mode), use OKLCH lightness adjustment.
  * @returns {ImageData} The colored image data using original colors
  */
 function applyOriginalColors(
@@ -518,7 +518,7 @@ function applyOriginalColors(
   const unalteredBwData = unalteredBwImageData
     ? unalteredBwImageData.data
     : null;
-  const COLOR_BEND_BASE = 35;
+  const COLOR_BEND_BASE = 32;
   const COLOR_BEND = COLOR_BEND_BASE * (1 - clarity / 100);
   for (let i = 0; i < bwData.length; i += 4) {
     if (maskData && maskData[i + 3] > 0) {
@@ -538,30 +538,29 @@ function applyOriginalColors(
       const isBlack = bwData[i] === 0;
       const MIN_GAP = 20;
       let adjustedRgb;
-     
-      const originalHsb = rgbToHsb(originalR, originalG, originalB);
-      let adjustedSaturation = originalHsb.s;
-      let darkBrightness = Math.min(originalHsb.b, COLOR_BEND);
-      let brightBrightness = Math.max(originalHsb.b, 100 - COLOR_BEND);
-      if (brightBrightness - darkBrightness < MIN_GAP) {
-        const mid = (darkBrightness + brightBrightness) / 2;
-        darkBrightness = Math.max(0, mid - MIN_GAP / 2);
-        brightBrightness = Math.min(100, mid + MIN_GAP / 2);
+
+      const originalOklch = rgbToOklch(originalR, originalG, originalB);
+      let darkLightness = Math.min(originalOklch.l, COLOR_BEND);
+      let brightLightness = Math.max(originalOklch.l, 100 - COLOR_BEND);
+      if (brightLightness - darkLightness < MIN_GAP) {
+        const mid = (darkLightness + brightLightness) / 2;
+        darkLightness = Math.max(0, mid - MIN_GAP / 2);
+        brightLightness = Math.min(100, mid + MIN_GAP / 2);
       }
+
       if (isBlack) {
-        adjustedRgb = hsbToRgb(
-          originalHsb.h,
-          adjustedSaturation,
-          darkBrightness,
+        adjustedRgb = oklchToRgb(
+          darkLightness,
+          originalOklch.c,
+          originalOklch.h,
         );
       } else {
-        adjustedRgb = hsbToRgb(
-          originalHsb.h,
-          adjustedSaturation,
-          brightBrightness,
+        adjustedRgb = oklchToRgb(
+          brightLightness,
+          originalOklch.c,
+          originalOklch.h,
         );
       }
-      
 
       resultData[i] = adjustedRgb.r;
       resultData[i + 1] = adjustedRgb.g;

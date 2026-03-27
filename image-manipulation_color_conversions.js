@@ -3,6 +3,17 @@
  */
 
 /**
+ * Clamps a number to [min, max].
+ * @param {number} value
+ * @param {number} min
+ * @param {number} max
+ * @returns {number}
+ */
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+/**
  * Converts a hex color string to RGB values
  * @param {string} hexColor - Hex color string (e.g., "#ff0000")
  * @returns {Object} Object with r, g, b values (0-255)
@@ -213,6 +224,128 @@ function hsbToRgb(h, s, bVal) {
     r: Math.round(r * 255),
     g: Math.round(g * 255),
     b: Math.round(b * 255),
+  };
+}
+
+/**
+ * Converts sRGB to linear RGB component.
+ * @param {number} c - sRGB component (0-1)
+ * @returns {number} linear RGB component (0-1)
+ */
+function srgbToLinear(c) {
+  if (c <= 0.04045) return c / 12.92;
+  return Math.pow((c + 0.055) / 1.055, 2.4);
+}
+
+/**
+ * Converts linear RGB to sRGB component.
+ * @param {number} c - linear RGB component
+ * @returns {number} sRGB component (0-1)
+ */
+function linearToSrgb(c) {
+  if (c <= 0.0031308) return 12.92 * c;
+  return 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+}
+
+/**
+ * Converts RGB values to OKLCH.
+ * @param {number} r - Red value (0-255)
+ * @param {number} g - Green value (0-255)
+ * @param {number} b - Blue value (0-255)
+ * @returns {Object} Object with l, c, h (l/c: 0-100, h: 0-360)
+ */
+function rgbToOklch(r, g, b) {
+  const rl = srgbToLinear(r / 255);
+  const gl = srgbToLinear(g / 255);
+  const bl = srgbToLinear(b / 255);
+
+  const l = 0.4122214708 * rl + 0.5363325363 * gl + 0.0514459929 * bl;
+  const m = 0.2119034982 * rl + 0.6806995451 * gl + 0.1073969566 * bl;
+  const s = 0.0883024619 * rl + 0.2817188376 * gl + 0.6299787005 * bl;
+
+  const l_ = Math.cbrt(l);
+  const m_ = Math.cbrt(m);
+  const s_ = Math.cbrt(s);
+
+  const oklabL = 0.2104542553 * l_ + 0.793617785 * m_ - 0.0040720468 * s_;
+  const oklabA = 1.9779984951 * l_ - 2.428592205 * m_ + 0.4505937099 * s_;
+  const oklabB = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.808675766 * s_;
+
+  const c = Math.sqrt(oklabA * oklabA + oklabB * oklabB);
+  let h = Math.atan2(oklabB, oklabA) * (180 / Math.PI);
+  if (h < 0) h += 360;
+
+  return {
+    l: oklabL * 100,
+    c: c * 100,
+    h,
+  };
+}
+
+/**
+ * Converts OKLCH values to RGB.
+ * @param {number} lVal - Lightness (0-100)
+ * @param {number} cVal - Chroma (0-100)
+ * @param {number} hVal - Hue (0-360)
+ * @returns {Object} Object with r, g, b values (0-255)
+ */
+function oklchToRgb(lVal, cVal, hVal) {
+  const l = clamp(lVal, 0, 100) / 100;
+  const requestedC = Math.max(0, cVal) / 100;
+  const hRad = (hVal * Math.PI) / 180;
+
+  const toLinearRgb = (c) => {
+    const a = c * Math.cos(hRad);
+    const b = c * Math.sin(hRad);
+
+    const l_ = l + 0.3963377774 * a + 0.2158037573 * b;
+    const m_ = l - 0.1055613458 * a - 0.0638541728 * b;
+    const s_ = l - 0.0894841775 * a - 1.291485548 * b;
+
+    const lCube = l_ * l_ * l_;
+    const mCube = m_ * m_ * m_;
+    const sCube = s_ * s_ * s_;
+
+    return {
+      r:
+        4.0767416621 * lCube - 3.3077115913 * mCube + 0.2309699292 * sCube,
+      g:
+        -1.2684380046 * lCube + 2.6097574011 * mCube - 0.3413193965 * sCube,
+      b:
+        -0.0041960863 * lCube - 0.7034186147 * mCube + 1.707614701 * sCube,
+    };
+  };
+
+  const inSrgbGamut = (linear) =>
+    linear.r >= 0 &&
+    linear.r <= 1 &&
+    linear.g >= 0 &&
+    linear.g <= 1 &&
+    linear.b >= 0 &&
+    linear.b <= 1;
+
+  // Keep target lightness/hue and reduce chroma until the color is reachable in sRGB.
+  let usableC = requestedC;
+  if (!inSrgbGamut(toLinearRgb(usableC))) {
+    let low = 0;
+    let high = usableC;
+    for (let i = 0; i < 18; i++) {
+      const mid = (low + high) / 2;
+      if (inSrgbGamut(toLinearRgb(mid))) {
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+    usableC = low;
+  }
+
+  const linear = toLinearRgb(usableC);
+
+  return {
+    r: Math.round(clamp(linearToSrgb(linear.r), 0, 1) * 255),
+    g: Math.round(clamp(linearToSrgb(linear.g), 0, 1) * 255),
+    b: Math.round(clamp(linearToSrgb(linear.b), 0, 1) * 255),
   };
 }
 
