@@ -7,6 +7,8 @@
   const resultSection = document.getElementById("resultSection");
   const testImageBtn = document.getElementById("testImageBtn");
   const debugCheckbox = document.getElementById("debugCheckbox");
+  const oklchToHsbSlider = document.getElementById("oklchToHsbSlider");
+  const oklchToHsbValue = document.getElementById("oklchToHsbValue");
   const debugSection = document.getElementById("debugSection");
   const thresholdSlider = document.getElementById("thresholdSlider");
   const thresholdValue = document.getElementById("thresholdValue");
@@ -23,6 +25,7 @@
   const clarityWarning = document.getElementById("clarityWarning");
   const add4thSquareCheckbox = document.getElementById("add4thSquareCheckbox");
   const add4thSquareControl = document.querySelector(".add-4th-square-control");
+  const oklchHsbControl = document.querySelector(".oklch-hsb-control");
   const tintCtrlPixelsCheckbox = document.getElementById("tintCtrlPixelsCheckbox");
   const scaleSlider = document.getElementById("scaleSlider");
   const scaleValue = document.getElementById("scaleValue");
@@ -167,6 +170,7 @@
     outsidePixels: "auto", // 'auto' | 'extend' | 'color'
     outsidePixelsColor: "#000000",
     debug: false,
+    oklchToHsbBlend: 0,
     pixelPerfect: false, // New setting for pixel perfect mode
   };
 
@@ -289,6 +293,8 @@
         settings.outsidePixelsColor || "#000000";
     // Debug checkbox and dependent UI
     if (debugCheckbox) debugCheckbox.checked = settings.debug;
+    if (oklchToHsbSlider)
+      oklchToHsbSlider.value = String(settings.oklchToHsbBlend ?? 0);
     if (settings.debug) {
       utils.removeHiddenClass(testImageBtn);
     } else {
@@ -306,6 +312,9 @@
     utils.updateSliderValue(scaleSlider, scaleValue);
     utils.updateSliderValue(noiseSlider, noiseValue);
     utils.updateSliderValue(claritySlider, clarityValue);
+    utils.updateSliderValue(oklchToHsbSlider, oklchToHsbValue, (v) =>
+      parseFloat(v).toFixed(2),
+    );
     // saturationBoostValue element was removed, so no need to update it
     utils.updateSliderValue(zoomSlider, zoomValue, (v) =>
       parseFloat(v).toFixed(2),
@@ -485,6 +494,7 @@
       utils.removeHiddenClass(debugSection);
       utils.removeHiddenClass(testImageBtn);
       utils.removeHiddenClass(add4thSquareControl);
+      utils.removeHiddenClass(oklchHsbControl);
       if (window.uploadedImage) {
         updateResult();
       }
@@ -492,8 +502,12 @@
       utils.addHiddenClass(debugSection);
       utils.addHiddenClass(testImageBtn);
       utils.addHiddenClass(add4thSquareControl);
+      utils.addHiddenClass(oklchHsbControl);
     }
   });
+  utils.addSliderListener(oklchToHsbSlider, oklchToHsbValue, (v) =>
+    parseFloat(v).toFixed(2),
+  );
 
   // Add slider listeners using utility function
   utils.addSliderListener(thresholdSlider, thresholdValue);
@@ -642,13 +656,15 @@
     });
   }
 
-  // On page load, set testImageBtn and add4thSquare visibility based on debugCheckbox
+  // On page load, set debug-only controls visibility based on debugCheckbox
   if (debugCheckbox.checked) {
     utils.removeHiddenClass(testImageBtn);
     utils.removeHiddenClass(add4thSquareControl);
+    utils.removeHiddenClass(oklchHsbControl);
   } else {
     utils.addHiddenClass(testImageBtn);
     utils.addHiddenClass(add4thSquareControl);
+    utils.addHiddenClass(oklchHsbControl);
   }
 
   // Initialize Original mode visibility
@@ -750,6 +766,9 @@
       const add4thSquare = add4thSquareCheckbox
         ? add4thSquareCheckbox.checked
         : true;
+      const oklchToHsbBlend = oklchToHsbSlider
+        ? parseFloat(oklchToHsbSlider.value)
+        : 0;
       const tintCtrlPixels = tintCtrlPixelsCheckbox
         ? tintCtrlPixelsCheckbox.checked
         : false;
@@ -788,7 +807,7 @@
           `ScaleMode: ${scalingMode} | PP: ${pixelPerfectCheckbox ? pixelPerfectCheckbox.checked : false} | Zoom: ${zoomValue} | Offset: (${offsetXValue}, ${offsetYValue})`,
         );
         log(
-          `Clarity: ${clarity} | 4thSqr: ${add4thSquare} | TintCtrl: ${tintCtrlPixels} | BlockSz: ${blockSize} | OutPx: ${outsidePixels}${outsidePixels === "color" ? ":" + outsidePixelsColor : ""}`,
+          `Clarity: ${clarity} | 4thSqr: ${add4thSquare} | OKLCH->HSB: ${oklchToHsbBlend.toFixed(2)} | TintCtrl: ${tintCtrlPixels} | BlockSz: ${blockSize} | OutPx: ${outsidePixels}${outsidePixels === "color" ? ":" + outsidePixelsColor : ""}`,
         );
         log("=================");
       }
@@ -813,6 +832,7 @@
         offsetYValue,
         clarity,
         add4thSquare,
+        oklchToHsbBlend,
         tintCtrlPixels,
         blockSize,
         outsidePixels,

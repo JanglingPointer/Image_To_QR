@@ -571,6 +571,7 @@ function applyCustomColors(imageData, darkColor, brightColor) {
  * @param {number} clarity - Robustness value (0-100), controls COLOR_BEND
  * @param {ImageData|null} unalteredBwImageData - Pre-noise/QR B&W image for detecting altered pixels.
  *   When provided, unaltered pixels keep original color; only altered pixels get luminance adjustment.
+ * @param {number} oklchToHsbBlend - 0..1 blend ratio from OKLCH result to HSB result.
  * @param {boolean} preserveSaturation - deprecated
  *   If false (original_colors mode), use OKLCH lightness adjustment.
  * @returns {ImageData} The colored image data using original colors
@@ -581,6 +582,7 @@ function applyOriginalColors(
   maskImageData,
   clarity = 90,
   unalteredBwImageData = null,
+  oklchToHsbBlend = 0,
   preserveSaturation = false,
 ) {
   const result = new ImageData(bwImageData.width, bwImageData.height);
@@ -591,12 +593,18 @@ function applyOriginalColors(
   const unalteredBwData = unalteredBwImageData
     ? unalteredBwImageData.data
     : null;
-  const COLOR_BEND_BASE = 26;
+  const COLOR_BEND_BASE_OKLCH = 26;
+  const COLOR_BEND_BASE_HSB = 35;
   const robustness = Math.max(0, Math.min(100, clarity));
-  const COLOR_BEND =
+  const COLOR_BEND_OKLCH =
     robustness <= 90
-      ? 40 + ((COLOR_BEND_BASE - 40) * robustness) / 90
-      : COLOR_BEND_BASE + ((20 - COLOR_BEND_BASE) * (robustness - 90)) / 10;
+      ? 40 + ((COLOR_BEND_BASE_OKLCH - 40) * robustness) / 90
+      : COLOR_BEND_BASE_OKLCH +
+          ((20 - COLOR_BEND_BASE_OKLCH) * (robustness - 90)) / 10;
+  const COLOR_BEND_HSB =
+    robustness <= 90
+      ? 40 + ((COLOR_BEND_BASE_HSB - 40) * robustness) / 90
+      : COLOR_BEND_BASE_HSB + ((20 - COLOR_BEND_BASE_HSB) * (robustness - 90)) / 10;
   for (let i = 0; i < bwData.length; i += 4) {
     if (maskData && maskData[i + 3] > 0) {
       const originalR = originalData[i];
@@ -614,11 +622,11 @@ function applyOriginalColors(
 
       const isBlack = bwData[i] === 0;
       const MIN_GAP = 20;
-      let adjustedRgb;
+      let adjustedRgbOklch;
 
       const originalOklch = rgbToOklch(originalR, originalG, originalB);
-      let darkLightness = Math.min(originalOklch.l, COLOR_BEND);
-      let brightLightness = Math.max(originalOklch.l, 100 - COLOR_BEND);
+      let darkLightness = Math.min(originalOklch.l, COLOR_BEND_OKLCH);
+      let brightLightness = Math.max(originalOklch.l, 100 - COLOR_BEND_OKLCH);
       if (brightLightness - darkLightness < MIN_GAP) {
         const mid = (darkLightness + brightLightness) / 2;
         darkLightness = Math.max(0, mid - MIN_GAP / 2);
@@ -626,18 +634,35 @@ function applyOriginalColors(
       }
 
       if (isBlack) {
-        adjustedRgb = oklchToRgb(
+        adjustedRgbOklch = oklchToRgb(
           darkLightness,
           originalOklch.c,
           originalOklch.h,
         );
       } else {
-        adjustedRgb = oklchToRgb(
+        adjustedRgbOklch = oklchToRgb(
           brightLightness,
           originalOklch.c,
           originalOklch.h,
         );
       }
+
+      const originalHsb = rgbToHsb(originalR, originalG, originalB);
+      let darkBrightness = Math.min(originalHsb.b, COLOR_BEND_HSB);
+      let brightBrightness = Math.max(originalHsb.b, 100 - COLOR_BEND_HSB);
+      if (brightBrightness - darkBrightness < MIN_GAP) {
+        const mid = (darkBrightness + brightBrightness) / 2;
+        darkBrightness = Math.max(0, mid - MIN_GAP / 2);
+        brightBrightness = Math.min(100, mid + MIN_GAP / 2);
+      }
+      const adjustedRgbHsb = isBlack
+        ? hsbToRgb(originalHsb.h, originalHsb.s, darkBrightness)
+        : hsbToRgb(originalHsb.h, originalHsb.s, brightBrightness);
+      const adjustedRgb = blendRgb(
+        adjustedRgbOklch,
+        adjustedRgbHsb,
+        oklchToHsbBlend,
+      );
 
       resultData[i] = adjustedRgb.r;
       resultData[i + 1] = adjustedRgb.g;
@@ -868,6 +893,7 @@ async function getQRCodeImageData(text) {
  * @param {number} offsetYValue - Vertical offset for custom mode (-1 to 1)
  * @param {number} clarity - Robustness value (0-100), controls COLOR_BEND
  * @param {boolean} add4thSquare - Whether to add a 4th square in the bottom-right corner
+ * @param {number} oklchToHsbBlend - 0..1 blend ratio from OKLCH result to HSB result
  * @param {boolean} tintCtrlPixels - Whether to tint control pixels from image lightness statistics
  * @param {string} outsidePixels - 'auto' | 'extend' | 'color' for padding treatment
  * @param {string} outsidePixelsColor - Hex color when outsidePixels is 'color'
@@ -893,6 +919,7 @@ async function generateQRCodeOverlay(
   offsetYValue = 0,
   clarity = 90,
   add4thSquare = true,
+  oklchToHsbBlend = 0,
   tintCtrlPixels = false,
   blockSize = 1,
   outsidePixels = "auto",
@@ -1107,6 +1134,7 @@ async function generateQRCodeOverlay(
         qrWithoutCtrlx3,
         clarity,
         unalteredBw,
+        oklchToHsbBlend,
         preserveSaturation,
       );
     } else {

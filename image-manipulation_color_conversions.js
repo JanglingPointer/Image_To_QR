@@ -350,6 +350,22 @@ function oklchToRgb(lVal, cVal, hVal) {
 }
 
 /**
+ * Blends two RGB colors by a ratio toward the second color.
+ * @param {{r:number,g:number,b:number}} rgbA - First color
+ * @param {{r:number,g:number,b:number}} rgbB - Second color
+ * @param {number} ratioToB - 0..1, where 0 keeps rgbA and 1 keeps rgbB
+ * @returns {{r:number,g:number,b:number}} Blended color
+ */
+function blendRgb(rgbA, rgbB, ratioToB) {
+  const t = clamp(ratioToB, 0, 1);
+  return {
+    r: Math.round(rgbA.r * (1 - t) + rgbB.r * t),
+    g: Math.round(rgbA.g * (1 - t) + rgbB.g * t),
+    b: Math.round(rgbA.b * (1 - t) + rgbB.b * t),
+  };
+}
+
+/**
  * Converts RGB values to hex color string
  * @param {number} r - Red value (0-255)
  * @param {number} g - Green value (0-255)
