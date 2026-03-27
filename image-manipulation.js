@@ -908,7 +908,7 @@ async function generateQRCodeOverlay(
   darkColor = "#000000",
   brightColor = "#ffffff",
   useOriginalColors = false,
-  noiseSeed = 12345,
+  noiseSeed = 54321,
   scalingMode = "shrink",
   shine = false,
   bwMode = "threshold",

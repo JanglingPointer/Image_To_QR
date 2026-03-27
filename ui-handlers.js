@@ -83,7 +83,7 @@
   window.uploadedImage = null;
 
   // Global variable for noise seed
-  window.noiseSeed = 12345;
+  window.noiseSeed = 54321;
 
   // Utility functions to reduce code duplication
   const utils = {
