@@ -343,6 +343,79 @@ function cropCenterPixels(
 }
 
 /**
+ * Returns inner dimensions after removing a uniform border from each side.
+ * @param {ImageData} imageData - Reference image dimensions
+ * @param {number} borderPerSide - Border size in pixels for each side
+ * @returns {{width: number, height: number, size: number}} Inner dimensions
+ */
+function getInnerDimensionsByBorder(imageData, borderPerSide) {
+  const width = Math.max(1, imageData.width - borderPerSide * 2);
+  const height = Math.max(1, imageData.height - borderPerSide * 2);
+  return { width, height, size: Math.min(width, height) };
+}
+
+/**
+ * Places an image inside a larger canvas at a fixed offset and fills uncovered area.
+ * @param {ImageData} sourceImageData - Image to place
+ * @param {number} targetWidth - Result width
+ * @param {number} targetHeight - Result height
+ * @param {number} offsetX - Left offset
+ * @param {number} offsetY - Top offset
+ * @param {number[]} fillColor - RGBA fill color
+ * @returns {ImageData} Padded image data
+ */
+function placeImageDataAtOffset(
+  sourceImageData,
+  targetWidth,
+  targetHeight,
+  offsetX,
+  offsetY,
+  fillColor = [0, 0, 0, 0],
+) {
+  const result = new ImageData(targetWidth, targetHeight);
+  const out = result.data;
+  const src = sourceImageData.data;
+  const fillR = fillColor[0] ?? 0;
+  const fillG = fillColor[1] ?? 0;
+  const fillB = fillColor[2] ?? 0;
+  const fillA = fillColor[3] ?? 0;
+
+  for (let i = 0; i < out.length; i += 4) {
+    out[i] = fillR;
+    out[i + 1] = fillG;
+    out[i + 2] = fillB;
+    out[i + 3] = fillA;
+  }
+
+  const copyWidth = Math.max(
+    0,
+    Math.min(sourceImageData.width, targetWidth - Math.max(0, offsetX)),
+  );
+  const copyHeight = Math.max(
+    0,
+    Math.min(sourceImageData.height, targetHeight - Math.max(0, offsetY)),
+  );
+
+  for (let y = 0; y < copyHeight; y++) {
+    for (let x = 0; x < copyWidth; x++) {
+      const srcIdx = (y * sourceImageData.width + x) * 4;
+      const dstX = x + offsetX;
+      const dstY = y + offsetY;
+      if (dstX < 0 || dstY < 0 || dstX >= targetWidth || dstY >= targetHeight) {
+        continue;
+      }
+      const dstIdx = (dstY * targetWidth + dstX) * 4;
+      out[dstIdx] = src[srcIdx];
+      out[dstIdx + 1] = src[srcIdx + 1];
+      out[dstIdx + 2] = src[srcIdx + 2];
+      out[dstIdx + 3] = src[srcIdx + 3];
+    }
+  }
+
+  return result;
+}
+
+/**
  * Converts an image to black and white using a threshold
  * @param {ImageData} imageData - The input image data
  * @param {number} threshold - Threshold value (0-255)
@@ -854,18 +927,21 @@ async function generateQRCodeOverlay(
     // Step 8: Thin out by keeping only center pixels
     const qrWithoutCtrlThinned = onlyKeepCenterPixelOf9x9Block(qrWithoutCtrlx3);
 
-    // Step 9: Scale uploaded image to match QR dimensions
+    // Step 9: Scale uploaded image to inner QR area (excluding 3px border on each side)
     let scaledUploadedImage;
+    const ctrlBorderPerSide = 3;
+    const innerTarget = getInnerDimensionsByBorder(qrCtrlx3, ctrlBorderPerSide);
 
     // Check if we're in pixel perfect mode (blockSize >= 1)
     // blockSize >= 1 means pixel-perfect mode, blockSize = 0 means regular scaling mode
     const isPixelPerfect = blockSize >= 1;
 
+    let scaledUploadedImageInner;
     if (isPixelPerfect) {
       // For pixel perfect mode, use cropCenterPixels
-      scaledUploadedImage = cropCenterPixels(
+      scaledUploadedImageInner = cropCenterPixels(
         uploadedImage,
-        qrWithoutCtrlThinned.width,
+        innerTarget.size,
         blockSize,
         offsetXValue,
         offsetYValue,
@@ -878,10 +954,10 @@ async function generateQRCodeOverlay(
       const effectiveOffsetXValue = scalingMode === "custom" ? offsetXValue : 0;
       const effectiveOffsetYValue = scalingMode === "custom" ? offsetYValue : 0;
 
-      scaledUploadedImage = scaleImageToDimensions(
+      scaledUploadedImageInner = scaleImageToDimensions(
         uploadedImage,
-        qrWithoutCtrlThinned.width,
-        qrWithoutCtrlThinned.height,
+        innerTarget.width,
+        innerTarget.height,
         scalingMode,
         effectiveZoomValue,
         effectiveOffsetXValue,
@@ -890,6 +966,25 @@ async function generateQRCodeOverlay(
         outsidePixelsColor,
       );
     }
+
+    // Insert the inner image into full QR resolution so downstream steps keep matching dimensions.
+    let borderFillColor;
+    if (outsidePixels === "color") {
+      borderFillColor = hexToRgba(outsidePixelsColor);
+    } else if (outsidePixels === "auto") {
+      borderFillColor = detectPaddingColor(uploadedImage, true, true);
+    } else {
+      borderFillColor = [0, 0, 0, 0];
+    }
+
+    scaledUploadedImage = placeImageDataAtOffset(
+      scaledUploadedImageInner,
+      qrCtrlx3.width,
+      qrCtrlx3.height,
+      ctrlBorderPerSide,
+      ctrlBorderPerSide,
+      borderFillColor,
+    );
 
     // Step 10: Convert uploaded image to BW (with optional dither gamma)
     let scaledUploadedImage_Gamma = null;
