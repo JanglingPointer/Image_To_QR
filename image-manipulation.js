@@ -6,6 +6,66 @@
  * @param {boolean} add4thSquare - Whether to add a 4th square in the bottom-right corner
  * @returns {ImageData} The mask image data
  */
+const FOURTH_SQUARE_SIZE = 5;
+const FOURTH_SQUARE_DISTANCE_FROM_BORDER = 5;
+
+function calculateGrayLuminanceFromRgb(r, g, b) {
+  return r * 0.299 + g * 0.587 + b * 0.114;
+}
+
+function readImageDataFromImageElement(image, imageSmoothingEnabled = null) {
+  const canvas = document.createElement("canvas");
+  canvas.width = image.width;
+  canvas.height = image.height;
+  const ctx = canvas.getContext("2d");
+  if (imageSmoothingEnabled !== null) {
+    ctx.imageSmoothingEnabled = imageSmoothingEnabled;
+  }
+  ctx.drawImage(image, 0, 0);
+  return ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+
+function overlayBlendChannel(baseValue, blendValue) {
+  const normalizedBase = baseValue / 255;
+  const normalizedBlend = blendValue / 255;
+  return Math.round(
+    (normalizedBase < 0.5
+      ? 2 * normalizedBase * normalizedBlend
+      : 1 - 2 * (1 - normalizedBase) * (1 - normalizedBlend)) * 255,
+  );
+}
+
+function overlayDiagonalGradient(imageData, colorBL, colorTR) {
+  const width = imageData.width;
+  const height = imageData.height;
+  const result = new ImageData(width, height);
+  const rgbBL = hexToRgb(colorBL);
+  const rgbTR = hexToRgb(colorTR);
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const t = (x / (width - 1) + (1 - y / (height - 1))) / 2; // 0 at BL, 1 at TR
+      const rGradient = Math.round(rgbBL.r * (1 - t) + rgbTR.r * t);
+      const gGradient = Math.round(rgbBL.g * (1 - t) + rgbTR.g * t);
+      const bGradient = Math.round(rgbBL.b * (1 - t) + rgbTR.b * t);
+      const idx = (y * width + x) * 4;
+
+      result.data[idx] = overlayBlendChannel(imageData.data[idx], rGradient);
+      result.data[idx + 1] = overlayBlendChannel(
+        imageData.data[idx + 1],
+        gGradient,
+      );
+      result.data[idx + 2] = overlayBlendChannel(
+        imageData.data[idx + 2],
+        bGradient,
+      );
+      result.data[idx + 3] = imageData.data[idx + 3];
+    }
+  }
+
+  return result;
+}
+
 function generateMask(imageData, marginSize, rectSize, add4thSquare = true) {
   const width = imageData.width;
   const height = imageData.height;
@@ -41,12 +101,12 @@ function generateMask(imageData, marginSize, rectSize, add4thSquare = true) {
 
       // Add 4th square in bottom-right corner if enabled
       if (add4thSquare) {
-        const squareSize = 5;
-        const distanceFromBorder = 5;
-        const squareLeft = width - distanceFromBorder - squareSize;
-        const squareRight = width - distanceFromBorder;
-        const squareTop = height - distanceFromBorder - squareSize;
-        const squareBottom = height - distanceFromBorder;
+        const squareLeft =
+          width - FOURTH_SQUARE_DISTANCE_FROM_BORDER - FOURTH_SQUARE_SIZE;
+        const squareRight = width - FOURTH_SQUARE_DISTANCE_FROM_BORDER;
+        const squareTop =
+          height - FOURTH_SQUARE_DISTANCE_FROM_BORDER - FOURTH_SQUARE_SIZE;
+        const squareBottom = height - FOURTH_SQUARE_DISTANCE_FROM_BORDER;
 
         if (
           x >= squareLeft &&
@@ -131,19 +191,13 @@ function setWhereMasked(image, mask, r, g, b, a, invertMask) {
  * @returns {number} Average luminance (0-255)
  */
 function calculateAveragePixelValue(image) {
-  const canvas = document.createElement("canvas");
-  canvas.width = image.width;
-  canvas.height = image.height;
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(image, 0, 0);
-
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const imageData = readImageDataFromImageElement(image);
   const data = imageData.data;
   let totalValue = 0;
   let pixelCount = 0;
 
   for (let i = 0; i < data.length; i += 4) {
-    const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+    const gray = calculateGrayLuminanceFromRgb(data[i], data[i + 1], data[i + 2]);
     totalValue += gray;
     pixelCount++;
   }
@@ -158,13 +212,7 @@ function calculateAveragePixelValue(image) {
  * @returns {number} Block size (1-16)
  */
 function computeBlockSizeFromImage(image) {
-  const canvas = document.createElement("canvas");
-  canvas.width = image.width;
-  canvas.height = image.height;
-  const ctx = canvas.getContext("2d");
-  ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(image, 0, 0);
-  const data = ctx.getImageData(0, 0, image.width, image.height);
+  const data = readImageDataFromImageElement(image, false);
   const w = data.width;
   const h = data.height;
   const pixels = data.data;
@@ -428,7 +476,7 @@ function convertToBlackAndWhite(imageData, threshold) {
 
   for (let i = 0; i < data.length; i += 4) {
     // Calculate grayscale value (luminance)
-    const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+    const gray = calculateGrayLuminanceFromRgb(data[i], data[i + 1], data[i + 2]);
 
     // Apply threshold
     const bw = gray > threshold ? 255 : 0;
@@ -453,7 +501,7 @@ function ditherImage(imageData) {
   const resultData = result.data;
   for (let i = 0; i < data.length; i += 4) {
     // Calculate grayscale value (luminance)
-    const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+    const gray = calculateGrayLuminanceFromRgb(data[i], data[i + 1], data[i + 2]);
     // Probability to be white is gray/255
     const isWhite = Math.random() < gray / 255;
     const bw = isWhite ? 255 : 0;
@@ -476,10 +524,11 @@ function floydSteinbergDither(imageData) {
   const data = new Float32Array(imageData.data.length);
   // Copy grayscale values into data
   for (let i = 0; i < imageData.data.length; i += 4) {
-    const gray =
-      imageData.data[i] * 0.299 +
-      imageData.data[i + 1] * 0.587 +
-      imageData.data[i + 2] * 0.114;
+    const gray = calculateGrayLuminanceFromRgb(
+      imageData.data[i],
+      imageData.data[i + 1],
+      imageData.data[i + 2],
+    );
     data[i] = data[i + 1] = data[i + 2] = gray;
     data[i + 3] = 255;
   }
@@ -832,7 +881,7 @@ async function getQRCodeImageData(text) {
     QRCode.toString(
       text,
       { errorCorrectionLevel: "H" },
-      async function (error, qrString) {
+      function (error, qrString) {
         if (error) {
           console.error("QR Code Generation Error: " + error);
           reject(error);
@@ -952,7 +1001,7 @@ async function generateQRCodeOverlay(
     const qrWithoutCtrlx3 = scale3Image(qrWithoutCtrl);
 
     // Step 8: Thin out by keeping only center pixels
-    const qrWithoutCtrlThinned = onlyKeepCenterPixelOf9x9Block(qrWithoutCtrlx3);
+    const qrWithoutCtrlThinned = onlyKeepCenterPixelOf3x3Block(qrWithoutCtrlx3);
 
     // Step 9: Scale uploaded image to inner QR area (excluding 3px border on each side)
     let scaledUploadedImage;
@@ -1027,10 +1076,11 @@ async function generateQRCodeOverlay(
       );
       for (let i = 0; i < scaledUploadedImage.data.length; i += 4) {
         // Calculate grayscale value (luminance)
-        const gray =
-          scaledUploadedImage.data[i] * 0.299 +
-          scaledUploadedImage.data[i + 1] * 0.587 +
-          scaledUploadedImage.data[i + 2] * 0.114;
+        const gray = calculateGrayLuminanceFromRgb(
+          scaledUploadedImage.data[i],
+          scaledUploadedImage.data[i + 1],
+          scaledUploadedImage.data[i + 2],
+        );
         // Apply brightness/contrast adjustment
         // x = ditherGamma, range [-1, 1]
         let x = ditherGamma;
@@ -1216,46 +1266,6 @@ async function generateQRCodeOverlay(
     const result_colored_xN = result_colored_shine
       ? scaleImageByFactor(result_colored_shine, scaleFactor)
       : null;
-
-    // Overlay a diagonal gradient on an ImageData
-    function overlayDiagonalGradient(imageData, colorBL, colorTR) {
-      const width = imageData.width;
-      const height = imageData.height;
-      const result = new ImageData(width, height);
-      // Parse hex colors
-      function hexToRgbArr(hex) {
-        hex = hex.replace("#", "");
-        return [
-          parseInt(hex.substring(0, 2), 16),
-          parseInt(hex.substring(2, 4), 16),
-          parseInt(hex.substring(4, 6), 16),
-        ];
-      }
-      const rgbBL = hexToRgbArr(colorBL);
-      const rgbTR = hexToRgbArr(colorTR);
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          const t = (x / (width - 1) + (1 - y / (height - 1))) / 2; // 0 at BL, 1 at TR
-          const rG = Math.round(rgbBL[0] * (1 - t) + rgbTR[0] * t);
-          const gG = Math.round(rgbBL[1] * (1 - t) + rgbTR[1] * t);
-          const bG = Math.round(rgbBL[2] * (1 - t) + rgbTR[2] * t);
-          const idx = (y * width + x) * 4;
-          // Photoshop overlay blend mode
-          function overlayBlend(a, b) {
-            a /= 255;
-            b /= 255;
-            return Math.round(
-              (a < 0.5 ? 2 * a * b : 1 - 2 * (1 - a) * (1 - b)) * 255,
-            );
-          }
-          result.data[idx] = overlayBlend(imageData.data[idx], rG);
-          result.data[idx + 1] = overlayBlend(imageData.data[idx + 1], gG);
-          result.data[idx + 2] = overlayBlend(imageData.data[idx + 2], bG);
-          result.data[idx + 3] = imageData.data[idx + 3];
-        }
-      }
-      return result;
-    }
 
     // Step 19: Create final canvas and overlay
     const canvas = document.getElementById("resultCanvas");

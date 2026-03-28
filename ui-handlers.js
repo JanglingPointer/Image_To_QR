@@ -720,6 +720,124 @@
   // Initialize Original mode visibility
   updateOriginalModeVisibility();
 
+  function readScalingModeSelection() {
+    let scalingMode = "shrink";
+    const growRadio = document.getElementById("scalingModeGrow");
+    const stretchRadio = document.getElementById("scalingModeStretch");
+    const customRadio = document.getElementById("scalingModeCustom");
+
+    if (growRadio && growRadio.checked) scalingMode = "grow";
+    if (stretchRadio && stretchRadio.checked) scalingMode = "stretch";
+    if (customRadio && customRadio.checked) scalingMode = "custom";
+
+    return { scalingMode, customRadio };
+  }
+
+  function readOutsidePixelsSettings() {
+    const outsidePixelsExtend = document.getElementById("outsidePixelsExtend");
+    const outsidePixelsColorRadio =
+      document.getElementById("outsidePixelsColor");
+    const outsidePixelsColorPicker = document.getElementById(
+      "outsidePixelsColorPicker",
+    );
+    let outsidePixels = "auto";
+    if (outsidePixelsExtend && outsidePixelsExtend.checked) outsidePixels = "extend";
+    else if (outsidePixelsColorRadio && outsidePixelsColorRadio.checked)
+      outsidePixels = "color";
+    const outsidePixelsColor =
+      outsidePixelsColorPicker && outsidePixels === "color"
+        ? outsidePixelsColorPicker.value
+        : "#000000";
+
+    return { outsidePixels, outsidePixelsColor };
+  }
+
+  function readGenerationSettings() {
+    const threshold = parseInt(thresholdSlider.value);
+    const scaleFactor = parseInt(scaleSlider.value);
+    const noiseProbability = parseInt(noiseSlider.value);
+    const darkColor = colorDark.value;
+    const brightColor = colorBright.value;
+    const useOriginalColors =
+      colorAppearanceColorful && colorAppearanceColorful.checked;
+    const saturationBoost = useOriginalColors
+      ? parseFloat(saturationBoostSlider.value)
+      : 0;
+    const noiseSeed = window.noiseSeed;
+
+    const { scalingMode, customRadio } = readScalingModeSelection();
+
+    let zoomValue = 0;
+    let blockSize = 0; // Default to 0 for regular scaling mode
+    if (customRadio && customRadio.checked) {
+      if (pixelPerfectCheckbox && pixelPerfectCheckbox.checked) {
+        // Pixel perfect mode: use blockSize (including blockSize = 1)
+        zoomValue = 0;
+        blockSize = parseInt(blockSizeSlider.value, 10);
+      } else {
+        // Normal mode: use zoom
+        zoomValue = parseFloat(zoomSlider.value);
+        blockSize = 0; // Use 0 to indicate regular scaling mode
+      }
+    }
+
+    const offsetXValue =
+      customRadio && customRadio.checked ? parseFloat(offsetXSlider.value) : 0;
+    const offsetYValue =
+      customRadio && customRadio.checked ? parseFloat(offsetYSlider.value) : 0;
+
+    const shine = shineCheckbox && shineCheckbox.checked;
+    const bwMode = document.getElementById("bwModePixelArt").checked
+      ? "original_colors"
+      : document.getElementById("bwModeDither").checked
+        ? "dither"
+        : "threshold";
+    let ditherGamma = 1.0;
+    if (bwMode === "dither" && ditherBrightnessSlider) {
+      ditherGamma = parseFloat(ditherBrightnessSlider.value);
+    }
+    const clarity = claritySlider ? parseFloat(claritySlider.value) : 90;
+    const add4thSquare = add4thSquareCheckbox
+      ? add4thSquareCheckbox.checked
+      : true;
+    const robustColors = robustColorsCheckbox
+      ? robustColorsCheckbox.checked
+      : true;
+    const oklchToHsbBlend =
+      robustColors || !oklchToHsbSlider ? 0 : parseFloat(oklchToHsbSlider.value);
+    const tintCtrlPixels = tintCtrlPixelsCheckbox
+      ? tintCtrlPixelsCheckbox.checked
+      : false;
+
+    const { outsidePixels, outsidePixelsColor } = readOutsidePixelsSettings();
+
+    return {
+      threshold,
+      scaleFactor,
+      noiseProbability,
+      darkColor,
+      brightColor,
+      useOriginalColors,
+      saturationBoost,
+      noiseSeed,
+      scalingMode,
+      zoomValue,
+      blockSize,
+      offsetXValue,
+      offsetYValue,
+      shine,
+      bwMode,
+      ditherGamma,
+      clarity,
+      add4thSquare,
+      robustColors,
+      oklchToHsbBlend,
+      tintCtrlPixels,
+      outsidePixels,
+      outsidePixelsColor,
+    };
+  }
+
   // Hide image controls when no image is present
   function hideImageUI() {
     utils.addHiddenClass(previewImage);
@@ -754,96 +872,32 @@
     }
 
     try {
-      const threshold = parseInt(thresholdSlider.value);
-      const scaleFactor = parseInt(scaleSlider.value);
-      const noiseProbability = parseInt(noiseSlider.value);
-      const darkColor = colorDark.value;
-      const brightColor = colorBright.value;
-      const useOriginalColors =
-        colorAppearanceColorful && colorAppearanceColorful.checked;
-      const saturationBoost = useOriginalColors
-        ? parseFloat(saturationBoostSlider.value)
-        : 0;
-      const noiseSeed = window.noiseSeed;
-      // Get scaling mode
-      let scalingMode = "shrink";
-      const shrinkRadio = document.getElementById("scalingModeShrink");
-      const growRadio = document.getElementById("scalingModeGrow");
-      const stretchRadio = document.getElementById("scalingModeStretch");
-      const customRadio = document.getElementById("scalingModeCustom");
-      if (growRadio && growRadio.checked) scalingMode = "grow";
-      if (stretchRadio && stretchRadio.checked) scalingMode = "stretch";
-      if (customRadio && customRadio.checked) scalingMode = "custom";
-
-      // Get zoom or blockSize value for custom mode based on pixel perfect setting
-      let zoomValue = 0;
-      let blockSize = 0; // Default to 0 for regular scaling mode
-      if (customRadio && customRadio.checked) {
-        if (pixelPerfectCheckbox && pixelPerfectCheckbox.checked) {
-          // Pixel perfect mode: use blockSize (including blockSize = 1)
-          zoomValue = 0;
-          blockSize = parseInt(blockSizeSlider.value, 10);
-        } else {
-          // Normal mode: use zoom
-          zoomValue = parseFloat(zoomSlider.value);
-          blockSize = 0; // Use 0 to indicate regular scaling mode
-        }
-      }
-
-      // Get offset values for custom mode
-      const offsetXValue =
-        customRadio && customRadio.checked
-          ? parseFloat(offsetXSlider.value)
-          : 0;
-      const offsetYValue =
-        customRadio && customRadio.checked
-          ? parseFloat(offsetYSlider.value)
-          : 0;
-      // In updateResult, get the shine checkbox state and pass it to generateQRCodeOverlay
-      const shineCheckbox = document.getElementById("shineCheckbox");
-      const shine = shineCheckbox && shineCheckbox.checked;
-      // In updateResult, get the selected black & white mode and pass it to generateQRCodeOverlay
-      const bwMode = document.getElementById("bwModePixelArt").checked
-        ? "original_colors"
-        : document.getElementById("bwModeDither").checked
-          ? "dither"
-          : "threshold";
-      let ditherGamma = 1.0;
-      if (bwMode === "dither" && ditherBrightnessSlider) {
-        ditherGamma = parseFloat(ditherBrightnessSlider.value);
-      }
-      const clarity = claritySlider ? parseFloat(claritySlider.value) : 90;
-      const add4thSquare = add4thSquareCheckbox
-        ? add4thSquareCheckbox.checked
-        : true;
-      const robustColors = robustColorsCheckbox
-        ? robustColorsCheckbox.checked
-        : true;
-      const oklchToHsbBlend =
-        robustColors || !oklchToHsbSlider
-          ? 0
-          : parseFloat(oklchToHsbSlider.value);
-      const tintCtrlPixels = tintCtrlPixelsCheckbox
-        ? tintCtrlPixelsCheckbox.checked
-        : false;
-      // blockSize already declared above, no need to redeclare
-      const outsidePixelsExtend = document.getElementById(
-        "outsidePixelsExtend",
-      );
-      const outsidePixelsColorRadio =
-        document.getElementById("outsidePixelsColor");
-      const outsidePixelsColorPicker = document.getElementById(
-        "outsidePixelsColorPicker",
-      );
-      let outsidePixels = "auto";
-      if (outsidePixelsExtend && outsidePixelsExtend.checked)
-        outsidePixels = "extend";
-      else if (outsidePixelsColorRadio && outsidePixelsColorRadio.checked)
-        outsidePixels = "color";
-      const outsidePixelsColor =
-        outsidePixelsColorPicker && outsidePixels === "color"
-          ? outsidePixelsColorPicker.value
-          : "#000000";
+      const settings = readGenerationSettings();
+      const {
+        threshold,
+        scaleFactor,
+        noiseProbability,
+        darkColor,
+        brightColor,
+        useOriginalColors,
+        saturationBoost,
+        noiseSeed,
+        scalingMode,
+        zoomValue,
+        blockSize,
+        offsetXValue,
+        offsetYValue,
+        shine,
+        bwMode,
+        ditherGamma,
+        clarity,
+        add4thSquare,
+        robustColors,
+        oklchToHsbBlend,
+        tintCtrlPixels,
+        outsidePixels,
+        outsidePixelsColor,
+      } = settings;
       // Debug logging: list all user-selected modes and values (compact)
       if (window.debugModule && window.debugModule.isEnabled()) {
         const log = window.debugModule.log;

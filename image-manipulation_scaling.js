@@ -56,7 +56,7 @@ function scale3Image(imageData) {
  * @param {ImageData} image - The input image
  * @returns {ImageData} The thinned image
  */
-function onlyKeepCenterPixelOf9x9Block(image) {
+function onlyKeepCenterPixelOf3x3Block(image) {
   if (image.width % 3 != 0 || image.height % 3 != 0) {
     console.error("Size mismatch - dimensions must be divisible by 3");
     return image;
@@ -81,6 +81,11 @@ function onlyKeepCenterPixelOf9x9Block(image) {
   }
 
   return result;
+}
+
+// Backward compatible alias for existing callers.
+function onlyKeepCenterPixelOf9x9Block(image) {
+  return onlyKeepCenterPixelOf3x3Block(image);
 }
 
 /**
