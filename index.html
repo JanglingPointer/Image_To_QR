@@ -8,6 +8,7 @@
         <link rel="stylesheet" href="styles.css" />
     </head>
     <body>
+        <!-- Orientation helper -->
         <div
             id="landscapeOrientationWarning"
             class="landscape-orientation-warning"
@@ -18,6 +19,8 @@
             This app works best in landscape mode — rotate your device for a better
             layout.
         </div>
+
+        <!-- Main app layout -->
         <div class="container">
             <div class="content">
                 <div class="layout-container">
@@ -290,20 +293,20 @@
                                             role="radiogroup"
                                             aria-label="Color appearance"
                                         >
-                                        <div class="flex-center gap-4">
-                                            <input
-                                                type="radio"
-                                                name="colorAppearance"
-                                                id="colorAppearanceColorful"
-                                                value="colorful"
-                                                checked
-                                            />
-                                            <label
-                                                for="colorAppearanceColorful"
-                                                class="margin-bottom-0"
-                                                >Colorful</label
-                                            >
-                                        </div>
+                                            <div class="flex-center gap-4">
+                                                <input
+                                                    type="radio"
+                                                    name="colorAppearance"
+                                                    id="colorAppearanceColorful"
+                                                    value="colorful"
+                                                    checked
+                                                />
+                                                <label
+                                                    for="colorAppearanceColorful"
+                                                    class="margin-bottom-0"
+                                                    >Colorful</label
+                                                >
+                                            </div>
                                             <div class="flex-center gap-4">
                                                 <input
                                                     type="radio"
@@ -317,7 +320,6 @@
                                                     >Duo Tone</label
                                                 >
                                             </div>
-                                            
                                         </div>
                                         <div class="color-row-secondary">
                                             <div
@@ -654,6 +656,7 @@
                     </div>
 
                     <div class="right-panel">
+                        <!-- Result preview -->
                         <div class="result-section" id="resultSection">
                             <div class="canvas-container">
                                 <canvas id="resultCanvas"></canvas>
@@ -663,6 +666,7 @@
                             </button>
                         </div>
 
+                        <!-- Debug output -->
                         <div class="debug-section" id="debugSection">
                             <div class="debug-content">
                                 <h3>Debug Output</h3>
@@ -785,20 +789,33 @@
 
         <script>
             (function () {
-                var el = document.getElementById("landscapeOrientationWarning");
-                if (!el) return;
+                var warningElement = document.getElementById(
+                    "landscapeOrientationWarning"
+                );
+                var ORIENTATION_UPDATE_DELAY_MS = 150;
+
+                if (!warningElement) return;
 
                 function updateLandscapeWarning() {
-                    var portrait = window.innerWidth < window.innerHeight;
-                    el.classList.toggle("is-visible", portrait);
-                    el.setAttribute("aria-hidden", portrait ? "false" : "true");
+                    var isPortrait = window.innerWidth < window.innerHeight;
+                    warningElement.classList.toggle("is-visible", isPortrait);
+                    warningElement.setAttribute(
+                        "aria-hidden",
+                        isPortrait ? "false" : "true"
+                    );
                 }
 
                 updateLandscapeWarning();
                 window.addEventListener("resize", updateLandscapeWarning);
-                window.addEventListener("orientationchange", function () {
-                    setTimeout(updateLandscapeWarning, 150);
-                });
+                window.addEventListener(
+                    "orientationchange",
+                    function handleOrientationChange() {
+                        setTimeout(
+                            updateLandscapeWarning,
+                            ORIENTATION_UPDATE_DELAY_MS
+                        );
+                    }
+                );
             })();
         </script>
         <script src="image-manipulation_color_conversions.js"></script>
