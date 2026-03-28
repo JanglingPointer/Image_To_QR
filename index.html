@@ -579,30 +579,38 @@
                                             class="robustness-content-row flex-center gap-8"
                                         >
                                             <div class="robustness-main flex-1">
-                                                <div class="flex-center">
-                                                    <label
-                                                        for="claritySlider"
-                                                        class="margin-right-8"
-                                                        >Robustness</label
+                                                <div
+                                                    class="robustness-slider-header flex-center"
+                                                >
+                                                    <div
+                                                        class="robustness-label-cluster"
                                                     >
+                                                        <label
+                                                            for="claritySlider"
+                                                            >Robustness</label
+                                                        >
+                                                        <span
+                                                            id="clarityWarning"
+                                                            class="clarity-warning-hidden"
+                                                            title="The code may be hard to scan. It may also work fine depending on your image."
+                                                            >⚠️</span
+                                                        >
+                                                    </div>
                                                     <span
-                                                        id="clarityWarning"
-                                                        class="margin-right-8 clarity-warning-hidden"
-                                                        title="The code may be hard to scan. It may also work fine depending on your image."
-                                                        >⚠️</span
+                                                        class="robustness-value-reset-group"
                                                     >
-                                                    <span
-                                                        id="clarityValue"
-                                                        class="margin-left-auto"
-                                                        >90</span
-                                                    >
-                                                    <button
-                                                        id="robustnessResetBtn"
-                                                        title="Reset robustness to default"
-                                                        class="margin-left-8"
-                                                    >
-                                                        🪄
-                                                    </button>
+                                                        <span
+                                                            id="clarityValue"
+                                                            >90</span
+                                                        >
+                                                        <button
+                                                            id="robustnessResetBtn"
+                                                            title="Reset robustness to default"
+                                                            type="button"
+                                                        >
+                                                            🪄
+                                                        </button>
+                                                    </span>
                                                 </div>
                                                 <div class="robustness-slider-row">
                                                     <input

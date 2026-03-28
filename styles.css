@@ -280,12 +280,31 @@ body {
     box-sizing: border-box;
 }
 
-.robustness-main > .flex-center {
-    flex-wrap: wrap;
-    gap: 4px 8px;
+/* One row: label cluster (left) + value+reset (right); no wrap between them */
+.robustness-main > .robustness-slider-header {
+    flex-wrap: nowrap;
+    gap: 8px;
     min-width: 0;
     width: 100%;
     box-sizing: border-box;
+}
+
+.robustness-label-cluster {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+/* Keep slider value + reset on one line; margin-left:auto right-aligns the pair */
+.robustness-value-reset-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
 }
 
 .show-expert-values-btn {
