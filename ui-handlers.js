@@ -10,6 +10,7 @@
   const oklchToHsbSlider = document.getElementById("oklchToHsbSlider");
   const oklchToHsbValue = document.getElementById("oklchToHsbValue");
   const debugSection = document.getElementById("debugSection");
+  const layoutContainer = document.querySelector(".layout-container");
   const thresholdSlider = document.getElementById("thresholdSlider");
   const thresholdControl = document.querySelector(".threshold-control");
   // Add DitherBrightness slider and value
@@ -514,8 +515,17 @@
   // Handle test image button
   testImageBtn.addEventListener("click", generateTestImage);
 
+  function syncLayoutStretchForDebugMode() {
+    if (!layoutContainer || !debugCheckbox) return;
+    layoutContainer.classList.toggle(
+      "layout-debug-checked",
+      debugCheckbox.checked,
+    );
+  }
+
   // Handle debug checkbox
   debugCheckbox.addEventListener("change", function () {
+    syncLayoutStretchForDebugMode();
     if (this.checked) {
       utils.removeHiddenClass(debugSection);
       utils.removeHiddenClass(testImageBtn);
@@ -704,6 +714,8 @@
     utils.addHiddenClass(add4thSquareControl);
     utils.addHiddenClass(oklchHsbControl);
   }
+
+  syncLayoutStretchForDebugMode();
 
   // Initialize Original mode visibility
   updateOriginalModeVisibility();

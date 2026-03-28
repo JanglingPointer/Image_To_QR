@@ -43,8 +43,19 @@ body {
 .layout-container {
     display: flex;
     gap: 25px;
-    /* stretch: right column matches left height so sticky #resultSection has a tall containing block even when debug is hidden */
+    /* stretch when debug is off: right column matches left height so sticky #resultSection has a tall containing block */
     align-items: stretch;
+}
+
+.layout-container.layout-debug-checked {
+    align-items: flex-start;
+}
+
+/* Debug on: preview scrolls with the page (no sticky). Debug off: sticky follows viewport. */
+.layout-container.layout-debug-checked .result-section {
+    position: static;
+    top: auto;
+    z-index: auto;
 }
 
 .left-panel {
