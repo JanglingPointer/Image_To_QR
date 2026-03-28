@@ -6,50 +6,6 @@
         <title>Image To QR</title>
         <script src="3rd_party/qrcode.min.js"></script>
         <link rel="stylesheet" href="styles.css" />
-        <style>
-            .debug-log-container {
-                margin-top: 20px;
-                width: 100%;
-            }
-            .debug-output-textarea {
-                width: 100%;
-                height: 100px;
-                font-family: monospace;
-                font-size: 12px;
-                background-color: #1e1e1e;
-                color: #ffffff;
-                border: 1px solid #444;
-                border-radius: 4px;
-                padding: 8px;
-                resize: vertical;
-                min-height: 60px;
-                max-height: 200px;
-            }
-            .debug-log-container h4 {
-                margin-bottom: 8px;
-                color: #ffffff;
-            }
-
-            .landscape-orientation-warning {
-                display: none;
-                width: 100%;
-                max-width: 1200px;
-                margin: 0 auto 10px;
-                box-sizing: border-box;
-                padding: 10px 14px;
-                background: rgba(0, 0, 0, 0.35);
-                color: #fff;
-                text-align: center;
-                font-size: 0.95rem;
-                line-height: 1.4;
-                border-radius: 8px;
-                border: 1px solid rgba(255, 255, 255, 0.25);
-            }
-
-            .landscape-orientation-warning.is-visible {
-                display: block;
-            }
-        </style>
     </head>
     <body>
         <div
@@ -852,19 +808,11 @@
         <script src="debug.js"></script>
         <script src="ui-handlers.js"></script>
 
-        <footer
-            style="
-                position: fixed;
-                bottom: 8px;
-                right: 12px;
-                font-size: 12px;
-                z-index: 1000;
-            "
-        >
+        <footer class="github-footer">
             <a
                 href="https://github.com/JanglingPointer/Image_To_QR"
                 target="_blank"
-                style="color: #ffffff; text-decoration: none"
+                class="github-footer-link"
             >
                 >> Go to Github
             </a>
