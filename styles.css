@@ -122,14 +122,21 @@ body {
     border-radius: 8px;
 }
 
-/* Center BW mode radio buttons vertically within their flex container */
+/* align-self: flex-start keeps radios left-aligned when .dither-and-threshold stacks (column);
+   wider screens restore vertical centering next to the threshold row (row flex, cross-axis vertical). */
 /* 2x2 grid: Top-Left=Original, Top-Right=Dither, Bottom-Right=Threshold (bottom-left empty) */
 .bw-mode-group.bw-mode-grid {
-    align-self: center;
+    align-self: flex-start;
     display: grid !important;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto;
     gap: 4px 12px;
+}
+
+@media (min-width: 1025px) {
+    .bw-mode-group.bw-mode-grid {
+        align-self: center;
+    }
 }
 .bw-mode-group.bw-mode-grid > label:nth-child(1) {
     grid-column: 1;
@@ -1051,6 +1058,22 @@ body {
     margin-bottom: 0;
 }
 
+/* Keep color pickers, saturation, and Shine on one row (wrapping as a unit) so Shine stays aligned with sliders */
+.color-row-secondary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.color-row-secondary .saturation-boost-group {
+    flex: 1 1 12rem;
+    min-width: 0;
+    max-width: 100%;
+}
+
 .color-label-group {
     display: flex;
     flex-direction: column;
@@ -1140,6 +1163,10 @@ body {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
+    }
+
+    .color-control .color-row-secondary {
+        width: 100%;
     }
 
     .custom-colors {
