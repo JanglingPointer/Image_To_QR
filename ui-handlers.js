@@ -11,7 +11,6 @@
   const oklchToHsbValue = document.getElementById("oklchToHsbValue");
   const debugSection = document.getElementById("debugSection");
   const thresholdSlider = document.getElementById("thresholdSlider");
-  const thresholdValue = document.getElementById("thresholdValue");
   const thresholdControl = document.querySelector(".threshold-control");
   // Add DitherBrightness slider and value
   const ditherBrightnessSlider = document.getElementById(
@@ -138,18 +137,16 @@
       }
     },
 
-    // Add slider event listener with value update
+    // Add slider event listener with value update (valueElement optional)
     addSliderListener: (slider, valueElement, formatter = (val) => val) => {
-      if (slider && valueElement) {
-        slider.addEventListener("input", function () {
-          utils.updateSliderValue(this, valueElement, formatter);
-          if (window.uploadedImage) {
-            updateResult();
-          }
-        });
-        // Set initial value
-        utils.updateSliderValue(slider, valueElement, formatter);
-      }
+      if (!slider) return;
+      slider.addEventListener("input", function () {
+        utils.updateSliderValue(this, valueElement, formatter);
+        if (window.uploadedImage) {
+          updateResult();
+        }
+      });
+      utils.updateSliderValue(slider, valueElement, formatter);
     },
   };
 
@@ -319,7 +316,7 @@
     // Initially hide main image controls until image is uploaded
     utils.addHiddenClass(mainImageControls);
     // Ensure slider value labels reflect current values
-    utils.updateSliderValue(thresholdSlider, thresholdValue);
+    utils.updateSliderValue(thresholdSlider);
     utils.updateSliderValue(scaleSlider, scaleValue);
     utils.updateSliderValue(noiseSlider, noiseValue);
     utils.updateSliderValue(claritySlider, clarityValue);
@@ -382,7 +379,6 @@
     const averagePixelValue = window.calculateAveragePixelValue(image);
     const newThreshold = Math.round(averagePixelValue);
     thresholdSlider.value = newThreshold;
-    thresholdValue.textContent = newThreshold;
   }
 
   // Handle auto block size button click
@@ -552,7 +548,7 @@
   }
 
   // Add slider listeners using utility function
-  utils.addSliderListener(thresholdSlider, thresholdValue);
+  utils.addSliderListener(thresholdSlider);
   utils.addSliderListener(scaleSlider, scaleValue);
   utils.addSliderListener(noiseSlider, noiseValue);
   utils.addSliderListener(claritySlider, clarityValue);
