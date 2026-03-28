@@ -912,6 +912,10 @@
           `Input: ${inputWidth}x${inputHeight}, Output: ${outputWidth}x${outputHeight}`,
         );
       }
+
+      // Outside Pixels visibility depends on lastInnerTargetSize (pixel-perfect custom),
+      // which changes when the QR is regenerated (e.g. text / link).
+      updateOutsidePixelsGroupVisibility();
     } catch (error) {
       console.error("Error generating QR code:", error);
       utils.addHiddenClass(resultSection);
