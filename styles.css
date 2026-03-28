@@ -18,7 +18,8 @@ body {
     background: white;
     border-radius: 15px;
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+    /* clip: keeps rounded corners without a scrollport (sticky in descendants can use the viewport) */
+    overflow: clip;
 }
 
 .header {
@@ -42,7 +43,8 @@ body {
 .layout-container {
     display: flex;
     gap: 25px;
-    align-items: flex-start;
+    /* stretch: right column matches left height so sticky #resultSection has a tall containing block even when debug is hidden */
+    align-items: stretch;
 }
 
 .left-panel {
@@ -940,12 +942,15 @@ body {
 .result-section {
     margin-top: 0;
     text-align: center;
-    flex: 1;
+    flex: 0 1 auto;
     min-width: 0;
     display: none; /* Default hidden state */
     flex-direction: column;
     align-items: center;
     gap: 15px;
+    position: sticky;
+    top: 10px;
+    z-index: 1;
 }
 
 .download-btn {
