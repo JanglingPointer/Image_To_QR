@@ -70,6 +70,9 @@ body {
 
 .input-section {
     margin-bottom: 0;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .input-group {
@@ -162,6 +165,9 @@ body {
     padding: 0;
     border: none;
     background: none;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Screen reader only labels */
@@ -198,17 +204,89 @@ body {
     margin-bottom: 0 !important;
 }
 
-/* Give robustness a bit more room than scale/noise in this row */
-.scale-factor-and-noise-probability .robustness-control {
-    flex: 1.25;
+/* Scale+noise share one flex item (never stack); robustness may wrap to its own row when narrow */
+.scale-factor-and-noise-probability {
+    min-width: 0;
+    width: 100%;
+    flex-wrap: wrap;
+    align-items: stretch;
+    box-sizing: border-box;
+    container-type: inline-size;
+    container-name: scale-noise-robustness;
+}
+
+.scale-noise-pair {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 16px;
+    flex: 1 1 0;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.scale-noise-pair > .scale-control,
+.scale-noise-pair > .noise-control {
+    min-width: 0;
+    box-sizing: border-box;
+    flex: 1 1 0;
+}
+
+.scale-factor-and-noise-probability > .robustness-control {
+    min-width: 0;
+    box-sizing: border-box;
+    flex: 1.25 1.25 0;
+}
+
+@container scale-noise-robustness (max-width: 520px) {
+    .scale-noise-pair {
+        flex: 1 1 100%;
+    }
+
+    .scale-factor-and-noise-probability > .robustness-control {
+        flex: 1 1 100%;
+        max-width: 100%;
+    }
+}
+
+.scale-noise-pair > .scale-control > .flex-center,
+.scale-noise-pair > .noise-control > .flex-center {
+    min-width: 0;
+    flex-wrap: nowrap;
+    gap: 4px;
+}
+
+.scale-noise-pair .scale-control input[type="range"],
+.scale-noise-pair .noise-control input[type="range"] {
+    min-width: 0;
+    width: 100%;
+    flex: 1 1 auto;
 }
 
 .robustness-slider-row input[type="range"] {
     width: 100%;
+    min-width: 0;
 }
 
-.robustness-main {
+.robustness-content-row .robustness-main {
     min-width: 0;
+    flex: 1 1 140px;
+}
+
+.robustness-content-row.flex-center {
+    flex-wrap: nowrap;
+    align-items: center;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.robustness-main > .flex-center {
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .show-expert-values-btn {
@@ -233,6 +311,9 @@ body {
 
 .robustness-control {
     position: relative;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .robustness-control.expert-collapsed .robustness-content-row {
@@ -245,8 +326,10 @@ body {
 }
 
 .robust-squares-label {
-    white-space: nowrap;
+    white-space: normal;
     align-self: center;
+    flex-shrink: 0;
+    flex-grow: 0;
 }
 
 .image-upload-and-scaling {
