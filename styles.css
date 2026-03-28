@@ -120,38 +120,44 @@ body {
     background: #f8f9fa;
     border: 1px solid #dee2e6;
     border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
 }
 
-/* align-self: flex-start keeps radios left-aligned when .dither-and-threshold stacks (column);
-   wider screens restore vertical centering next to the threshold row (row flex, cross-axis vertical). */
-/* 2x2 grid: Top-Left=Original, Top-Right=Dither, Bottom-Right=Threshold (bottom-left empty) */
-.bw-mode-group.bw-mode-grid {
+.dither-and-threshold .threshold-control {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    align-self: stretch;
+}
+
+/* Top row: Original | gap | Dither + Threshold (tight), single horizontal line */
+.bw-mode-group.bw-mode-row {
     align-self: flex-start;
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
-    gap: 4px 12px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 32px;
+    min-width: 0;
 }
 
-@media (min-width: 1025px) {
-    .bw-mode-group.bw-mode-grid {
-        align-self: center;
-    }
-}
-.bw-mode-group.bw-mode-grid > label:nth-child(1) {
-    grid-column: 1;
-    grid-row: 1;
-}
-.bw-mode-group.bw-mode-grid > label:nth-child(2) {
-    grid-column: 2;
-    grid-row: 1;
-}
-.bw-mode-group.bw-mode-grid > label:nth-child(3) {
-    grid-column: 2;
-    grid-row: 2;
+.bw-mode-original,
+.bw-mode-dither-threshold {
+    flex: 0 0 auto;
 }
 
-.bw-mode-group.bw-mode-grid label.bw-mode-option-disabled {
+.bw-mode-dither-threshold {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    column-gap: 6px;
+}
+
+.bw-mode-group.bw-mode-row label.bw-mode-option-disabled {
     opacity: 0.45;
     cursor: not-allowed;
     pointer-events: none;
@@ -1178,15 +1184,15 @@ body {
         min-width: 35px;
     }
 
-    /* Stack brightness slider under radio buttons for dither/threshold control */
+    /* Narrow: stack slider tracks; BW radios stay one row (scroll if needed) */
     .dither-and-threshold {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
+        gap: 10px;
     }
 
-    .bw-mode-group {
+    .bw-mode-group.bw-mode-row {
         align-self: flex-start;
+        overflow-x: auto;
+        max-width: 100%;
     }
 
     .threshold-control,

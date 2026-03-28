@@ -426,7 +426,7 @@
             utils.removeHiddenClass(robustnessControl);
             utils.removeHiddenClass(colorControl);
             utils.removeHiddenClass(scalingModeGroup, "flex");
-            utils.removeHiddenClass(bwModeGroup);
+            utils.removeHiddenClass(bwModeGroup, "flex");
 
             autoAdjustThreshold(window.uploadedImage);
             autoComputeBlockSize();
@@ -501,7 +501,7 @@
       utils.removeHiddenClass(robustnessControl);
       utils.removeHiddenClass(colorControl);
       utils.removeHiddenClass(scalingModeGroup, "flex");
-      utils.removeHiddenClass(bwModeGroup);
+      utils.removeHiddenClass(bwModeGroup, "flex");
       autoAdjustThreshold(window.uploadedImage);
       autoComputeBlockSize();
       updateDitherBrightnessVisibility();
