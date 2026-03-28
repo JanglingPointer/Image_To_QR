@@ -183,14 +183,13 @@ body {
     border: 0;
 }
 
-/* Apply margins to container divs */
+/* Container divs — spacing from parent gap/flex; no outer margins on panels */
 .scale-factor-and-noise-probability,
 .dither-and-threshold,
 .color-control,
 .qr-text-input,
 .debug-and-test-controls {
-    margin-top: 10px !important;
-    margin-bottom: 0 !important;
+    margin: 0 !important;
 }
 
 /* Remove all margins from control elements - let containers handle spacing */
@@ -219,7 +218,7 @@ body {
     display: flex;
     flex-wrap: nowrap;
     align-items: stretch;
-    gap: 16px;
+    gap: 0;
     flex: 1 1 0;
     min-width: 0;
     box-sizing: border-box;
@@ -338,7 +337,7 @@ body {
     gap: 10px;
     align-items: stretch;
     width: 100%;
-    margin-bottom: 15px;
+    margin-bottom: 3px;
 }
 
 .file-input-wrapper {
@@ -756,8 +755,7 @@ body {
 .noise-control,
 .robustness-control,
 .color-control {
-    margin-top: 0;
-    margin-bottom: 15px;
+    margin: 0;
     padding: 8px;
     background: #f8f9fa;
     border-radius: 8px;
