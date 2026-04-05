@@ -5,6 +5,7 @@
   const textInput = document.getElementById("textInput");
   const previewImage = document.getElementById("previewImage");
   const resultSection = document.getElementById("resultSection");
+  const resultCanvas = document.getElementById("resultCanvas");
   const testImageBtn = document.getElementById("testImageBtn");
   const debugCheckbox = document.getElementById("debugCheckbox");
   const oklchToHsbSlider = document.getElementById("oklchToHsbSlider");
@@ -847,12 +848,41 @@
     utils.addHiddenClass(zoomControl);
   }
 
+  function clearResultCanvasTooltip() {
+    if (resultCanvas) resultCanvas.removeAttribute("title");
+  }
+
+  function applyResultCanvasTooltip(debugData) {
+    if (!resultCanvas) return;
+    if (
+      !debugData ||
+      !debugData.qr_noMargin ||
+      !debugData.result_colored_xN
+    ) {
+      resultCanvas.removeAttribute("title");
+      return;
+    }
+    const M = debugData.qr_noMargin.width;
+    const N = M * 3;
+    const Ox = debugData.result_colored_xN.width;
+    const Oy = debugData.result_colored_xN.height;
+    resultCanvas.title = `Data Pixels before Scaling (No Border):
+${M}x${M}
+
+Image Pixels before Scaling (No Border):
+${N}x${N}
+
+Pixels after Scaling (With Border):
+${Ox}x${Oy}`;
+  }
+
   // Update result automatically when image or text changes
   async function updateResult() {
     // Clear debug output at the beginning of each recalculation
     if (window.debugModule) window.debugModule.clear();
 
     if (!window.uploadedImage) {
+      clearResultCanvasTooltip();
       utils.addHiddenClass(resultSection);
       if (debugCheckbox.checked) {
         utils.addHiddenClass(debugSection);
@@ -959,6 +989,8 @@
         utils.addHiddenClass(debugSection);
       }
 
+      applyResultCanvasTooltip(debugData);
+
       // Log input and output dimensions at the end of successful update
       if (
         window.uploadedImage &&
@@ -980,6 +1012,7 @@
       updateOutsidePixelsGroupVisibility();
     } catch (error) {
       console.error("Error generating QR code:", error);
+      clearResultCanvasTooltip();
       utils.addHiddenClass(resultSection);
       utils.addHiddenClass(debugSection);
     }
