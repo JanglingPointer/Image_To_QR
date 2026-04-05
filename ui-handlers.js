@@ -537,9 +537,7 @@
       utils.removeHiddenClass(testImageBtn);
       utils.removeHiddenClass(add4thSquareControl);
       utils.removeHiddenClass(oklchHsbControl);
-      if (window.uploadedImage) {
-        updateResult();
-      }
+      updateResult();
     } else {
       utils.addHiddenClass(debugSection);
       utils.addHiddenClass(testImageBtn);
@@ -904,10 +902,10 @@ ${Ox}x${Oy}`;
 
     if (!window.uploadedImage) {
       hideImageUI();
-      utils.addHiddenClass(debugSection);
       if (!userHasEnteredTextInTextField || !textValue) {
         clearResultCanvasTooltip();
         utils.addHiddenClass(resultSection);
+        utils.addHiddenClass(debugSection);
         return;
       }
       try {
@@ -963,11 +961,20 @@ ${Ox}x${Oy}`;
           outsidePixelsColor,
         );
         utils.removeHiddenClass(resultSection, "flex");
+
+        if (debugCheckbox.checked && debugData && window.debugModule) {
+          utils.removeHiddenClass(debugSection, "flex");
+          window.debugModule.renderAllDebugImages(debugData);
+        } else {
+          utils.addHiddenClass(debugSection);
+        }
+
         applyResultCanvasTooltip(debugData);
       } catch (error) {
         console.error("Error generating QR code:", error);
         clearResultCanvasTooltip();
         utils.addHiddenClass(resultSection);
+        utils.addHiddenClass(debugSection);
       }
       return;
     }
