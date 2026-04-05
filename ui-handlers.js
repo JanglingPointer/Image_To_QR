@@ -3,6 +3,8 @@
 
   const imageInput = document.getElementById("imageInput");
   const textInput = document.getElementById("textInput");
+  /** True after the user edits the text field (input event); default value alone does not set this. */
+  let userHasEnteredTextInTextField = false;
   const previewImage = document.getElementById("previewImage");
   const resultSection = document.getElementById("resultSection");
   const resultCanvas = document.getElementById("resultCanvas");
@@ -472,7 +474,10 @@
   });
 
   // Handle text input
-  textInput.addEventListener("input", updateResult);
+  textInput.addEventListener("input", function () {
+    userHasEnteredTextInTextField = true;
+    updateResult();
+  });
 
   // Handle text input focus to clear default value
   textInput.addEventListener("focus", function () {
@@ -560,7 +565,13 @@
 
   // Add slider listeners using utility function
   utils.addSliderListener(thresholdSlider);
-  utils.addSliderListener(scaleSlider, scaleValue);
+  if (scaleSlider) {
+    scaleSlider.addEventListener("input", function () {
+      utils.updateSliderValue(this, scaleValue);
+      updateResult();
+    });
+    utils.updateSliderValue(scaleSlider, scaleValue);
+  }
   utils.addSliderListener(noiseSlider, noiseValue);
   utils.addSliderListener(claritySlider, clarityValue);
   updateRobustnessWarning();
@@ -881,16 +892,6 @@ ${Ox}x${Oy}`;
     // Clear debug output at the beginning of each recalculation
     if (window.debugModule) window.debugModule.clear();
 
-    if (!window.uploadedImage) {
-      clearResultCanvasTooltip();
-      utils.addHiddenClass(resultSection);
-      if (debugCheckbox.checked) {
-        utils.addHiddenClass(debugSection);
-      }
-      hideImageUI(); // Hide scaling mode group if no image
-      return;
-    }
-
     const textValue = textInput.value.trim();
 
     // Use fallback string "." if text is empty or whitespace-only
@@ -899,6 +900,76 @@ ${Ox}x${Oy}`;
       textToUse = ".";
     } else if (textToUse === textInput.placeholder) {
       textToUse = textInput.placeholder;
+    }
+
+    if (!window.uploadedImage) {
+      hideImageUI();
+      utils.addHiddenClass(debugSection);
+      if (!userHasEnteredTextInTextField || !textValue) {
+        clearResultCanvasTooltip();
+        utils.addHiddenClass(resultSection);
+        return;
+      }
+      try {
+        const settings = readGenerationSettings();
+        const {
+          threshold,
+          scaleFactor,
+          noiseProbability,
+          darkColor,
+          brightColor,
+          useOriginalColors,
+          saturationBoost,
+          noiseSeed,
+          scalingMode,
+          zoomValue,
+          blockSize,
+          offsetXValue,
+          offsetYValue,
+          shine,
+          bwMode,
+          ditherGamma,
+          clarity,
+          add4thSquare,
+          oklchToHsbBlend,
+          tintCtrlPixels,
+          outsidePixels,
+          outsidePixelsColor,
+        } = settings;
+        const debugData = await generateQRCodeOverlay(
+          null,
+          textToUse,
+          threshold,
+          scaleFactor,
+          noiseProbability,
+          darkColor,
+          brightColor,
+          useOriginalColors,
+          noiseSeed,
+          scalingMode,
+          shine,
+          bwMode,
+          ditherGamma,
+          saturationBoost,
+          zoomValue,
+          offsetXValue,
+          offsetYValue,
+          clarity,
+          add4thSquare,
+          oklchToHsbBlend,
+          tintCtrlPixels,
+          blockSize,
+          outsidePixels,
+          outsidePixelsColor,
+        );
+        utils.removeHiddenClass(resultSection, "flex");
+        applyResultCanvasTooltip(debugData);
+      } catch (error) {
+        console.error("Error generating QR code:", error);
+        clearResultCanvasTooltip();
+        utils.addHiddenClass(resultSection);
+      }
+      return;
     }
 
     try {
@@ -1379,7 +1450,6 @@ ${Ox}x${Oy}`;
   updateScalingModeAndZoomVisibility();
   updateOutsidePixelsGroupVisibility();
 
-  // Ensure result and debug sections are hidden on page load
-  utils.addHiddenClass(resultSection);
   utils.addHiddenClass(debugSection);
+  void updateResult();
 })();

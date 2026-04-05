@@ -923,7 +923,7 @@ async function getQRCodeImageData(text) {
 
 /**
  * Generates a QR code overlay on the uploaded image using the complex processing pipeline
- * @param {HTMLImageElement} uploadedImage - The image to overlay the QR code on
+ * @param {HTMLImageElement|null} uploadedImage - The image to overlay the QR code on, or null for a plain scaled QR preview
  * @param {string} text - The text/URL to encode in the QR code
  * @param {number} threshold - Threshold for black and white conversion (0-255)
  * @param {number} scaleFactor - Scale factor for final output (1-8)
@@ -975,6 +975,22 @@ async function generateQRCodeOverlay(
   outsidePixelsColor = "#000000",
 ) {
   try {
+    if (!uploadedImage) {
+      const qr_noMargin = await getQRCodeImageData(text);
+      const qr = addMargin(1, qr_noMargin);
+      const result_colored_xN = scaleImageByFactor(scale3Image(qr), scaleFactor);
+      const canvas = document.getElementById("resultCanvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = result_colored_xN.width;
+      canvas.height = result_colored_xN.height;
+      ctx.putImageData(result_colored_xN, 0, 0);
+      return {
+        qr_noMargin,
+        qr,
+        result_colored_xN,
+      };
+    }
+
     // Step 1: Generate QR code without margin using direct pixel access
     const qr_noMargin = await getQRCodeImageData(text);
 
