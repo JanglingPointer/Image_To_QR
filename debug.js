@@ -46,25 +46,53 @@
   }
 
   /**
-   * Clear the debug output textarea.
+   * Clear the debug output textarea and hide all debug image slots until the next render.
    */
   function clear() {
     const debugOutputText = document.getElementById("debugOutputText");
     if (debugOutputText) {
       debugOutputText.value = "";
     }
+    hideAllDebugImageItems();
+  }
+
+  /**
+   * @param {ImageData|null|undefined} imageData
+   * @returns {boolean}
+   */
+  function imageDataHasContent(imageData) {
+    if (!imageData) return false;
+    const w = imageData.width;
+    const h = imageData.height;
+    if (typeof w !== "number" || typeof h !== "number" || w <= 0 || h <= 0) {
+      return false;
+    }
+    const data = imageData.data;
+    const need = w * h * 4;
+    return !!data && typeof data.length === "number" && data.length >= need;
+  }
+
+  function hideAllDebugImageItems() {
+    for (const { id } of DEBUG_CANVAS_MAP) {
+      const canvas = document.getElementById(id);
+      if (!canvas) continue;
+      const item = canvas.closest(".debug-image-item");
+      if (item) item.style.display = "none";
+      canvas.width = 0;
+      canvas.height = 0;
+    }
   }
 
   /**
    * Render an ImageData to a debug canvas element.
-   * Hides the parent .debug-image-item if imageData is null/undefined.
+   * Hides the parent .debug-image-item if there is no usable pixel data.
    * @param {HTMLCanvasElement} canvas
    * @param {ImageData|null|undefined} imageData
    */
   function renderDebugImage(canvas, imageData) {
     if (!canvas) return;
     const item = canvas.closest(".debug-image-item");
-    if (imageData) {
+    if (imageDataHasContent(imageData)) {
       if (item) item.style.display = "";
       const ctx = canvas.getContext("2d");
       canvas.width = imageData.width;
@@ -72,6 +100,8 @@
       ctx.putImageData(imageData, 0, 0);
     } else {
       if (item) item.style.display = "none";
+      canvas.width = 0;
+      canvas.height = 0;
     }
   }
 
@@ -227,4 +257,6 @@
   window.log_to_debug_output = log;
 
   window.generateRandomTestImageDataUrl = generateRandomTestImageDataUrl;
+
+  hideAllDebugImageItems();
 })();
