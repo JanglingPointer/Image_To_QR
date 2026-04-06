@@ -48,6 +48,9 @@
   const noiseControl = document.querySelector(".noise-control");
   const robustnessResetBtn = document.getElementById("robustnessResetBtn");
   const robustnessControl = document.querySelector(".robustness-control");
+  const autoSquareColorControl = document.querySelector(
+    ".auto-square-color-control",
+  );
   const colorDark = document.getElementById("colorDark");
   const colorBright = document.getElementById("colorBright");
   const colorControl = document.querySelector(".color-control");
@@ -505,6 +508,7 @@
             utils.removeHiddenClass(mainImageControls);
             utils.removeHiddenClass(scaleControl);
             utils.removeHiddenClass(noiseControl);
+            utils.removeHiddenClass(autoSquareColorControl);
             utils.removeHiddenClass(robustnessControl);
             utils.removeHiddenClass(colorControl);
             utils.removeHiddenClass(scalingModeGroup, "flex");
@@ -583,6 +587,7 @@
       utils.removeHiddenClass(mainImageControls);
       utils.removeHiddenClass(scaleControl);
       utils.removeHiddenClass(noiseControl);
+      utils.removeHiddenClass(autoSquareColorControl);
       utils.removeHiddenClass(robustnessControl);
       utils.removeHiddenClass(colorControl);
       utils.removeHiddenClass(scalingModeGroup, "flex");
@@ -1149,7 +1154,7 @@ ${Ox}x${Oy}`;
           `ScaleMode: ${scalingMode} | PP: ${pixelPerfectCheckbox ? pixelPerfectCheckbox.checked : false} | Zoom: ${zoomValue} | Offset: (${offsetXValue}, ${offsetYValue})`,
         );
         log(
-          `Clarity: ${clarity} | 4thSqr: ${add4thSquare} | OKLCH_Pre: ${oklchPre.toFixed(2)} | Overlay: ${overlayAmount.toFixed(2)} | HSB: ${hsbAmount.toFixed(2)} | TintCtrl: ${tintCtrlPixels} | BlockSz: ${blockSize} | OutPx: ${outsidePixels}${outsidePixels === "color" ? ":" + outsidePixelsColor : ""}`,
+          `Clarity: ${clarity} | 4thSqr: ${add4thSquare} | OKLCH: ${oklchPre.toFixed(2)} | Overlay: ${overlayAmount.toFixed(2)} | HSB: ${hsbAmount.toFixed(2)} | TintCtrl: ${tintCtrlPixels} | BlockSz: ${blockSize} | OutPx: ${outsidePixels}${outsidePixels === "color" ? ":" + outsidePixelsColor : ""}`,
         );
         log("=================");
       }

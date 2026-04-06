@@ -136,15 +136,22 @@ body {
     padding: 5px 10px;
 }
 
-/* Style the entire dither-and-threshold container with gray background */
+/* Style the entire dither-and-threshold container with gray background.
+   Padding matches .color-control (8px). Extra gap only when sliders are shown. */
 .dither-and-threshold {
-    padding: 10px 12px;
+    padding: 8px;
+    gap: 0;
     background: var(--surface-muted);
     border: 1px solid var(--border-muted);
     border-radius: 8px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
+}
+
+.dither-and-threshold:has(
+        .threshold-control:not(.hidden) .threshold-row > div:not(.hidden)
+    ) {
     gap: 12px;
 }
 
@@ -155,14 +162,14 @@ body {
     align-self: stretch;
 }
 
-/* Top row: Original | gap | Dither + Threshold (tight), single horizontal line */
+/* Top row: Original | Dither + Threshold (same horizontal rhythm as duo-tone radios) */
 .bw-mode-group.bw-mode-row {
     align-self: flex-start;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
     align-items: center;
-    gap: 32px;
+    gap: 8px;
     min-width: 0;
 }
 
@@ -177,6 +184,16 @@ body {
     flex-wrap: nowrap;
     align-items: center;
     column-gap: 6px;
+}
+
+/* Match .color-row label (Colorful / Duo Tone radios) */
+.bw-mode-group.bw-mode-row label {
+    display: inline;
+    margin-bottom: 0;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
 }
 
 .bw-mode-group.bw-mode-row label.bw-mode-option-disabled {
@@ -261,6 +278,7 @@ body {
 /* Remove all margins from control elements - let containers handle spacing */
 .scale-control,
 .noise-control,
+.auto-square-color-control,
 .robustness-control,
 .threshold-control,
 .block-size-control,
@@ -290,17 +308,38 @@ body {
     box-sizing: border-box;
 }
 
-.scale-noise-pair > .scale-control,
+.scale-noise-pair > .scale-control {
+    min-width: 0;
+    box-sizing: border-box;
+    flex: 0.42 1 0;
+}
+
 .scale-noise-pair > .noise-control {
     min-width: 0;
     box-sizing: border-box;
     flex: 1 1 0;
 }
 
+/* vs noise=1: scale 0.42×, auto 0.48× */
+.scale-noise-pair > .auto-square-color-control {
+    min-width: 0;
+    box-sizing: border-box;
+    flex: 0.48 1 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 0;
+}
+
+/*
+ * Outer row: [ scale-noise-pair | robustness ]. Noise is only 1/(0.42+1+0.48) of the pair.
+ * So robustness flex-grow should be ~1/1.9 ≈ 0.53 vs pair's 1 to match noise column width.
+ */
 .scale-factor-and-noise-probability > .robustness-control {
     min-width: 0;
     box-sizing: border-box;
-    flex: 1.25 1.25 0;
+    flex: 0.53 1 0;
 }
 
 @container scale-noise-robustness (max-width: 520px) {
@@ -315,7 +354,8 @@ body {
 }
 
 .scale-noise-pair > .scale-control > .flex-center,
-.scale-noise-pair > .noise-control > .flex-center {
+.scale-noise-pair > .noise-control > .flex-center,
+.scale-noise-pair > .auto-square-color-control > .flex-center {
     min-width: 0;
     flex-wrap: nowrap;
     gap: 4px;
@@ -376,10 +416,9 @@ body {
 .show-expert-values-btn {
     display: none;
     position: absolute;
-    left: 8px;
-    right: 8px;
-    top: 8px;
-    bottom: 8px;
+    /* Inset scales with the expert group; clamp keeps a minimum gap on tiny boxes */
+    inset: clamp(4px, 2.5%, 14px);
+    box-sizing: border-box;
     border: 1px solid var(--border-muted);
     border-radius: 8px;
     background: #ffffff;
@@ -394,10 +433,15 @@ body {
 }
 
 .robustness-control {
-    position: relative;
     min-width: 0;
     max-width: 100%;
     box-sizing: border-box;
+}
+
+.robustness-expert-group {
+    position: relative;
+    width: 100%;
+    min-width: 0;
 }
 
 .robustness-control.expert-collapsed .robustness-content-row {
@@ -409,11 +453,12 @@ body {
     display: block;
 }
 
-.robust-squares-label {
-    white-space: normal;
-    align-self: center;
-    flex-shrink: 0;
-    flex-grow: 0;
+.auto-square-color-control .auto-square-color-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    margin-bottom: 0;
 }
 
 .image-upload-and-scaling {
@@ -821,6 +866,7 @@ body {
 .threshold-control,
 .scale-control,
 .noise-control,
+.auto-square-color-control,
 .robustness-control,
 .color-control {
     margin: 0;
@@ -854,6 +900,7 @@ body {
 .block-size-control label,
 .scale-control label,
 .noise-control label,
+.auto-square-color-control label,
 .robustness-control label,
 .color-control label {
     display: block;
@@ -1276,7 +1323,9 @@ body {
     }
 
     /* Narrow: stack slider tracks; BW radios stay one row (scroll if needed) */
-    .dither-and-threshold {
+    .dither-and-threshold:has(
+            .threshold-control:not(.hidden) .threshold-row > div:not(.hidden)
+        ) {
         gap: 10px;
     }
 

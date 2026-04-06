@@ -518,77 +518,83 @@
                                                 class="noise-slider"
                                             />
                                         </div>
+                                        <div class="auto-square-color-control hidden">
+                                            <div class="flex-center">
+                                                <label
+                                                    for="tintCtrlPixelsCheckbox"
+                                                    class="auto-square-color-label margin-bottom-0"
+                                                    title="When contrast of the control-squares is tailored to the image contrast, you can get away with  more subtle data-pixel contrast"
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        id="tintCtrlPixelsCheckbox"
+                                                    />
+                                                    Auto Square Color
+                                                </label>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div
                                         class="robustness-control hidden expert-collapsed"
                                     >
-                                        <button
-                                            id="showExpertValuesBtn"
-                                            class="show-expert-values-btn"
-                                            type="button"
-                                        >
-                                            Show expert values
-                                        </button>
-                                        <div
-                                            id="robustnessExpertContent"
-                                            class="robustness-content-row flex-center gap-8"
-                                        >
-                                            <div class="robustness-main flex-1">
-                                                <div
-                                                    class="robustness-slider-header flex-center"
-                                                >
+                                        <div class="robustness-expert-group">
+                                            <button
+                                                id="showExpertValuesBtn"
+                                                class="show-expert-values-btn"
+                                                type="button"
+                                            >
+                                                Show expert values
+                                            </button>
+                                            <div
+                                                id="robustnessExpertContent"
+                                                class="robustness-content-row flex-center gap-8"
+                                            >
+                                                <div class="robustness-main flex-1">
                                                     <div
-                                                        class="robustness-label-cluster"
+                                                        class="robustness-slider-header flex-center"
                                                     >
-                                                        <label
-                                                            for="claritySlider"
-                                                            >Robustness</label
+                                                        <div
+                                                            class="robustness-label-cluster"
                                                         >
+                                                            <label
+                                                                for="claritySlider"
+                                                                >Robustness</label
+                                                            >
+                                                            <span
+                                                                id="clarityWarning"
+                                                                class="clarity-warning-hidden"
+                                                                title="The code may be hard to scan. It may also work fine depending on your image."
+                                                                >⚠️</span
+                                                            >
+                                                        </div>
                                                         <span
-                                                            id="clarityWarning"
-                                                            class="clarity-warning-hidden"
-                                                            title="The code may be hard to scan. It may also work fine depending on your image."
-                                                            >⚠️</span
+                                                            class="robustness-value-reset-group"
                                                         >
+                                                            <span
+                                                                id="clarityValue"
+                                                                >90</span
+                                                            >
+                                                            <button
+                                                                id="robustnessResetBtn"
+                                                                title="Reset robustness to default"
+                                                                type="button"
+                                                            >
+                                                                🪄
+                                                            </button>
+                                                        </span>
                                                     </div>
-                                                    <span
-                                                        class="robustness-value-reset-group"
-                                                    >
-                                                        <span
-                                                            id="clarityValue"
-                                                            >90</span
-                                                        >
-                                                        <button
-                                                            id="robustnessResetBtn"
-                                                            title="Reset robustness to default"
-                                                            type="button"
-                                                        >
-                                                            🪄
-                                                        </button>
-                                                    </span>
-                                                </div>
-                                                <div class="robustness-slider-row">
-                                                    <input
-                                                        type="range"
-                                                        id="claritySlider"
-                                                        min="0"
-                                                        max="100"
-                                                        value="90"
-                                                        class="noise-slider"
-                                                    />
+                                                    <div class="robustness-slider-row">
+                                                        <input
+                                                            type="range"
+                                                            id="claritySlider"
+                                                            min="0"
+                                                            max="100"
+                                                            value="90"
+                                                            class="noise-slider"
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <label
-                                                for="tintCtrlPixelsCheckbox"
-                                                class="robust-squares-label flex-center gap-4 margin-bottom-0"
-                                                title="When contrast of the control-squares is tailored to the image contrast, you can get away with  more subtle data-pixel contrast"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    id="tintCtrlPixelsCheckbox"
-                                                />
-                                                Robust<br />Squares
-                                            </label>
                                         </div>
                                     </div>
                                 </div>
@@ -635,7 +641,7 @@
                                         <label
                                             for="oklchPreSlider"
                                             class="color-blend-slider-label margin-bottom-0"
-                                            >OKLCH_Pre:</label
+                                            >OKLCH:</label
                                         >
                                         <input
                                             type="range"
