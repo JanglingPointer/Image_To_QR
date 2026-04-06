@@ -129,6 +129,70 @@
     return checkbox ? checkbox.checked : false;
   }
 
+  const QR_OVERLAY_CTRL_CANVAS_ID = "debugQrCtrlx3";
+  const QR_OVERLAY_THINNED_CANVAS_ID = "debugQrWithoutCtrlThinned";
+
+  /**
+   * True when both debug canvases have been rendered (non-zero size).
+   * @returns {boolean}
+   */
+  function qrOverlaySourceCanvasesReady() {
+    const c1 = document.getElementById(QR_OVERLAY_CTRL_CANVAS_ID);
+    const c2 = document.getElementById(QR_OVERLAY_THINNED_CANVAS_ID);
+    if (!c1 || !c2) return false;
+    return (
+      c1.width > 0 &&
+      c1.height > 0 &&
+      c2.width > 0 &&
+      c2.height > 0
+    );
+  }
+
+  /**
+   * Enables or disables the QR Overlay download button from current canvas state.
+   * @param {HTMLButtonElement|null} [button]
+   */
+  function syncQrOverlayDownloadButtonState(button) {
+    const btn = button || document.getElementById("qrOverlayDownloadBtn");
+    if (!btn) return;
+    btn.disabled = !qrOverlaySourceCanvasesReady();
+  }
+
+  /**
+   * Composite qrCtrlx3 and qrWithoutCtrlThinned on a transparent canvas and download as Overlay.png.
+   */
+  function downloadQrOverlayPng() {
+    const cCtrl = document.getElementById(QR_OVERLAY_CTRL_CANVAS_ID);
+    const cThin = document.getElementById(QR_OVERLAY_THINNED_CANVAS_ID);
+    if (!cCtrl || !cThin || !qrOverlaySourceCanvasesReady()) return;
+
+    const w = Math.max(cCtrl.width, cThin.width);
+    const h = Math.max(cCtrl.height, cThin.height);
+    const out = document.createElement("canvas");
+    out.width = w;
+    out.height = h;
+    const ctx = out.getContext("2d");
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(cCtrl, 0, 0);
+    ctx.drawImage(cThin, 0, 0);
+
+    try {
+      Android.saveToGallery(out.toDataURL("image/png"), "Overlay.png");
+    } catch (e) {
+      try {
+        const link = document.createElement("a");
+        link.download = "Overlay.png";
+        link.href = out.toDataURL("image/png");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (e2) {
+        console.error("QR Overlay export failed:", e2);
+        alert("Failed to generate image");
+      }
+    }
+  }
+
   /**
    * Checks if a point is inside a triangle (barycentric test).
    * @param {number} px - Point X
@@ -254,6 +318,8 @@
     renderDebugImage,
     renderAllDebugImages,
     isEnabled,
+    syncQrOverlayDownloadButtonState,
+    downloadQrOverlayPng,
   };
 
   // Legacy global name for backwards compatibility (e.g. image-manipulation may call it)

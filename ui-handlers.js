@@ -16,8 +16,6 @@
   const colorOverlayValue = document.getElementById("colorOverlayValue");
   const colorHsbSlider = document.getElementById("colorHsbSlider");
   const colorHsbValue = document.getElementById("colorHsbValue");
-  const oklchPostSlider = document.getElementById("oklchPostSlider");
-  const oklchPostValue = document.getElementById("oklchPostValue");
   const debugSection = document.getElementById("debugSection");
   const layoutContainer = document.querySelector(".layout-container");
   const thresholdSlider = document.getElementById("thresholdSlider");
@@ -66,6 +64,7 @@
   const bwModeGroup = document.querySelector(".bw-mode-group");
   const mainImageControls = document.querySelector(".main-image-controls");
   const downloadBtn = document.getElementById("downloadBtn");
+  const qrOverlayDownloadBtn = document.getElementById("qrOverlayDownloadBtn");
   const shineCheckbox = document.getElementById("shineCheckbox");
   const saturationBoostCheckbox = document.getElementById(
     "saturationBoostCheckbox",
@@ -188,9 +187,8 @@
     outsidePixelsColor: "#000000",
     debug: false,
     oklchPre: 1,
-    colorOverlay: 0,
-    colorHsb: 0,
-    oklchPost: 0,
+    colorOverlay: 0.5,
+    colorHsb: 0.5,
     pixelPerfect: false, // New setting for pixel perfect mode
   };
 
@@ -318,12 +316,14 @@
     if (oklchPreSlider)
       oklchPreSlider.value = String(settings.oklchPre ?? 1);
     if (colorOverlaySlider)
-      colorOverlaySlider.value = String(settings.colorOverlay ?? 0);
+      colorOverlaySlider.value = String(settings.colorOverlay ?? 0.5);
     if (colorHsbSlider)
-      colorHsbSlider.value = String(settings.colorHsb ?? 0);
-    if (oklchPostSlider)
-      oklchPostSlider.value = String(settings.oklchPost ?? 0);
-    updateRobustColorsState(false);
+      colorHsbSlider.value = String(settings.colorHsb ?? 0.5);
+    if (robustColorsCheckbox && robustColorsCheckbox.checked) {
+      if (oklchPreSlider) oklchPreSlider.value = "1";
+      if (colorOverlaySlider) colorOverlaySlider.value = "0.5";
+      if (colorHsbSlider) colorHsbSlider.value = "0.5";
+    }
     if (settings.debug) {
       utils.removeHiddenClass(testImageBtn);
     } else {
@@ -350,9 +350,6 @@
     utils.updateSliderValue(colorHsbSlider, colorHsbValue, (v) =>
       parseFloat(v).toFixed(2),
     );
-    utils.updateSliderValue(oklchPostSlider, oklchPostValue, (v) =>
-      parseFloat(v).toFixed(2),
-    );
     // saturationBoostValue element was removed, so no need to update it
     utils.updateSliderValue(zoomSlider, zoomValue, (v) =>
       parseFloat(v).toFixed(2),
@@ -377,23 +374,7 @@
     }
   }
 
-  function syncColorBlendSlidersDisabled() {
-    const robustOn = robustColorsCheckbox && robustColorsCheckbox.checked;
-    if (oklchPreSlider) oklchPreSlider.disabled = robustOn;
-    if (colorOverlaySlider) colorOverlaySlider.disabled = robustOn;
-    if (colorHsbSlider) colorHsbSlider.disabled = robustOn;
-    if (oklchPostSlider) oklchPostSlider.disabled = robustOn;
-  }
-
-  function updateRobustColorsState(triggerUpdate = true) {
-    if (!robustColorsCheckbox) return;
-    if (robustColorsCheckbox.checked) {
-      if (oklchPreSlider) oklchPreSlider.value = "1";
-      if (colorOverlaySlider) colorOverlaySlider.value = "0";
-      if (colorHsbSlider) colorHsbSlider.value = "0";
-      if (oklchPostSlider) oklchPostSlider.value = "0";
-    }
-    syncColorBlendSlidersDisabled();
+  function refreshColorBlendSliderLabels() {
     utils.updateSliderValue(oklchPreSlider, oklchPreValue, (v) =>
       parseFloat(v).toFixed(2),
     );
@@ -403,13 +384,6 @@
     utils.updateSliderValue(colorHsbSlider, colorHsbValue, (v) =>
       parseFloat(v).toFixed(2),
     );
-    utils.updateSliderValue(oklchPostSlider, oklchPostValue, (v) =>
-      parseFloat(v).toFixed(2),
-    );
-    updateRobustnessWarning();
-    if (triggerUpdate && window.uploadedImage) {
-      updateResult();
-    }
   }
 
   // Auto-compute block size when Pixel Perfect is active
@@ -578,12 +552,17 @@
     if (this.checked) {
       utils.removeHiddenClass(debugSection);
       utils.removeHiddenClass(testImageBtn);
+      utils.removeHiddenClass(qrOverlayDownloadBtn);
       utils.removeHiddenClass(colorComponentBlendControl);
       utils.removeHiddenClass(add4thSquareControl);
+      if (window.debugModule) {
+        window.debugModule.syncQrOverlayDownloadButtonState(qrOverlayDownloadBtn);
+      }
       updateResult();
     } else {
       utils.addHiddenClass(debugSection);
       utils.addHiddenClass(testImageBtn);
+      utils.addHiddenClass(qrOverlayDownloadBtn);
       utils.addHiddenClass(colorComponentBlendControl);
       utils.addHiddenClass(add4thSquareControl);
     }
@@ -595,6 +574,17 @@
       }
     });
   }
+  function uncheckRobustColorsOnBlendSliderInput() {
+    if (robustColorsCheckbox && robustColorsCheckbox.checked) {
+      robustColorsCheckbox.checked = false;
+      updateRobustnessWarning();
+    }
+  }
+  [oklchPreSlider, colorOverlaySlider, colorHsbSlider].forEach(function (slider) {
+    if (slider) {
+      slider.addEventListener("input", uncheckRobustColorsOnBlendSliderInput);
+    }
+  });
   utils.addSliderListener(oklchPreSlider, oklchPreValue, (v) =>
     parseFloat(v).toFixed(2),
   );
@@ -604,12 +594,22 @@
   utils.addSliderListener(colorHsbSlider, colorHsbValue, (v) =>
     parseFloat(v).toFixed(2),
   );
-  utils.addSliderListener(oklchPostSlider, oklchPostValue, (v) =>
-    parseFloat(v).toFixed(2),
-  );
   if (robustColorsCheckbox) {
     robustColorsCheckbox.addEventListener("change", function () {
-      updateRobustColorsState(true);
+      if (this.checked) {
+        if (oklchPreSlider) oklchPreSlider.value = "1";
+        if (colorOverlaySlider) colorOverlaySlider.value = "0.5";
+        if (colorHsbSlider) colorHsbSlider.value = "0.5";
+      } else {
+        if (oklchPreSlider) oklchPreSlider.value = "1";
+        if (colorOverlaySlider) colorOverlaySlider.value = "0.8";
+        if (colorHsbSlider) colorHsbSlider.value = "0.4";
+      }
+      refreshColorBlendSliderLabels();
+      updateRobustnessWarning();
+      if (window.uploadedImage) {
+        updateResult();
+      }
     });
   }
 
@@ -677,6 +677,14 @@
   // Add color picker event listeners
   colorDark.addEventListener("input", colorInputHandler);
   colorBright.addEventListener("input", colorInputHandler);
+
+  if (qrOverlayDownloadBtn) {
+    qrOverlayDownloadBtn.addEventListener("click", function () {
+      if (window.debugModule && window.debugModule.downloadQrOverlayPng) {
+        window.debugModule.downloadQrOverlayPng();
+      }
+    });
+  }
 
   // Handle download button
   downloadBtn.addEventListener("click", function () {
@@ -769,10 +777,15 @@
   // On page load, set debug-only controls visibility based on debugCheckbox
   if (debugCheckbox.checked) {
     utils.removeHiddenClass(testImageBtn);
+    utils.removeHiddenClass(qrOverlayDownloadBtn);
     utils.removeHiddenClass(colorComponentBlendControl);
     utils.removeHiddenClass(add4thSquareControl);
+    if (window.debugModule) {
+      window.debugModule.syncQrOverlayDownloadButtonState(qrOverlayDownloadBtn);
+    }
   } else {
     utils.addHiddenClass(testImageBtn);
+    utils.addHiddenClass(qrOverlayDownloadBtn);
     utils.addHiddenClass(colorComponentBlendControl);
     utils.addHiddenClass(add4thSquareControl);
   }
@@ -869,14 +882,11 @@
       ? 1
       : parseFloat(oklchPreSlider ? oklchPreSlider.value : 1);
     const overlayAmount = robustColors
-      ? 0
-      : parseFloat(colorOverlaySlider ? colorOverlaySlider.value : 0);
+      ? 0.5
+      : parseFloat(colorOverlaySlider ? colorOverlaySlider.value : 0.8);
     const hsbAmount = robustColors
-      ? 0
-      : parseFloat(colorHsbSlider ? colorHsbSlider.value : 0);
-    const oklchPost = robustColors
-      ? 0
-      : parseFloat(oklchPostSlider ? oklchPostSlider.value : 0);
+      ? 0.5
+      : parseFloat(colorHsbSlider ? colorHsbSlider.value : 0.4);
     const tintCtrlPixels = tintCtrlPixelsCheckbox
       ? tintCtrlPixelsCheckbox.checked
       : false;
@@ -906,7 +916,6 @@
       oklchPre,
       overlayAmount,
       hsbAmount,
-      oklchPost,
       tintCtrlPixels,
       outsidePixels,
       outsidePixelsColor,
@@ -953,7 +962,12 @@ ${Ox}x${Oy}`;
   // Update result automatically when image or text changes
   async function updateResult() {
     // Clear debug output at the beginning of each recalculation
-    if (window.debugModule) window.debugModule.clear();
+    if (window.debugModule) {
+      window.debugModule.clear();
+      if (debugCheckbox.checked) {
+        window.debugModule.syncQrOverlayDownloadButtonState(qrOverlayDownloadBtn);
+      }
+    }
 
     const textValue = textInput.value.trim();
 
@@ -997,7 +1011,6 @@ ${Ox}x${Oy}`;
           oklchPre,
           overlayAmount,
           hsbAmount,
-          oklchPost,
           tintCtrlPixels,
           outsidePixels,
           outsidePixelsColor,
@@ -1025,7 +1038,6 @@ ${Ox}x${Oy}`;
           oklchPre,
           overlayAmount,
           hsbAmount,
-          oklchPost,
           tintCtrlPixels,
           blockSize,
           outsidePixels,
@@ -1036,8 +1048,12 @@ ${Ox}x${Oy}`;
         if (debugCheckbox.checked && debugData && window.debugModule) {
           utils.removeHiddenClass(debugSection, "flex");
           window.debugModule.renderAllDebugImages(debugData);
+          window.debugModule.syncQrOverlayDownloadButtonState(qrOverlayDownloadBtn);
         } else {
           utils.addHiddenClass(debugSection);
+          if (debugCheckbox.checked && window.debugModule) {
+            window.debugModule.syncQrOverlayDownloadButtonState(qrOverlayDownloadBtn);
+          }
         }
 
         applyResultCanvasTooltip(debugData);
@@ -1046,6 +1062,9 @@ ${Ox}x${Oy}`;
         clearResultCanvasTooltip();
         utils.addHiddenClass(resultSection);
         utils.addHiddenClass(debugSection);
+        if (window.debugModule && debugCheckbox.checked) {
+          window.debugModule.syncQrOverlayDownloadButtonState(qrOverlayDownloadBtn);
+        }
       }
       return;
     }
@@ -1075,7 +1094,6 @@ ${Ox}x${Oy}`;
         oklchPre,
         overlayAmount,
         hsbAmount,
-        oklchPost,
         tintCtrlPixels,
         outsidePixels,
         outsidePixelsColor,
@@ -1097,7 +1115,7 @@ ${Ox}x${Oy}`;
           `ScaleMode: ${scalingMode} | PP: ${pixelPerfectCheckbox ? pixelPerfectCheckbox.checked : false} | Zoom: ${zoomValue} | Offset: (${offsetXValue}, ${offsetYValue})`,
         );
         log(
-          `Clarity: ${clarity} | 4thSqr: ${add4thSquare} | RobustColors: ${robustColors} | OKLCH_Pre: ${oklchPre.toFixed(2)} | Overlay: ${overlayAmount.toFixed(2)} | HSB: ${hsbAmount.toFixed(2)} | OKLCH_Post: ${oklchPost.toFixed(2)} | TintCtrl: ${tintCtrlPixels} | BlockSz: ${blockSize} | OutPx: ${outsidePixels}${outsidePixels === "color" ? ":" + outsidePixelsColor : ""}`,
+          `Clarity: ${clarity} | 4thSqr: ${add4thSquare} | RobustColors: ${robustColors} | OKLCH_Pre: ${oklchPre.toFixed(2)} | Overlay: ${overlayAmount.toFixed(2)} | HSB: ${hsbAmount.toFixed(2)} | TintCtrl: ${tintCtrlPixels} | BlockSz: ${blockSize} | OutPx: ${outsidePixels}${outsidePixels === "color" ? ":" + outsidePixelsColor : ""}`,
         );
         log("=================");
       }
@@ -1125,7 +1143,6 @@ ${Ox}x${Oy}`;
         oklchPre,
         overlayAmount,
         hsbAmount,
-        oklchPost,
         tintCtrlPixels,
         blockSize,
         outsidePixels,
@@ -1140,8 +1157,12 @@ ${Ox}x${Oy}`;
       if (debugCheckbox.checked && debugData && window.debugModule) {
         utils.removeHiddenClass(debugSection, "flex");
         window.debugModule.renderAllDebugImages(debugData);
+        window.debugModule.syncQrOverlayDownloadButtonState(qrOverlayDownloadBtn);
       } else {
         utils.addHiddenClass(debugSection);
+        if (debugCheckbox.checked && window.debugModule) {
+          window.debugModule.syncQrOverlayDownloadButtonState(qrOverlayDownloadBtn);
+        }
       }
 
       applyResultCanvasTooltip(debugData);
@@ -1170,6 +1191,9 @@ ${Ox}x${Oy}`;
       clearResultCanvasTooltip();
       utils.addHiddenClass(resultSection);
       utils.addHiddenClass(debugSection);
+      if (window.debugModule && debugCheckbox.checked) {
+        window.debugModule.syncQrOverlayDownloadButtonState(qrOverlayDownloadBtn);
+      }
     }
   }
 

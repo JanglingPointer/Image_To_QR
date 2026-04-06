@@ -616,12 +616,34 @@
                                     id="testImageBtn"
                                     class="test-image-btn"
                                 >
-                                    Use test image
+                                    Test Image
                                 </button>
+                                <button
+                                    type="button"
+                                    id="qrOverlayDownloadBtn"
+                                    class="test-image-btn hidden"
+                                    disabled
+                                >
+                                    ⬇️ QR Overlay
+                                </button>
+                                <div
+                                    class="flex-center gap-4 add-4th-square-control hidden"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        id="add4thSquareCheckbox"
+                                        checked
+                                    />
+                                    <label
+                                        for="add4thSquareCheckbox"
+                                        class="margin-bottom-0"
+                                        >4th square</label
+                                    >
+                                </div>
                                 <div
                                     class="color-component-blend-control hidden"
                                 >
-                                    <div class="flex-center gap-4 color-blend-slider-row">
+                                    <div class="gap-4 color-blend-slider-row">
                                         <label
                                             for="oklchPreSlider"
                                             class="color-blend-slider-label margin-bottom-0"
@@ -642,7 +664,7 @@
                                             >1.00</span
                                         >
                                     </div>
-                                    <div class="flex-center gap-4 color-blend-slider-row">
+                                    <div class="gap-4 color-blend-slider-row">
                                         <label
                                             for="colorOverlaySlider"
                                             class="color-blend-slider-label margin-bottom-0"
@@ -654,16 +676,16 @@
                                             min="0"
                                             max="1"
                                             step="0.01"
-                                            value="0"
+                                            value="0.5"
                                             class="noise-slider"
                                         />
                                         <span
                                             id="colorOverlayValue"
                                             class="slider-value"
-                                            >0.00</span
+                                            >0.50</span
                                         >
                                     </div>
-                                    <div class="flex-center gap-4 color-blend-slider-row">
+                                    <div class="gap-4 color-blend-slider-row">
                                         <label
                                             for="colorHsbSlider"
                                             class="color-blend-slider-label margin-bottom-0"
@@ -675,50 +697,15 @@
                                             min="0"
                                             max="1"
                                             step="0.01"
-                                            value="0"
+                                            value="0.5"
                                             class="noise-slider"
                                         />
                                         <span
                                             id="colorHsbValue"
                                             class="slider-value"
-                                            >0.00</span
+                                            >0.50</span
                                         >
                                     </div>
-                                    <div class="flex-center gap-4 color-blend-slider-row">
-                                        <label
-                                            for="oklchPostSlider"
-                                            class="color-blend-slider-label margin-bottom-0"
-                                            >OKLCH_Post:</label
-                                        >
-                                        <input
-                                            type="range"
-                                            id="oklchPostSlider"
-                                            min="0"
-                                            max="1"
-                                            step="0.01"
-                                            value="0"
-                                            class="noise-slider"
-                                        />
-                                        <span
-                                            id="oklchPostValue"
-                                            class="slider-value"
-                                            >0.00</span
-                                        >
-                                    </div>
-                                </div>
-                                <div
-                                    class="flex-center gap-4 add-4th-square-control hidden"
-                                >
-                                    <input
-                                        type="checkbox"
-                                        id="add4thSquareCheckbox"
-                                        checked
-                                    />
-                                    <label
-                                        for="add4thSquareCheckbox"
-                                        class="margin-bottom-0"
-                                        >4th square</label
-                                    >
                                 </div>
                             </div>
                         </div>

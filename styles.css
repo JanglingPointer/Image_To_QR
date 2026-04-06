@@ -233,27 +233,29 @@ body {
     gap: 0.35rem;
     align-items: stretch;
     min-width: 0;
+    flex: 1 1 100%;
 }
 
 .color-blend-slider-row {
-    flex-wrap: nowrap;
+    display: grid;
+    grid-template-columns: 13ch 1fr auto;
+    gap: 4px;
     align-items: center;
     min-width: 0;
 }
 
 .color-blend-slider-row .noise-slider {
-    flex: 1 1 auto;
+    width: 100%;
     min-width: 0;
 }
 
 .color-blend-slider-row .color-blend-slider-label {
-    flex-shrink: 0;
     display: inline-block;
     white-space: nowrap;
 }
 
 .color-blend-slider-row .slider-value {
-    flex-shrink: 0;
+    justify-self: end;
 }
 
 /* Remove all margins from control elements - let containers handle spacing */
@@ -596,6 +598,11 @@ body {
 
 .test-image-btn:hover {
     background: #5a6268;
+}
+
+.test-image-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .checkbox-label {

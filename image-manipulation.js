@@ -1016,6 +1016,43 @@ async function getQRCodeImageData(text) {
 }
 
 /**
+ * Margin, control/data masks, 3× scales, and thinned data modules — same pipeline with or without an uploaded image.
+ * @param {string} text
+ * @param {boolean} add4thSquare
+ * @returns {Promise<{
+ *   qr_noMargin: ImageData,
+ *   qr: ImageData,
+ *   qrCtrlMask: ImageData,
+ *   qrCtrl: ImageData,
+ *   qrCtrlx3: ImageData,
+ *   qrWithoutCtrl: ImageData,
+ *   qrWithoutCtrlx3: ImageData,
+ *   qrWithoutCtrlThinned: ImageData,
+ * }>}
+ */
+async function buildQrLayerImageData(text, add4thSquare) {
+  const qr_noMargin = await getQRCodeImageData(text);
+  const shouldAdd4thSquare = add4thSquare && qr_noMargin.width >= 25;
+  const qr = addMargin(1, qr_noMargin);
+  const qrCtrlMask = generateMask(qr, 1, 8, shouldAdd4thSquare);
+  const qrCtrl = setWhereMasked(qr, qrCtrlMask, 0, 0, 0, 0, true);
+  const qrCtrlx3 = scale3Image(qrCtrl);
+  const qrWithoutCtrl = setWhereMasked(qr, qrCtrlMask, 0, 0, 0, 0, false);
+  const qrWithoutCtrlx3 = scale3Image(qrWithoutCtrl);
+  const qrWithoutCtrlThinned = onlyKeepCenterPixelOf3x3Block(qrWithoutCtrlx3);
+  return {
+    qr_noMargin,
+    qr,
+    qrCtrlMask,
+    qrCtrl,
+    qrCtrlx3,
+    qrWithoutCtrl,
+    qrWithoutCtrlx3,
+    qrWithoutCtrlThinned,
+  };
+}
+
+/**
  * Generates a QR code overlay on the uploaded image using the complex processing pipeline
  * @param {HTMLImageElement|null} uploadedImage - The image to overlay the QR code on, or null for a plain scaled QR preview
  * @param {string} text - The text/URL to encode in the QR code
@@ -1039,7 +1076,6 @@ async function getQRCodeImageData(text) {
  * @param {number} oklchPre - 0..1 blend from scaled image toward pure OKLCH component
  * @param {number} overlayAmount - 0..1 blend toward overlay-mode component
  * @param {number} hsbAmount - 0..1 blend toward pure HSB component
- * @param {number} oklchPost - 0..1 final blend toward OKLCH component again
  * @param {boolean} tintCtrlPixels - Whether to tint control pixels from image lightness statistics
  * @param {string} outsidePixels - 'auto' | 'extend' | 'color' for padding treatment
  * @param {string} outsidePixelsColor - Hex color when outsidePixels is 'color'
@@ -1068,16 +1104,24 @@ async function generateQRCodeOverlay(
   oklchPre = 1,
   overlayAmount = 0,
   hsbAmount = 0,
-  oklchPost = 0,
   tintCtrlPixels = false,
   blockSize = 1,
   outsidePixels = "auto",
   outsidePixelsColor = "#000000",
 ) {
   try {
+    const {
+      qr_noMargin,
+      qr,
+      qrCtrlMask,
+      qrCtrl,
+      qrCtrlx3,
+      qrWithoutCtrl,
+      qrWithoutCtrlx3,
+      qrWithoutCtrlThinned,
+    } = await buildQrLayerImageData(text, add4thSquare);
+
     if (!uploadedImage) {
-      const qr_noMargin = await getQRCodeImageData(text);
-      const qr = addMargin(1, qr_noMargin);
       const result_colored_xN = scaleImageByFactor(scale3Image(qr), scaleFactor);
       const canvas = document.getElementById("resultCanvas");
       const ctx = canvas.getContext("2d");
@@ -1087,37 +1131,15 @@ async function generateQRCodeOverlay(
       return {
         qr_noMargin,
         qr,
+        qrCtrlMask,
+        qrCtrl,
+        qrCtrlx3,
+        qrWithoutCtrl,
+        qrWithoutCtrlx3,
+        qrWithoutCtrlThinned,
         result_colored_xN,
       };
     }
-
-    // Step 1: Generate QR code without margin using direct pixel access
-    const qr_noMargin = await getQRCodeImageData(text);
-
-    // Only add 4th square if checkbox is checked AND QR code is at least 25 pixels
-    // (Regular Small QR codes don't have a 4th square)
-    const shouldAdd4thSquare = add4thSquare && qr_noMargin.width >= 25;
-
-    // Step 2: Add 1 pixel margin
-    const qr = addMargin(1, qr_noMargin);
-
-    // Step 3: Generate mask for control squares and margin
-    const qrCtrlMask = generateMask(qr, 1, 8, shouldAdd4thSquare);
-
-    // Step 4: Create QR with control squares (transparent where not masked)
-    const qrCtrl = setWhereMasked(qr, qrCtrlMask, 0, 0, 0, 0, true);
-
-    // Step 5: Scale up control squares by factor of 3
-    const qrCtrlx3 = scale3Image(qrCtrl);
-
-    // Step 6: Create QR without control squares (transparent where masked)
-    const qrWithoutCtrl = setWhereMasked(qr, qrCtrlMask, 0, 0, 0, 0, false);
-
-    // Step 7: Scale up by factor of 3
-    const qrWithoutCtrlx3 = scale3Image(qrWithoutCtrl);
-
-    // Step 8: Thin out by keeping only center pixels
-    const qrWithoutCtrlThinned = onlyKeepCenterPixelOf3x3Block(qrWithoutCtrlx3);
 
     // Step 9: Scale uploaded image to inner QR area (excluding 3px border on each side)
     let scaledUploadedImage;
@@ -1356,8 +1378,7 @@ async function generateQRCodeOverlay(
       );
       acc = blendImageDataLinear(acc, component_oklch, oklchPre);
       acc = blendImageDataLinear(acc, component_overlay, overlayAmount);
-      acc = blendImageDataLinear(acc, component_hsb, hsbAmount);
-      result_colored = blendImageDataLinear(acc, component_oklch, oklchPost);
+      result_colored = blendImageDataLinear(acc, component_hsb, hsbAmount);
       result_colored = compositeQrControlSquaresOnTop(result_colored, qrCtrlx3);
     } else {
       result_colored = applyCustomColors(
