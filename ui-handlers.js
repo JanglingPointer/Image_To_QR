@@ -40,7 +40,6 @@
     "robustnessExpertContent",
   );
   const tintCtrlPixelsCheckbox = document.getElementById("tintCtrlPixelsCheckbox");
-  const robustColorsCheckbox = document.getElementById("robustColorsCheckbox");
   const scaleSlider = document.getElementById("scaleSlider");
   const scaleValue = document.getElementById("scaleValue");
   const scaleControl = document.querySelector(".scale-control");
@@ -161,6 +160,13 @@
     },
   };
 
+  /** Default blend values and thresholds for the robustness warning (OKLCH/Overlay/HSB). */
+  const ROBUST_COLORS_PRESET = Object.freeze({
+    oklchPre: 1,
+    colorOverlay: 0.5,
+    colorHsb: 0,
+  });
+
   // Centralized initial settings
   const initialSettings = {
     text: "https://example.com#enter_your_own_URL",
@@ -171,7 +177,6 @@
     clarity: 90, // 0..100
     add4thSquare: true, // Whether to add 4th square
     tintCtrlPixels: false,
-    robustColors: true,
     scale: 3,
     noise: 10,
     colorDark: "#211e59",
@@ -186,9 +191,9 @@
     outsidePixels: "auto", // 'auto' | 'extend' | 'color'
     outsidePixelsColor: "#000000",
     debug: false,
-    oklchPre: 1,
-    colorOverlay: 0.5,
-    colorHsb: 0.5,
+    oklchPre: ROBUST_COLORS_PRESET.oklchPre,
+    colorOverlay: ROBUST_COLORS_PRESET.colorOverlay,
+    colorHsb: ROBUST_COLORS_PRESET.colorHsb,
     pixelPerfect: false, // New setting for pixel perfect mode
   };
 
@@ -255,8 +260,6 @@
       add4thSquareCheckbox.checked = settings.add4thSquare;
     if (tintCtrlPixelsCheckbox)
       tintCtrlPixelsCheckbox.checked = !!settings.tintCtrlPixels;
-    if (robustColorsCheckbox)
-      robustColorsCheckbox.checked = settings.robustColors !== false;
     if (scaleSlider) scaleSlider.value = String(settings.scale);
     if (noiseSlider) noiseSlider.value = String(settings.noise);
     if (saturationBoostSlider)
@@ -314,16 +317,17 @@
     // Debug checkbox and dependent UI
     if (debugCheckbox) debugCheckbox.checked = settings.debug;
     if (oklchPreSlider)
-      oklchPreSlider.value = String(settings.oklchPre ?? 1);
+      oklchPreSlider.value = String(
+        settings.oklchPre ?? ROBUST_COLORS_PRESET.oklchPre,
+      );
     if (colorOverlaySlider)
-      colorOverlaySlider.value = String(settings.colorOverlay ?? 0.5);
+      colorOverlaySlider.value = String(
+        settings.colorOverlay ?? ROBUST_COLORS_PRESET.colorOverlay,
+      );
     if (colorHsbSlider)
-      colorHsbSlider.value = String(settings.colorHsb ?? 0.5);
-    if (robustColorsCheckbox && robustColorsCheckbox.checked) {
-      if (oklchPreSlider) oklchPreSlider.value = "1";
-      if (colorOverlaySlider) colorOverlaySlider.value = "0.5";
-      if (colorHsbSlider) colorHsbSlider.value = "0.5";
-    }
+      colorHsbSlider.value = String(
+        settings.colorHsb ?? ROBUST_COLORS_PRESET.colorHsb,
+      );
     if (settings.debug) {
       utils.removeHiddenClass(testImageBtn);
     } else {
@@ -363,12 +367,36 @@
     utils.updateSliderValue(blockSizeSlider, blockSizeValue);
   }
 
+  /** Same effect as clicking "Show expert values" — expands robustness controls so the warning is visible. */
+  function revealRobustnessExpertValues() {
+    if (robustnessControl) {
+      robustnessControl.classList.remove("expert-collapsed");
+    }
+  }
+
   function updateRobustnessWarning() {
     if (!claritySlider || !clarityWarning) return;
     const robustness = parseFloat(claritySlider.value);
-    const robustColorsOff = robustColorsCheckbox && !robustColorsCheckbox.checked;
-    if (robustness < 80 || robustColorsOff) {
+    const oklchPre = parseFloat(
+      oklchPreSlider ? oklchPreSlider.value : ROBUST_COLORS_PRESET.oklchPre,
+    );
+    const overlayAmt = parseFloat(
+      colorOverlaySlider
+        ? colorOverlaySlider.value
+        : ROBUST_COLORS_PRESET.colorOverlay,
+    );
+    const hsbAmt = parseFloat(
+      colorHsbSlider ? colorHsbSlider.value : ROBUST_COLORS_PRESET.colorHsb,
+    );
+    const blendOutsideRobust =
+      oklchPre < ROBUST_COLORS_PRESET.oklchPre ||
+      overlayAmt > ROBUST_COLORS_PRESET.colorOverlay ||
+      hsbAmt > ROBUST_COLORS_PRESET.colorHsb;
+    const fourthSquareOff =
+      add4thSquareCheckbox && !add4thSquareCheckbox.checked;
+    if (robustness < 80 || blendOutsideRobust || fourthSquareOff) {
       clarityWarning.classList.remove("clarity-warning-hidden");
+      revealRobustnessExpertValues();
     } else {
       clarityWarning.classList.add("clarity-warning-hidden");
     }
@@ -569,20 +597,15 @@
   });
   if (showExpertValuesBtn && robustnessExpertContent) {
     showExpertValuesBtn.addEventListener("click", function () {
-      if (robustnessControl) {
-        robustnessControl.classList.remove("expert-collapsed");
-      }
+      revealRobustnessExpertValues();
     });
   }
-  function uncheckRobustColorsOnBlendSliderInput() {
-    if (robustColorsCheckbox && robustColorsCheckbox.checked) {
-      robustColorsCheckbox.checked = false;
-      updateRobustnessWarning();
-    }
+  function onBlendSliderInput() {
+    updateRobustnessWarning();
   }
   [oklchPreSlider, colorOverlaySlider, colorHsbSlider].forEach(function (slider) {
     if (slider) {
-      slider.addEventListener("input", uncheckRobustColorsOnBlendSliderInput);
+      slider.addEventListener("input", onBlendSliderInput);
     }
   });
   utils.addSliderListener(oklchPreSlider, oklchPreValue, (v) =>
@@ -594,24 +617,6 @@
   utils.addSliderListener(colorHsbSlider, colorHsbValue, (v) =>
     parseFloat(v).toFixed(2),
   );
-  if (robustColorsCheckbox) {
-    robustColorsCheckbox.addEventListener("change", function () {
-      if (this.checked) {
-        if (oklchPreSlider) oklchPreSlider.value = "1";
-        if (colorOverlaySlider) colorOverlaySlider.value = "0.5";
-        if (colorHsbSlider) colorHsbSlider.value = "0.5";
-      } else {
-        if (oklchPreSlider) oklchPreSlider.value = "1";
-        if (colorOverlaySlider) colorOverlaySlider.value = "0.8";
-        if (colorHsbSlider) colorHsbSlider.value = "0.4";
-      }
-      refreshColorBlendSliderLabels();
-      updateRobustnessWarning();
-      if (window.uploadedImage) {
-        updateResult();
-      }
-    });
-  }
 
   // Add slider listeners using utility function
   utils.addSliderListener(thresholdSlider);
@@ -875,18 +880,15 @@
     const add4thSquare = add4thSquareCheckbox
       ? add4thSquareCheckbox.checked
       : true;
-    const robustColors = robustColorsCheckbox
-      ? robustColorsCheckbox.checked
-      : true;
-    const oklchPre = robustColors
-      ? 1
-      : parseFloat(oklchPreSlider ? oklchPreSlider.value : 1);
-    const overlayAmount = robustColors
-      ? 0.5
-      : parseFloat(colorOverlaySlider ? colorOverlaySlider.value : 0.8);
-    const hsbAmount = robustColors
-      ? 0.5
-      : parseFloat(colorHsbSlider ? colorHsbSlider.value : 0.4);
+    const oklchPre = parseFloat(
+      oklchPreSlider ? oklchPreSlider.value : ROBUST_COLORS_PRESET.oklchPre,
+    );
+    const overlayAmount = parseFloat(
+      colorOverlaySlider ? colorOverlaySlider.value : 0.8,
+    );
+    const hsbAmount = parseFloat(
+      colorHsbSlider ? colorHsbSlider.value : 0.4,
+    );
     const tintCtrlPixels = tintCtrlPixelsCheckbox
       ? tintCtrlPixelsCheckbox.checked
       : false;
@@ -912,7 +914,6 @@
       ditherGamma,
       clarity,
       add4thSquare,
-      robustColors,
       oklchPre,
       overlayAmount,
       hsbAmount,
@@ -1090,7 +1091,6 @@ ${Ox}x${Oy}`;
         ditherGamma,
         clarity,
         add4thSquare,
-        robustColors,
         oklchPre,
         overlayAmount,
         hsbAmount,
@@ -1115,7 +1115,7 @@ ${Ox}x${Oy}`;
           `ScaleMode: ${scalingMode} | PP: ${pixelPerfectCheckbox ? pixelPerfectCheckbox.checked : false} | Zoom: ${zoomValue} | Offset: (${offsetXValue}, ${offsetYValue})`,
         );
         log(
-          `Clarity: ${clarity} | 4thSqr: ${add4thSquare} | RobustColors: ${robustColors} | OKLCH_Pre: ${oklchPre.toFixed(2)} | Overlay: ${overlayAmount.toFixed(2)} | HSB: ${hsbAmount.toFixed(2)} | TintCtrl: ${tintCtrlPixels} | BlockSz: ${blockSize} | OutPx: ${outsidePixels}${outsidePixels === "color" ? ":" + outsidePixelsColor : ""}`,
+          `Clarity: ${clarity} | 4thSqr: ${add4thSquare} | OKLCH_Pre: ${oklchPre.toFixed(2)} | Overlay: ${overlayAmount.toFixed(2)} | HSB: ${hsbAmount.toFixed(2)} | TintCtrl: ${tintCtrlPixels} | BlockSz: ${blockSize} | OutPx: ${outsidePixels}${outsidePixels === "color" ? ":" + outsidePixelsColor : ""}`,
         );
         log("=================");
       }
@@ -1343,6 +1343,7 @@ ${Ox}x${Oy}`;
   // Add 4th Square checkbox event
   if (add4thSquareCheckbox) {
     add4thSquareCheckbox.addEventListener("change", function () {
+      updateRobustnessWarning();
       if (window.uploadedImage) {
         updateResult();
       }
