@@ -613,6 +613,56 @@ function applyCustomColors(imageData, darkColor, brightColor) {
 }
 
 /**
+ * Linear RGB blend of two same-size ImageData: out = base * (1 - t) + layer * t.
+ * @param {ImageData} baseImageData
+ * @param {ImageData} layerImageData
+ * @param {number} t - 0..1
+ * @returns {ImageData}
+ */
+function blendImageDataLinear(baseImageData, layerImageData, t) {
+  const tClamped = clamp(t, 0, 1);
+  const w = baseImageData.width;
+  const h = baseImageData.height;
+  const out = new ImageData(w, h);
+  const a = baseImageData.data;
+  const b = layerImageData.data;
+  const o = out.data;
+  const inv = 1 - tClamped;
+  for (let i = 0; i < a.length; i += 4) {
+    o[i] = Math.round(a[i] * inv + b[i] * tClamped);
+    o[i + 1] = Math.round(a[i + 1] * inv + b[i + 1] * tClamped);
+    o[i + 2] = Math.round(a[i + 2] * inv + b[i + 2] * tClamped);
+    o[i + 3] = 255;
+  }
+  return out;
+}
+
+/**
+ * Draws QR finder/control layer (qrCtrlx3) on top of an ImageData (opaque pixels replace).
+ * @param {ImageData} targetImageData
+ * @param {ImageData} qrCtrlx3ImageData
+ * @returns {ImageData} New ImageData
+ */
+function compositeQrControlSquaresOnTop(targetImageData, qrCtrlx3ImageData) {
+  const out = new ImageData(
+    new Uint8ClampedArray(targetImageData.data),
+    targetImageData.width,
+    targetImageData.height,
+  );
+  const t = out.data;
+  const c = qrCtrlx3ImageData.data;
+  for (let i = 0; i < t.length; i += 4) {
+    if (c[i + 3] > 0) {
+      t[i] = c[i];
+      t[i + 1] = c[i + 1];
+      t[i + 2] = c[i + 2];
+      t[i + 3] = 255;
+    }
+  }
+  return out;
+}
+
+/**
  * Transforms a black and white image to use original image colors.
  * @param {ImageData} bwImageData - The input black and white image data (after noise + QR overlay)
  * @param {ImageData} originalImageData - The original colored image data
@@ -986,11 +1036,13 @@ async function getQRCodeImageData(text) {
  * @param {number} offsetYValue - Vertical offset for custom mode (-1 to 1)
  * @param {number} clarity - Robustness value (0-100), controls COLOR_BEND
  * @param {boolean} add4thSquare - Whether to add a 4th square in the bottom-right corner
- * @param {number} oklchToHsbBlend - 0..1 blend ratio from OKLCH result to HSB result
+ * @param {number} oklchPre - 0..1 blend from scaled image toward pure OKLCH component
+ * @param {number} overlayAmount - 0..1 blend toward overlay-mode component
+ * @param {number} hsbAmount - 0..1 blend toward pure HSB component
+ * @param {number} oklchPost - 0..1 final blend toward OKLCH component again
  * @param {boolean} tintCtrlPixels - Whether to tint control pixels from image lightness statistics
  * @param {string} outsidePixels - 'auto' | 'extend' | 'color' for padding treatment
  * @param {string} outsidePixelsColor - Hex color when outsidePixels is 'color'
- * @param {boolean} useOverlayBlend - If true (original colors), blend data with Photoshop Overlay instead of OKLCH/HSB
  * @returns {Object} Object containing debug data including qrWithoutCtrlx3
  */
 async function generateQRCodeOverlay(
@@ -1013,12 +1065,14 @@ async function generateQRCodeOverlay(
   offsetYValue = 0,
   clarity = 90,
   add4thSquare = true,
-  oklchToHsbBlend = 0,
+  oklchPre = 1,
+  overlayAmount = 0,
+  hsbAmount = 0,
+  oklchPost = 0,
   tintCtrlPixels = false,
   blockSize = 1,
   outsidePixels = "auto",
   outsidePixelsColor = "#000000",
-  useOverlayBlend = false,
 ) {
   try {
     if (!uploadedImage) {
@@ -1169,6 +1223,25 @@ async function generateQRCodeOverlay(
       noiseSeed,
     );
 
+    // Step 11b: Noisy BW + thinned QR data only (no finder/control squares) — used for OKLCH/HSB/Overlay components
+    const scaledUploadedImageBW_plusDataOnly = new ImageData(
+      scaledUploadedImageBW_Noise.width,
+      scaledUploadedImageBW_Noise.height,
+    );
+    const bwDataOnlyData = scaledUploadedImageBW_plusDataOnly.data;
+    for (let i = 0; i < scaledUploadedImageBW_Noise.data.length; i++) {
+      bwDataOnlyData[i] = scaledUploadedImageBW_Noise.data[i];
+    }
+    const qrWithoutCtrlThinnedDataOnly = qrWithoutCtrlThinned.data;
+    for (let i = 0; i < qrWithoutCtrlThinnedDataOnly.length; i += 4) {
+      if (qrWithoutCtrlThinnedDataOnly[i + 3] > 0) {
+        bwDataOnlyData[i] = qrWithoutCtrlThinnedDataOnly[i];
+        bwDataOnlyData[i + 1] = qrWithoutCtrlThinnedDataOnly[i + 1];
+        bwDataOnlyData[i + 2] = qrWithoutCtrlThinnedDataOnly[i + 2];
+        bwDataOnlyData[i + 3] = qrWithoutCtrlThinnedDataOnly[i + 3];
+      }
+    }
+
     // Step 12: Create BW image with control squares (using noisy image as base)
     const scaledUploadedImageBW_plusCtrl = new ImageData(
       scaledUploadedImageBW_Noise.width,
@@ -1219,6 +1292,9 @@ async function generateQRCodeOverlay(
 
     // Step 14: Apply colors to create colored result
     let result_colored;
+    let component_oklch = null;
+    let component_hsb = null;
+    let component_overlay = null;
     if (useOriginalColors) {
       let unalteredBw = null;
       if (bwMode === "original_colors") {
@@ -1230,7 +1306,7 @@ async function generateQRCodeOverlay(
         const qrThinnedData = qrWithoutCtrlThinned.data;
         for (let i = 0; i < qrThinnedData.length; i += 4) {
           if (qrThinnedData[i + 3] > 0) {
-            const inv = bwPlusAllQRData[i] === 0 ? 255 : 0;
+            const inv = bwDataOnlyData[i] === 0 ? 255 : 0;
             unalteredBw.data[i] = inv;
             unalteredBw.data[i + 1] = inv;
             unalteredBw.data[i + 2] = inv;
@@ -1240,17 +1316,49 @@ async function generateQRCodeOverlay(
       }
       const preserveSaturation =
         bwMode === "dither" || bwMode === "threshold";
-      result_colored = applyOriginalColors(
-        scaledUploadedImageBW_plusAllQR,
+      component_oklch = applyOriginalColors(
+        scaledUploadedImageBW_plusDataOnly,
         scaledUploadedImage,
         qrWithoutCtrlx3,
         clarity,
         unalteredBw,
-        oklchToHsbBlend,
+        0,
         preserveSaturation,
-        useOverlayBlend,
-        qrCtrlx3,
+        false,
+        null,
       );
+      component_hsb = applyOriginalColors(
+        scaledUploadedImageBW_plusDataOnly,
+        scaledUploadedImage,
+        qrWithoutCtrlx3,
+        clarity,
+        unalteredBw,
+        1,
+        preserveSaturation,
+        false,
+        null,
+      );
+      component_overlay = applyOriginalColors(
+        scaledUploadedImageBW_plusDataOnly,
+        scaledUploadedImage,
+        qrWithoutCtrlx3,
+        clarity,
+        unalteredBw,
+        0,
+        preserveSaturation,
+        true,
+        null,
+      );
+      let acc = new ImageData(
+        new Uint8ClampedArray(scaledUploadedImage.data),
+        scaledUploadedImage.width,
+        scaledUploadedImage.height,
+      );
+      acc = blendImageDataLinear(acc, component_oklch, oklchPre);
+      acc = blendImageDataLinear(acc, component_overlay, overlayAmount);
+      acc = blendImageDataLinear(acc, component_hsb, hsbAmount);
+      result_colored = blendImageDataLinear(acc, component_oklch, oklchPost);
+      result_colored = compositeQrControlSquaresOnTop(result_colored, qrCtrlx3);
     } else {
       result_colored = applyCustomColors(
         scaledUploadedImageBW_plusAllQR,
@@ -1359,6 +1467,13 @@ async function generateQRCodeOverlay(
       result_colored: result_colored,
       result_colored_xN: result_colored_xN,
       result_colored_shine: result_colored_shine,
+      ...(component_oklch
+        ? {
+            component_oklch,
+            component_hsb,
+            component_overlay,
+          }
+        : {}),
       // Add gamma debug image if present
       ...(scaledUploadedImage_Gamma ? { scaledUploadedImage_Gamma } : {}),
     };

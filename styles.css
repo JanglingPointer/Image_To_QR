@@ -227,6 +227,35 @@ body {
     margin: 0 !important;
 }
 
+.color-component-blend-control {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    align-items: stretch;
+    min-width: 0;
+}
+
+.color-blend-slider-row {
+    flex-wrap: nowrap;
+    align-items: center;
+    min-width: 0;
+}
+
+.color-blend-slider-row .noise-slider {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.color-blend-slider-row .color-blend-slider-label {
+    flex-shrink: 0;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.color-blend-slider-row .slider-value {
+    flex-shrink: 0;
+}
+
 /* Remove all margins from control elements - let containers handle spacing */
 .scale-control,
 .noise-control,

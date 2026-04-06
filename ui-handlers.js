@@ -10,8 +10,14 @@
   const resultCanvas = document.getElementById("resultCanvas");
   const testImageBtn = document.getElementById("testImageBtn");
   const debugCheckbox = document.getElementById("debugCheckbox");
-  const oklchToHsbSlider = document.getElementById("oklchToHsbSlider");
-  const oklchToHsbValue = document.getElementById("oklchToHsbValue");
+  const oklchPreSlider = document.getElementById("oklchPreSlider");
+  const oklchPreValue = document.getElementById("oklchPreValue");
+  const colorOverlaySlider = document.getElementById("colorOverlaySlider");
+  const colorOverlayValue = document.getElementById("colorOverlayValue");
+  const colorHsbSlider = document.getElementById("colorHsbSlider");
+  const colorHsbValue = document.getElementById("colorHsbValue");
+  const oklchPostSlider = document.getElementById("oklchPostSlider");
+  const oklchPostValue = document.getElementById("oklchPostValue");
   const debugSection = document.getElementById("debugSection");
   const layoutContainer = document.querySelector(".layout-container");
   const thresholdSlider = document.getElementById("thresholdSlider");
@@ -28,9 +34,9 @@
   const clarityWarning = document.getElementById("clarityWarning");
   const add4thSquareCheckbox = document.getElementById("add4thSquareCheckbox");
   const add4thSquareControl = document.querySelector(".add-4th-square-control");
-  const overlayBlendCheckbox = document.getElementById("overlayBlendCheckbox");
-  const overlayBlendControl = document.querySelector(".overlay-blend-control");
-  const oklchHsbControl = document.querySelector(".oklch-hsb-control");
+  const colorComponentBlendControl = document.querySelector(
+    ".color-component-blend-control",
+  );
   const showExpertValuesBtn = document.getElementById("showExpertValuesBtn");
   const robustnessExpertContent = document.getElementById(
     "robustnessExpertContent",
@@ -181,8 +187,10 @@
     outsidePixels: "auto", // 'auto' | 'extend' | 'color'
     outsidePixelsColor: "#000000",
     debug: false,
-    oklchToHsbBlend: 0,
-    overlayBlend: false,
+    oklchPre: 1,
+    colorOverlay: 0,
+    colorHsb: 0,
+    oklchPost: 0,
     pixelPerfect: false, // New setting for pixel perfect mode
   };
 
@@ -307,10 +315,14 @@
         settings.outsidePixelsColor || "#000000";
     // Debug checkbox and dependent UI
     if (debugCheckbox) debugCheckbox.checked = settings.debug;
-    if (oklchToHsbSlider)
-      oklchToHsbSlider.value = String(settings.oklchToHsbBlend ?? 0);
-    if (overlayBlendCheckbox)
-      overlayBlendCheckbox.checked = !!settings.overlayBlend;
+    if (oklchPreSlider)
+      oklchPreSlider.value = String(settings.oklchPre ?? 1);
+    if (colorOverlaySlider)
+      colorOverlaySlider.value = String(settings.colorOverlay ?? 0);
+    if (colorHsbSlider)
+      colorHsbSlider.value = String(settings.colorHsb ?? 0);
+    if (oklchPostSlider)
+      oklchPostSlider.value = String(settings.oklchPost ?? 0);
     updateRobustColorsState(false);
     if (settings.debug) {
       utils.removeHiddenClass(testImageBtn);
@@ -329,7 +341,16 @@
     utils.updateSliderValue(scaleSlider, scaleValue);
     utils.updateSliderValue(noiseSlider, noiseValue);
     utils.updateSliderValue(claritySlider, clarityValue);
-    utils.updateSliderValue(oklchToHsbSlider, oklchToHsbValue, (v) =>
+    utils.updateSliderValue(oklchPreSlider, oklchPreValue, (v) =>
+      parseFloat(v).toFixed(2),
+    );
+    utils.updateSliderValue(colorOverlaySlider, colorOverlayValue, (v) =>
+      parseFloat(v).toFixed(2),
+    );
+    utils.updateSliderValue(colorHsbSlider, colorHsbValue, (v) =>
+      parseFloat(v).toFixed(2),
+    );
+    utils.updateSliderValue(oklchPostSlider, oklchPostValue, (v) =>
       parseFloat(v).toFixed(2),
     );
     // saturationBoostValue element was removed, so no need to update it
@@ -356,22 +377,33 @@
     }
   }
 
-  function syncOklchToHsbSliderDisabled() {
-    if (!oklchToHsbSlider) return;
-    const overlayOn = overlayBlendCheckbox && overlayBlendCheckbox.checked;
+  function syncColorBlendSlidersDisabled() {
     const robustOn = robustColorsCheckbox && robustColorsCheckbox.checked;
-    oklchToHsbSlider.disabled = overlayOn || robustOn;
+    if (oklchPreSlider) oklchPreSlider.disabled = robustOn;
+    if (colorOverlaySlider) colorOverlaySlider.disabled = robustOn;
+    if (colorHsbSlider) colorHsbSlider.disabled = robustOn;
+    if (oklchPostSlider) oklchPostSlider.disabled = robustOn;
   }
 
   function updateRobustColorsState(triggerUpdate = true) {
-    if (!robustColorsCheckbox || !oklchToHsbSlider) return;
+    if (!robustColorsCheckbox) return;
     if (robustColorsCheckbox.checked) {
-      oklchToHsbSlider.value = "0";
-    } else {
-      oklchToHsbSlider.value = "0.5";
+      if (oklchPreSlider) oklchPreSlider.value = "1";
+      if (colorOverlaySlider) colorOverlaySlider.value = "0";
+      if (colorHsbSlider) colorHsbSlider.value = "0";
+      if (oklchPostSlider) oklchPostSlider.value = "0";
     }
-    syncOklchToHsbSliderDisabled();
-    utils.updateSliderValue(oklchToHsbSlider, oklchToHsbValue, (v) =>
+    syncColorBlendSlidersDisabled();
+    utils.updateSliderValue(oklchPreSlider, oklchPreValue, (v) =>
+      parseFloat(v).toFixed(2),
+    );
+    utils.updateSliderValue(colorOverlaySlider, colorOverlayValue, (v) =>
+      parseFloat(v).toFixed(2),
+    );
+    utils.updateSliderValue(colorHsbSlider, colorHsbValue, (v) =>
+      parseFloat(v).toFixed(2),
+    );
+    utils.updateSliderValue(oklchPostSlider, oklchPostValue, (v) =>
       parseFloat(v).toFixed(2),
     );
     updateRobustnessWarning();
@@ -546,16 +578,14 @@
     if (this.checked) {
       utils.removeHiddenClass(debugSection);
       utils.removeHiddenClass(testImageBtn);
-      utils.removeHiddenClass(overlayBlendControl);
+      utils.removeHiddenClass(colorComponentBlendControl);
       utils.removeHiddenClass(add4thSquareControl);
-      utils.removeHiddenClass(oklchHsbControl);
       updateResult();
     } else {
       utils.addHiddenClass(debugSection);
       utils.addHiddenClass(testImageBtn);
-      utils.addHiddenClass(overlayBlendControl);
+      utils.addHiddenClass(colorComponentBlendControl);
       utils.addHiddenClass(add4thSquareControl);
-      utils.addHiddenClass(oklchHsbControl);
     }
   });
   if (showExpertValuesBtn && robustnessExpertContent) {
@@ -565,7 +595,16 @@
       }
     });
   }
-  utils.addSliderListener(oklchToHsbSlider, oklchToHsbValue, (v) =>
+  utils.addSliderListener(oklchPreSlider, oklchPreValue, (v) =>
+    parseFloat(v).toFixed(2),
+  );
+  utils.addSliderListener(colorOverlaySlider, colorOverlayValue, (v) =>
+    parseFloat(v).toFixed(2),
+  );
+  utils.addSliderListener(colorHsbSlider, colorHsbValue, (v) =>
+    parseFloat(v).toFixed(2),
+  );
+  utils.addSliderListener(oklchPostSlider, oklchPostValue, (v) =>
     parseFloat(v).toFixed(2),
   );
   if (robustColorsCheckbox) {
@@ -730,14 +769,12 @@
   // On page load, set debug-only controls visibility based on debugCheckbox
   if (debugCheckbox.checked) {
     utils.removeHiddenClass(testImageBtn);
-    utils.removeHiddenClass(overlayBlendControl);
+    utils.removeHiddenClass(colorComponentBlendControl);
     utils.removeHiddenClass(add4thSquareControl);
-    utils.removeHiddenClass(oklchHsbControl);
   } else {
     utils.addHiddenClass(testImageBtn);
-    utils.addHiddenClass(overlayBlendControl);
+    utils.addHiddenClass(colorComponentBlendControl);
     utils.addHiddenClass(add4thSquareControl);
-    utils.addHiddenClass(oklchHsbControl);
   }
 
   syncLayoutStretchForDebugMode();
@@ -828,10 +865,18 @@
     const robustColors = robustColorsCheckbox
       ? robustColorsCheckbox.checked
       : true;
-    const oklchToHsbBlend =
-      robustColors || !oklchToHsbSlider ? 0 : parseFloat(oklchToHsbSlider.value);
-    const useOverlayBlend =
-      overlayBlendCheckbox && overlayBlendCheckbox.checked;
+    const oklchPre = robustColors
+      ? 1
+      : parseFloat(oklchPreSlider ? oklchPreSlider.value : 1);
+    const overlayAmount = robustColors
+      ? 0
+      : parseFloat(colorOverlaySlider ? colorOverlaySlider.value : 0);
+    const hsbAmount = robustColors
+      ? 0
+      : parseFloat(colorHsbSlider ? colorHsbSlider.value : 0);
+    const oklchPost = robustColors
+      ? 0
+      : parseFloat(oklchPostSlider ? oklchPostSlider.value : 0);
     const tintCtrlPixels = tintCtrlPixelsCheckbox
       ? tintCtrlPixelsCheckbox.checked
       : false;
@@ -858,11 +903,13 @@
       clarity,
       add4thSquare,
       robustColors,
-      oklchToHsbBlend,
+      oklchPre,
+      overlayAmount,
+      hsbAmount,
+      oklchPost,
       tintCtrlPixels,
       outsidePixels,
       outsidePixelsColor,
-      useOverlayBlend,
     };
   }
 
@@ -947,11 +994,13 @@ ${Ox}x${Oy}`;
           ditherGamma,
           clarity,
           add4thSquare,
-          oklchToHsbBlend,
+          oklchPre,
+          overlayAmount,
+          hsbAmount,
+          oklchPost,
           tintCtrlPixels,
           outsidePixels,
           outsidePixelsColor,
-          useOverlayBlend,
         } = settings;
         const debugData = await generateQRCodeOverlay(
           null,
@@ -973,12 +1022,14 @@ ${Ox}x${Oy}`;
           offsetYValue,
           clarity,
           add4thSquare,
-          oklchToHsbBlend,
+          oklchPre,
+          overlayAmount,
+          hsbAmount,
+          oklchPost,
           tintCtrlPixels,
           blockSize,
           outsidePixels,
           outsidePixelsColor,
-          useOverlayBlend,
         );
         utils.removeHiddenClass(resultSection, "flex");
 
@@ -1021,11 +1072,13 @@ ${Ox}x${Oy}`;
         clarity,
         add4thSquare,
         robustColors,
-        oklchToHsbBlend,
+        oklchPre,
+        overlayAmount,
+        hsbAmount,
+        oklchPost,
         tintCtrlPixels,
         outsidePixels,
         outsidePixelsColor,
-        useOverlayBlend,
       } = settings;
       // Debug logging: list all user-selected modes and values (compact)
       if (window.debugModule && window.debugModule.isEnabled()) {
@@ -1044,7 +1097,7 @@ ${Ox}x${Oy}`;
           `ScaleMode: ${scalingMode} | PP: ${pixelPerfectCheckbox ? pixelPerfectCheckbox.checked : false} | Zoom: ${zoomValue} | Offset: (${offsetXValue}, ${offsetYValue})`,
         );
         log(
-          `Clarity: ${clarity} | 4thSqr: ${add4thSquare} | RobustColors: ${robustColors} | OKLCH->HSB: ${oklchToHsbBlend.toFixed(2)} | Overlay: ${useOverlayBlend} | TintCtrl: ${tintCtrlPixels} | BlockSz: ${blockSize} | OutPx: ${outsidePixels}${outsidePixels === "color" ? ":" + outsidePixelsColor : ""}`,
+          `Clarity: ${clarity} | 4thSqr: ${add4thSquare} | RobustColors: ${robustColors} | OKLCH_Pre: ${oklchPre.toFixed(2)} | Overlay: ${overlayAmount.toFixed(2)} | HSB: ${hsbAmount.toFixed(2)} | OKLCH_Post: ${oklchPost.toFixed(2)} | TintCtrl: ${tintCtrlPixels} | BlockSz: ${blockSize} | OutPx: ${outsidePixels}${outsidePixels === "color" ? ":" + outsidePixelsColor : ""}`,
         );
         log("=================");
       }
@@ -1069,12 +1122,14 @@ ${Ox}x${Oy}`;
         offsetYValue,
         clarity,
         add4thSquare,
-        oklchToHsbBlend,
+        oklchPre,
+        overlayAmount,
+        hsbAmount,
+        oklchPost,
         tintCtrlPixels,
         blockSize,
         outsidePixels,
         outsidePixelsColor,
-        useOverlayBlend,
       );
       if (debugData && debugData.qrCtrlx3) {
         lastInnerTargetSize = Math.max(0, debugData.qrCtrlx3.width - 6);
@@ -1264,15 +1319,6 @@ ${Ox}x${Oy}`;
   // Add 4th Square checkbox event
   if (add4thSquareCheckbox) {
     add4thSquareCheckbox.addEventListener("change", function () {
-      if (window.uploadedImage) {
-        updateResult();
-      }
-    });
-  }
-
-  if (overlayBlendCheckbox) {
-    overlayBlendCheckbox.addEventListener("change", function () {
-      syncOklchToHsbSliderDisabled();
       if (window.uploadedImage) {
         updateResult();
       }
