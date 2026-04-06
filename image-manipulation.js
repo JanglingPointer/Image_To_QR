@@ -671,10 +671,10 @@ function compositeQrControlSquaresOnTop(targetImageData, qrCtrlx3ImageData) {
  * @param {ImageData|null} unalteredBwImageData - Pre-noise/QR B&W image for detecting altered pixels.
  *   When provided, unaltered pixels keep original color; only altered pixels get luminance adjustment.
  * @param {number} oklchToHsbBlend - 0..1 blend ratio from OKLCH result to HSB result.
- * @param {boolean} preserveSaturation - deprecated
- *   If false (original_colors mode), use OKLCH lightness adjustment.
- * @param {boolean} useOverlayBlend - If true: no-data (non-control) → original; data + OKLCH L in module band → original;
- *   else overlay. Control/finder pixels use B&W as when overlay is off. Bands use COLOR_BEND_OKLCH from robustness.
+ * @param {boolean} preserveSaturation - When true (dither/threshold BW mode), overlay skips the “already-okish luminance”
+ *   shortcut so data pixels always go through overlay blend. Unused for non-overlay paths.
+ * @param {boolean} useOverlayBlend - If true: no-data (non-control) → original; data + OKLCH L in module band → original
+ *   (unless preserveSaturation); else overlay. Control/finder pixels use B&W as when overlay is off. Bands use COLOR_BEND_OKLCH from robustness.
  * @param {ImageData|null} controlMaskImageData - QR **control** squares only (e.g. qrCtrlx3); used to exclude finder patterns from overlay “no data” path.
  * @returns {ImageData} The colored image data using original colors
  */
@@ -732,7 +732,7 @@ function applyOriginalColors(
         const oklchLMatchesDataPixel = isBlack
           ? originalOklch.l <= COLOR_BEND_OKLCH
           : originalOklch.l >= 100 - COLOR_BEND_OKLCH;
-        if (oklchLMatchesDataPixel) {
+        if (oklchLMatchesDataPixel && !preserveSaturation) {
           resultData[i] = originalR;
           resultData[i + 1] = originalG;
           resultData[i + 2] = originalB;
@@ -1338,6 +1338,7 @@ async function generateQRCodeOverlay(
       }
       const preserveSaturation =
         bwMode === "dither" || bwMode === "threshold";
+      // Pure OKLCH: leaves pixels unchanged where data BW still matches the unaltered BW, or OKLCH L is already at the dark/bright extreme for the module.
       component_oklch = applyOriginalColors(
         scaledUploadedImageBW_plusDataOnly,
         scaledUploadedImage,
@@ -1349,6 +1350,7 @@ async function generateQRCodeOverlay(
         false,
         null,
       );
+      // Pure HSB: leaves pixels unchanged where data BW still matches the unaltered BW, or brightness is already at the dark/bright extreme for the module.
       component_hsb = applyOriginalColors(
         scaledUploadedImageBW_plusDataOnly,
         scaledUploadedImage,
@@ -1360,6 +1362,7 @@ async function generateQRCodeOverlay(
         false,
         null,
       );
+      // Overlay: leaves pixels unchanged where data BW still matches the unaltered BW, original OKLCH L already matches the module band, or the pixel is outside the data mask (non-control).
       component_overlay = applyOriginalColors(
         scaledUploadedImageBW_plusDataOnly,
         scaledUploadedImage,

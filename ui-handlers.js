@@ -160,12 +160,43 @@
     },
   };
 
-  /** Default blend values and thresholds for the robustness warning (OKLCH/Overlay/HSB). */
-  const ROBUST_COLORS_PRESET = Object.freeze({
+  /** Default blend values when BW mode is Original (pixel art); also used for robustness warning in that mode. */
+  const ROBUST_COLORS_PRESET_ORIGINAL_BW = Object.freeze({
     oklchPre: 1,
     colorOverlay: 0.5,
     colorHsb: 0,
   });
+
+  /** Default blend values when BW mode is Dither or Threshold; also used for robustness warning in those modes. */
+  const ROBUST_COLORS_PRESET_DITHER_THRESHOLD = Object.freeze({
+    oklchPre: 1,
+    colorOverlay: 0.2,
+    colorHsb: 0.5,
+  });
+
+  function robustColorsPresetForBwMode(bwMode) {
+    if (bwMode === "dither" || bwMode === "threshold") {
+      return ROBUST_COLORS_PRESET_DITHER_THRESHOLD;
+    }
+    return ROBUST_COLORS_PRESET_ORIGINAL_BW;
+  }
+
+  function getCurrentBwModeFromUI() {
+    const bwPixelArt = document.getElementById("bwModePixelArt");
+    const bwDither = document.getElementById("bwModeDither");
+    if (bwPixelArt && bwPixelArt.checked) return "original_colors";
+    if (bwDither && bwDither.checked) return "dither";
+    return "threshold";
+  }
+
+  /** Sets OKLCH/Overlay/HSB sliders to the defaults for the given BW mode and refreshes labels. */
+  function applyColorBlendSlidersToPreset(bwMode) {
+    const p = robustColorsPresetForBwMode(bwMode);
+    if (oklchPreSlider) oklchPreSlider.value = String(p.oklchPre);
+    if (colorOverlaySlider) colorOverlaySlider.value = String(p.colorOverlay);
+    if (colorHsbSlider) colorHsbSlider.value = String(p.colorHsb);
+    refreshColorBlendSliderLabels();
+  }
 
   // Centralized initial settings
   const initialSettings = {
@@ -191,9 +222,9 @@
     outsidePixels: "auto", // 'auto' | 'extend' | 'color'
     outsidePixelsColor: "#000000",
     debug: false,
-    oklchPre: ROBUST_COLORS_PRESET.oklchPre,
-    colorOverlay: ROBUST_COLORS_PRESET.colorOverlay,
-    colorHsb: ROBUST_COLORS_PRESET.colorHsb,
+    oklchPre: ROBUST_COLORS_PRESET_ORIGINAL_BW.oklchPre,
+    colorOverlay: ROBUST_COLORS_PRESET_ORIGINAL_BW.colorOverlay,
+    colorHsb: ROBUST_COLORS_PRESET_ORIGINAL_BW.colorHsb,
     pixelPerfect: false, // New setting for pixel perfect mode
   };
 
@@ -316,17 +347,18 @@
         settings.outsidePixelsColor || "#000000";
     // Debug checkbox and dependent UI
     if (debugCheckbox) debugCheckbox.checked = settings.debug;
+    const blendPreset = robustColorsPresetForBwMode(settings.bwMode);
     if (oklchPreSlider)
       oklchPreSlider.value = String(
-        settings.oklchPre ?? ROBUST_COLORS_PRESET.oklchPre,
+        settings.oklchPre ?? blendPreset.oklchPre,
       );
     if (colorOverlaySlider)
       colorOverlaySlider.value = String(
-        settings.colorOverlay ?? ROBUST_COLORS_PRESET.colorOverlay,
+        settings.colorOverlay ?? blendPreset.colorOverlay,
       );
     if (colorHsbSlider)
       colorHsbSlider.value = String(
-        settings.colorHsb ?? ROBUST_COLORS_PRESET.colorHsb,
+        settings.colorHsb ?? blendPreset.colorHsb,
       );
     if (settings.debug) {
       utils.removeHiddenClass(testImageBtn);
@@ -377,21 +409,22 @@
   function updateRobustnessWarning() {
     if (!claritySlider || !clarityWarning) return;
     const robustness = parseFloat(claritySlider.value);
+    const blendPreset = robustColorsPresetForBwMode(getCurrentBwModeFromUI());
     const oklchPre = parseFloat(
-      oklchPreSlider ? oklchPreSlider.value : ROBUST_COLORS_PRESET.oklchPre,
+      oklchPreSlider ? oklchPreSlider.value : blendPreset.oklchPre,
     );
     const overlayAmt = parseFloat(
       colorOverlaySlider
         ? colorOverlaySlider.value
-        : ROBUST_COLORS_PRESET.colorOverlay,
+        : blendPreset.colorOverlay,
     );
     const hsbAmt = parseFloat(
-      colorHsbSlider ? colorHsbSlider.value : ROBUST_COLORS_PRESET.colorHsb,
+      colorHsbSlider ? colorHsbSlider.value : blendPreset.colorHsb,
     );
     const blendOutsideRobust =
-      oklchPre < ROBUST_COLORS_PRESET.oklchPre ||
-      overlayAmt > ROBUST_COLORS_PRESET.colorOverlay ||
-      hsbAmt > ROBUST_COLORS_PRESET.colorHsb;
+      oklchPre < blendPreset.oklchPre ||
+      overlayAmt > blendPreset.colorOverlay ||
+      hsbAmt > blendPreset.colorHsb;
     const fourthSquareOff =
       add4thSquareCheckbox && !add4thSquareCheckbox.checked;
     if (robustness < 80 || blendOutsideRobust || fourthSquareOff) {
@@ -872,6 +905,7 @@
       : document.getElementById("bwModeDither").checked
         ? "dither"
         : "threshold";
+    const blendPreset = robustColorsPresetForBwMode(bwMode);
     let ditherGamma = 1.0;
     if (bwMode === "dither" && ditherBrightnessSlider) {
       ditherGamma = parseFloat(ditherBrightnessSlider.value);
@@ -881,13 +915,13 @@
       ? add4thSquareCheckbox.checked
       : true;
     const oklchPre = parseFloat(
-      oklchPreSlider ? oklchPreSlider.value : ROBUST_COLORS_PRESET.oklchPre,
+      oklchPreSlider ? oklchPreSlider.value : blendPreset.oklchPre,
     );
     const overlayAmount = parseFloat(
-      colorOverlaySlider ? colorOverlaySlider.value : 0.8,
+      colorOverlaySlider ? colorOverlaySlider.value : blendPreset.colorOverlay,
     );
     const hsbAmount = parseFloat(
-      colorHsbSlider ? colorHsbSlider.value : 0.4,
+      colorHsbSlider ? colorHsbSlider.value : blendPreset.colorHsb,
     );
     const tintCtrlPixels = tintCtrlPixelsCheckbox
       ? tintCtrlPixelsCheckbox.checked
@@ -1272,6 +1306,8 @@ ${Ox}x${Oy}`;
         if (id === "bwModePixelArt" && saturationBoostSlider) {
           saturationBoostSlider.value = "0";
         }
+        applyColorBlendSlidersToPreset(getCurrentBwModeFromUI());
+        updateRobustnessWarning();
         updateDitherBrightnessVisibility();
         updateZoomControlVisibility();
         updateOriginalModeVisibility();
