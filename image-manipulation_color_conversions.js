@@ -366,6 +366,43 @@ function blendRgb(rgbA, rgbB, ratioToB) {
 }
 
 /**
+ * Photoshop Overlay blend mode per channel (backdrop = base, source = top layer).
+ * @param {number} backdrop - Backdrop channel 0..1
+ * @param {number} source - Source channel 0..1
+ * @returns {number} Blended channel 0..1
+ */
+function overlayChannelPhotoshop(backdrop, source) {
+  if (backdrop < 0.5) {
+    return 2 * backdrop * source;
+  }
+  return 1 - 2 * (1 - backdrop) * (1 - source);
+}
+
+/**
+ * Photoshop Overlay: original image as backdrop, data pixel as source.
+ * @param {number} origR
+ * @param {number} origG
+ * @param {number} origB
+ * @param {number} blendR
+ * @param {number} blendG
+ * @param {number} blendB
+ * @returns {{r:number,g:number,b:number}}
+ */
+function photoshopOverlayBlendRgb(origR, origG, origB, blendR, blendG, blendB) {
+  return {
+    r: Math.round(
+      255 * overlayChannelPhotoshop(origR / 255, blendR / 255),
+    ),
+    g: Math.round(
+      255 * overlayChannelPhotoshop(origG / 255, blendG / 255),
+    ),
+    b: Math.round(
+      255 * overlayChannelPhotoshop(origB / 255, blendB / 255),
+    ),
+  };
+}
+
+/**
  * Converts RGB values to hex color string
  * @param {number} r - Red value (0-255)
  * @param {number} g - Green value (0-255)

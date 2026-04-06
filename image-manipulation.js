@@ -616,13 +616,16 @@ function applyCustomColors(imageData, darkColor, brightColor) {
  * Transforms a black and white image to use original image colors.
  * @param {ImageData} bwImageData - The input black and white image data (after noise + QR overlay)
  * @param {ImageData} originalImageData - The original colored image data
- * @param {ImageData} maskImageData - The mask image data (for useOriginalColors = true)
+ * @param {ImageData} maskImageData - Mask for QR **data** modules only (e.g. qrWithoutCtrlx3), not finder/control squares.
  * @param {number} clarity - Robustness value (0-100), controls COLOR_BEND
  * @param {ImageData|null} unalteredBwImageData - Pre-noise/QR B&W image for detecting altered pixels.
  *   When provided, unaltered pixels keep original color; only altered pixels get luminance adjustment.
  * @param {number} oklchToHsbBlend - 0..1 blend ratio from OKLCH result to HSB result.
  * @param {boolean} preserveSaturation - deprecated
  *   If false (original_colors mode), use OKLCH lightness adjustment.
+ * @param {boolean} useOverlayBlend - If true: no-data (non-control) → original; data + OKLCH L in module band → original;
+ *   else overlay. Control/finder pixels use B&W as when overlay is off. Bands use COLOR_BEND_OKLCH from robustness.
+ * @param {ImageData|null} controlMaskImageData - QR **control** squares only (e.g. qrCtrlx3); used to exclude finder patterns from overlay “no data” path.
  * @returns {ImageData} The colored image data using original colors
  */
 function applyOriginalColors(
@@ -633,12 +636,15 @@ function applyOriginalColors(
   unalteredBwImageData = null,
   oklchToHsbBlend = 0,
   preserveSaturation = false,
+  useOverlayBlend = false,
+  controlMaskImageData = null,
 ) {
   const result = new ImageData(bwImageData.width, bwImageData.height);
   const bwData = bwImageData.data;
   const originalData = originalImageData.data;
   const resultData = result.data;
   const maskData = maskImageData ? maskImageData.data : null;
+  const controlData = controlMaskImageData ? controlMaskImageData.data : null;
   const unalteredBwData = unalteredBwImageData
     ? unalteredBwImageData.data
     : null;
@@ -670,6 +676,37 @@ function applyOriginalColors(
       }
 
       const isBlack = bwData[i] === 0;
+
+      if (useOverlayBlend) {
+        const originalOklch = rgbToOklch(originalR, originalG, originalB);
+        const oklchLMatchesDataPixel = isBlack
+          ? originalOklch.l <= COLOR_BEND_OKLCH
+          : originalOklch.l >= 100 - COLOR_BEND_OKLCH;
+        if (oklchLMatchesDataPixel) {
+          resultData[i] = originalR;
+          resultData[i + 1] = originalG;
+          resultData[i + 2] = originalB;
+          resultData[i + 3] = 255;
+          continue;
+        }
+        const dataR = bwData[i];
+        const dataG = bwData[i + 1];
+        const dataB = bwData[i + 2];
+        const adjustedRgb = photoshopOverlayBlendRgb(
+          originalR,
+          originalG,
+          originalB,
+          dataR,
+          dataG,
+          dataB,
+        );
+        resultData[i] = adjustedRgb.r;
+        resultData[i + 1] = adjustedRgb.g;
+        resultData[i + 2] = adjustedRgb.b;
+        resultData[i + 3] = 255;
+        continue;
+      }
+
       const MIN_GAP = 20;
       let adjustedRgbOklch;
 
@@ -718,9 +755,16 @@ function applyOriginalColors(
       resultData[i + 2] = adjustedRgb.b;
       resultData[i + 3] = 255;
     } else {
-      resultData[i] = bwData[i];
-      resultData[i + 1] = bwData[i + 1];
-      resultData[i + 2] = bwData[i + 2];
+      const isControlPixel = controlData && controlData[i + 3] > 0;
+      if (useOverlayBlend && !isControlPixel) {
+        resultData[i] = originalData[i];
+        resultData[i + 1] = originalData[i + 1];
+        resultData[i + 2] = originalData[i + 2];
+      } else {
+        resultData[i] = bwData[i];
+        resultData[i + 1] = bwData[i + 1];
+        resultData[i + 2] = bwData[i + 2];
+      }
       resultData[i + 3] = 255;
     }
   }
@@ -946,6 +990,7 @@ async function getQRCodeImageData(text) {
  * @param {boolean} tintCtrlPixels - Whether to tint control pixels from image lightness statistics
  * @param {string} outsidePixels - 'auto' | 'extend' | 'color' for padding treatment
  * @param {string} outsidePixelsColor - Hex color when outsidePixels is 'color'
+ * @param {boolean} useOverlayBlend - If true (original colors), blend data with Photoshop Overlay instead of OKLCH/HSB
  * @returns {Object} Object containing debug data including qrWithoutCtrlx3
  */
 async function generateQRCodeOverlay(
@@ -973,6 +1018,7 @@ async function generateQRCodeOverlay(
   blockSize = 1,
   outsidePixels = "auto",
   outsidePixelsColor = "#000000",
+  useOverlayBlend = false,
 ) {
   try {
     if (!uploadedImage) {
@@ -1202,6 +1248,8 @@ async function generateQRCodeOverlay(
         unalteredBw,
         oklchToHsbBlend,
         preserveSaturation,
+        useOverlayBlend,
+        qrCtrlx3,
       );
     } else {
       result_colored = applyCustomColors(

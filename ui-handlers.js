@@ -28,6 +28,8 @@
   const clarityWarning = document.getElementById("clarityWarning");
   const add4thSquareCheckbox = document.getElementById("add4thSquareCheckbox");
   const add4thSquareControl = document.querySelector(".add-4th-square-control");
+  const overlayBlendCheckbox = document.getElementById("overlayBlendCheckbox");
+  const overlayBlendControl = document.querySelector(".overlay-blend-control");
   const oklchHsbControl = document.querySelector(".oklch-hsb-control");
   const showExpertValuesBtn = document.getElementById("showExpertValuesBtn");
   const robustnessExpertContent = document.getElementById(
@@ -180,6 +182,7 @@
     outsidePixelsColor: "#000000",
     debug: false,
     oklchToHsbBlend: 0,
+    overlayBlend: false,
     pixelPerfect: false, // New setting for pixel perfect mode
   };
 
@@ -306,6 +309,8 @@
     if (debugCheckbox) debugCheckbox.checked = settings.debug;
     if (oklchToHsbSlider)
       oklchToHsbSlider.value = String(settings.oklchToHsbBlend ?? 0);
+    if (overlayBlendCheckbox)
+      overlayBlendCheckbox.checked = !!settings.overlayBlend;
     updateRobustColorsState(false);
     if (settings.debug) {
       utils.removeHiddenClass(testImageBtn);
@@ -351,15 +356,21 @@
     }
   }
 
+  function syncOklchToHsbSliderDisabled() {
+    if (!oklchToHsbSlider) return;
+    const overlayOn = overlayBlendCheckbox && overlayBlendCheckbox.checked;
+    const robustOn = robustColorsCheckbox && robustColorsCheckbox.checked;
+    oklchToHsbSlider.disabled = overlayOn || robustOn;
+  }
+
   function updateRobustColorsState(triggerUpdate = true) {
     if (!robustColorsCheckbox || !oklchToHsbSlider) return;
     if (robustColorsCheckbox.checked) {
       oklchToHsbSlider.value = "0";
-      oklchToHsbSlider.disabled = true;
     } else {
-      oklchToHsbSlider.disabled = false;
       oklchToHsbSlider.value = "0.5";
     }
+    syncOklchToHsbSliderDisabled();
     utils.updateSliderValue(oklchToHsbSlider, oklchToHsbValue, (v) =>
       parseFloat(v).toFixed(2),
     );
@@ -535,12 +546,14 @@
     if (this.checked) {
       utils.removeHiddenClass(debugSection);
       utils.removeHiddenClass(testImageBtn);
+      utils.removeHiddenClass(overlayBlendControl);
       utils.removeHiddenClass(add4thSquareControl);
       utils.removeHiddenClass(oklchHsbControl);
       updateResult();
     } else {
       utils.addHiddenClass(debugSection);
       utils.addHiddenClass(testImageBtn);
+      utils.addHiddenClass(overlayBlendControl);
       utils.addHiddenClass(add4thSquareControl);
       utils.addHiddenClass(oklchHsbControl);
     }
@@ -717,10 +730,12 @@
   // On page load, set debug-only controls visibility based on debugCheckbox
   if (debugCheckbox.checked) {
     utils.removeHiddenClass(testImageBtn);
+    utils.removeHiddenClass(overlayBlendControl);
     utils.removeHiddenClass(add4thSquareControl);
     utils.removeHiddenClass(oklchHsbControl);
   } else {
     utils.addHiddenClass(testImageBtn);
+    utils.addHiddenClass(overlayBlendControl);
     utils.addHiddenClass(add4thSquareControl);
     utils.addHiddenClass(oklchHsbControl);
   }
@@ -815,6 +830,8 @@
       : true;
     const oklchToHsbBlend =
       robustColors || !oklchToHsbSlider ? 0 : parseFloat(oklchToHsbSlider.value);
+    const useOverlayBlend =
+      overlayBlendCheckbox && overlayBlendCheckbox.checked;
     const tintCtrlPixels = tintCtrlPixelsCheckbox
       ? tintCtrlPixelsCheckbox.checked
       : false;
@@ -845,6 +862,7 @@
       tintCtrlPixels,
       outsidePixels,
       outsidePixelsColor,
+      useOverlayBlend,
     };
   }
 
@@ -933,6 +951,7 @@ ${Ox}x${Oy}`;
           tintCtrlPixels,
           outsidePixels,
           outsidePixelsColor,
+          useOverlayBlend,
         } = settings;
         const debugData = await generateQRCodeOverlay(
           null,
@@ -959,6 +978,7 @@ ${Ox}x${Oy}`;
           blockSize,
           outsidePixels,
           outsidePixelsColor,
+          useOverlayBlend,
         );
         utils.removeHiddenClass(resultSection, "flex");
 
@@ -1005,6 +1025,7 @@ ${Ox}x${Oy}`;
         tintCtrlPixels,
         outsidePixels,
         outsidePixelsColor,
+        useOverlayBlend,
       } = settings;
       // Debug logging: list all user-selected modes and values (compact)
       if (window.debugModule && window.debugModule.isEnabled()) {
@@ -1023,7 +1044,7 @@ ${Ox}x${Oy}`;
           `ScaleMode: ${scalingMode} | PP: ${pixelPerfectCheckbox ? pixelPerfectCheckbox.checked : false} | Zoom: ${zoomValue} | Offset: (${offsetXValue}, ${offsetYValue})`,
         );
         log(
-          `Clarity: ${clarity} | 4thSqr: ${add4thSquare} | RobustColors: ${robustColors} | OKLCH->HSB: ${oklchToHsbBlend.toFixed(2)} | TintCtrl: ${tintCtrlPixels} | BlockSz: ${blockSize} | OutPx: ${outsidePixels}${outsidePixels === "color" ? ":" + outsidePixelsColor : ""}`,
+          `Clarity: ${clarity} | 4thSqr: ${add4thSquare} | RobustColors: ${robustColors} | OKLCH->HSB: ${oklchToHsbBlend.toFixed(2)} | Overlay: ${useOverlayBlend} | TintCtrl: ${tintCtrlPixels} | BlockSz: ${blockSize} | OutPx: ${outsidePixels}${outsidePixels === "color" ? ":" + outsidePixelsColor : ""}`,
         );
         log("=================");
       }
@@ -1053,6 +1074,7 @@ ${Ox}x${Oy}`;
         blockSize,
         outsidePixels,
         outsidePixelsColor,
+        useOverlayBlend,
       );
       if (debugData && debugData.qrCtrlx3) {
         lastInnerTargetSize = Math.max(0, debugData.qrCtrlx3.width - 6);
@@ -1242,6 +1264,15 @@ ${Ox}x${Oy}`;
   // Add 4th Square checkbox event
   if (add4thSquareCheckbox) {
     add4thSquareCheckbox.addEventListener("change", function () {
+      if (window.uploadedImage) {
+        updateResult();
+      }
+    });
+  }
+
+  if (overlayBlendCheckbox) {
+    overlayBlendCheckbox.addEventListener("change", function () {
+      syncOklchToHsbSliderDisabled();
       if (window.uploadedImage) {
         updateResult();
       }
