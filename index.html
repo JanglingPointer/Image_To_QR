@@ -28,8 +28,12 @@
                         <div class="input-section">
                             <div
                                 class="input-group text-input-group qr-text-input"
+                                title="When the QR code is scanned, it will gives this Link/Text as a result."
                             >
-                                <label for="textInput">Text / Link</label>
+                                <label
+                                    for="textInput"
+                                    >Text / Link</label
+                                >
                                 <input
                                     type="text"
                                     id="textInput"
@@ -47,6 +51,7 @@
                                         type="file"
                                         id="imageInput"
                                         accept="image/*"
+                                        title="Chose an Image that should be turned into a QR code."
                                     />
                                     <div class="file-input-text">
                                         <strong>Import</strong>
@@ -66,6 +71,7 @@
                                     >
                                     <div
                                         class="pixel-perfect-group flex-center gap-8"
+                                        title="Turn on for Pixel Art. Will try to preserve pixels when mapping the image to the QR-Code-Canvas"
                                     >
                                         <input
                                             type="checkbox"
@@ -74,13 +80,13 @@
                                         <label
                                             for="pixelPerfectCheckbox"
                                             class="margin-bottom-0"
-                                            title="Use pixel perfect mapping, if your source image is pixel art"
                                             >Pixel Perfect</label
                                         >
                                     </div>
                                     <div class="scaling-mode-grid">
                                         <div class="scaling-mode-presets">
                                             <label
+                                                title="Scale down such that the largest size fits the QR-Code-Size"
                                                 ><input
                                                     type="radio"
                                                     name="scalingMode"
@@ -91,6 +97,7 @@
                                                 Shrink</label
                                             >
                                             <label
+                                                title="Scale up such that the smallest size fits the QR-Code-Size"
                                                 ><input
                                                     type="radio"
                                                     name="scalingMode"
@@ -102,6 +109,7 @@
                                         </div>
                                         <div class="scaling-mode-presets">
                                             <label
+                                                title="Stretch the image to exactly fill the QR-Code-area, even if aspect ratio changes."
                                                 ><input
                                                     type="radio"
                                                     name="scalingMode"
@@ -111,6 +119,7 @@
                                                 Stretch</label
                                             >
                                             <label
+                                                title="Manual layout mode: use the zoom and X/Y offset sliders to align the image with QR Code Area."
                                                 ><input
                                                     type="radio"
                                                     name="scalingMode"
@@ -144,6 +153,7 @@
                                                 step="0.01"
                                                 value="0"
                                                 class="scale-slider width-80"
+                                                title="Enlarge/Shrink the Image"
                                             />
                                             <span
                                                 id="zoomValue"
@@ -167,6 +177,7 @@
                                                 max="16"
                                                 value="1"
                                                 class="threshold-slider"
+                                                title="How many pixels of your input image should be mapped to one pixel of the QR-Code-Canvas"
                                             />
                                             <span
                                                 id="blockSizeValue"
@@ -174,8 +185,9 @@
                                                 >1</span
                                             >
                                             <button
+                                                type="button"
                                                 id="autoBlockSizeBtn"
-                                                title="Auto-calculate block size"
+                                                title="Try to auto-detect the Pixel-Art Block-Sizie (How many pixels of your input image should be mapped to one pixel of the QR-Code-Canvas)"
                                                 class="margin-left-8"
                                             >
                                                 🔄
@@ -198,6 +210,7 @@
                                                 step="0.01"
                                                 value="0"
                                                 class="scale-slider width-80"
+                                                title="Move the image to the left/right"
                                             />
                                             <span
                                                 id="offsetXValue"
@@ -222,6 +235,7 @@
                                                 step="0.01"
                                                 value="0"
                                                 class="scale-slider width-80"
+                                                title="Move the image up/down"
                                             />
                                             <span
                                                 id="offsetYValue"
@@ -236,6 +250,7 @@
                                         >
                                         <div class="outside-pixels-grid">
                                             <label
+                                                title="Automatically chose a color for pixels that are outside the image"
                                                 ><input
                                                     type="radio"
                                                     name="outsidePixels"
@@ -246,6 +261,7 @@
                                                 Auto</label
                                             >
                                             <label
+                                                title="Repeat the colors at the image edge outward"
                                                 ><input
                                                     type="radio"
                                                     name="outsidePixels"
@@ -255,6 +271,7 @@
                                                 Extend</label
                                             >
                                             <label
+                                                title="Fill regions outside the mapped image with a flat color."
                                                 ><input
                                                     type="radio"
                                                     name="outsidePixels"
@@ -276,6 +293,7 @@
                                                     id="outsidePixelsColorPicker"
                                                     value="#000000"
                                                     class="color-picker"
+                                                    title="Color for pixels that fall outside the input image"
                                                 />
                                             </div>
                                         </div>
@@ -304,6 +322,7 @@
                                                 <label
                                                     for="colorAppearanceColorful"
                                                     class="margin-bottom-0"
+                                                    title="Keep the original colors of the image"
                                                     >Colorful</label
                                                 >
                                             </div>
@@ -317,6 +336,7 @@
                                                 <label
                                                     for="colorAppearanceDuoTone"
                                                     class="margin-bottom-0"
+                                                    title="Map the image to two custom colors"
                                                     >Duo Tone</label
                                                 >
                                             </div>
@@ -336,6 +356,7 @@
                                                     id="colorDark"
                                                     value="#211e59"
                                                     class="color-picker"
+                                                    title="Dark pixels will be mapped to this color"
                                                 />
                                                 <label
                                                     for="colorBright"
@@ -347,10 +368,12 @@
                                                     id="colorBright"
                                                     value="#f9f7dd"
                                                     class="color-picker"
+                                                    title="Bright pixels will be mapped to this color"
                                                 />
                                             </div>
                                             <div
                                                 class="saturation-boost-group flex-center gap-4 hidden"
+                                                title="Boost saturation.&#10;Especially 'Dither' and 'Threshold' can make the image look a bit unsaturated, so you can use this to bring its colors back."
                                             >
                                                 <label
                                                     for="saturationBoostSlider"
@@ -370,6 +393,7 @@
                                             </div>
                                             <div
                                                 class="shine-group flex-center gap-4"
+                                                title="Add a subtle glossy highlight."
                                             >
                                                 <input
                                                     type="checkbox"
@@ -391,6 +415,7 @@
                                     >
                                         <div class="bw-mode-original">
                                             <label
+                                                title="Stay as close as possible to the original image colors"
                                                 ><input
                                                     type="radio"
                                                     name="bwMode"
@@ -403,6 +428,7 @@
                                         </div>
                                         <div class="bw-mode-dither-threshold">
                                             <label
+                                                title="First apply dithering (Black/White Pixels sprinkled to represent graytones) to get a black and white image, then overlay colors."
                                                 ><input
                                                     type="radio"
                                                     name="bwMode"
@@ -412,6 +438,7 @@
                                                 Dither</label
                                             >
                                             <label
+                                                title="First apply a threshold (bright pixels = white, dark pixels = black), then overlay colors."
                                                 ><input
                                                     type="radio"
                                                     name="bwMode"
@@ -427,7 +454,10 @@
                                             class="threshold-row flex-center gap-16"
                                         >
                                             <div class="flex-1">
-                                                <div class="flex-center">
+                                                <div
+                                                    class="flex-center"
+                                                    title="At which brightness should pixels be seperated into Black/Dark and White/Bright."
+                                                >
                                                     <label
                                                         for="thresholdSlider"
                                                         class="margin-right-8"
@@ -444,7 +474,10 @@
                                                 </div>
                                             </div>
                                             <div class="flex-1">
-                                                <div class="flex-center">
+                                                <div
+                                                    class="flex-center"
+                                                    title="Choses more or less density of dark pixels when dithering"
+                                                >
                                                     <label
                                                         for="ditherBrightnessSlider"
                                                         >Brightness</label
@@ -468,7 +501,10 @@
                                 >
                                     <div class="scale-noise-pair">
                                         <div class="scale-control hidden">
-                                            <div class="flex-center">
+                                            <div
+                                                class="flex-center"
+                                                title="One Pixel of the QR-Code-Canvas will be mapped to a block of this many same-colored-pixels fot the final image"
+                                            >
                                                 <label
                                                     for="scaleSlider"
                                                     class="margin-right-8"
@@ -490,7 +526,10 @@
                                             />
                                         </div>
                                         <div class="noise-control hidden">
-                                            <div class="flex-center">
+                                            <div
+                                                class="flex-center"
+                                                title="How much noise pixels should be added.&#10;Useful to hide the regular QR-Code-Pattern.&#10;Tries to intelligently plase these pixels to break the regular pattern."
+                                            >
                                                 <label
                                                     for="noiseSlider"
                                                     class="margin-right-8"
@@ -502,8 +541,9 @@
                                                     >10</span
                                                 >
                                                 <button
+                                                    type="button"
                                                     id="noiseSeedBtn"
-                                                    title="Change noise seed"
+                                                    title="Re-Roll the noise pixels"
                                                     class="margin-left-8"
                                                 >
                                                     🎲
@@ -523,7 +563,7 @@
                                                 <label
                                                     for="tintCtrlPixelsCheckbox"
                                                     class="auto-square-color-label margin-bottom-0"
-                                                    title="When contrast of the control-squares is tailored to the image contrast, you can get away with  more subtle data-pixel contrast"
+                                                    title="Automatically colors the Control-Squares by chosing a kind-of-dark and a kind-of-bright color from the image.&#10;This can also increase scan robustness, as it makes the Control-Squares be more in line with the image contrast."
                                                 >
                                                     <input
                                                         type="checkbox"
@@ -542,6 +582,7 @@
                                                 id="showExpertValuesBtn"
                                                 class="show-expert-values-btn"
                                                 type="button"
+                                                title="Cuation: The following expert values will have an impact on scanability of your code"
                                             >
                                                 Show expert values
                                             </button>
@@ -549,7 +590,10 @@
                                                 id="robustnessExpertContent"
                                                 class="robustness-content-row flex-center gap-8"
                                             >
-                                                <div class="robustness-main flex-1">
+                                                <div
+                                                    class="robustness-main flex-1"
+                                                    title="Low Robustness = Less deviation from original image. High Robustness = Better scanability"
+                                                >
                                                     <div
                                                         class="robustness-slider-header flex-center"
                                                     >
@@ -563,7 +607,7 @@
                                                             <span
                                                                 id="clarityWarning"
                                                                 class="clarity-warning-hidden"
-                                                                title="The code may be hard to scan. It may also work fine depending on your image."
+                                                                title="Warning: the current mix of image and settings may be difficult for some scanners.&#10;Try raising robustness or simplifying the photo if scans fail."
                                                                 >⚠️</span
                                                             >
                                                         </div>
@@ -576,7 +620,7 @@
                                                             >
                                                             <button
                                                                 id="robustnessResetBtn"
-                                                                title="Reset robustness to default"
+                                                                title="Restore the robustness slider to its recommended default."
                                                                 type="button"
                                                             >
                                                                 🪄
@@ -601,14 +645,22 @@
                             </div>
 
                             <div class="input-group debug-and-test-controls">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="debugCheckbox" />
+                                <label
+                                    class="checkbox-label"
+                                    title="Show additional options and internal data for troubleshooting."
+                                >
+                                    <input
+                                        type="checkbox"
+                                        id="debugCheckbox"
+                                    />
                                     <span class="checkmark"></span>
                                     Debug
                                 </label>
                                 <button
                                     id="testImageBtn"
                                     class="test-image-btn"
+                                    type="button"
+                                    title="Generate a random image as input"
                                 >
                                     Test Image
                                 </button>
@@ -617,11 +669,13 @@
                                     id="qrOverlayDownloadBtn"
                                     class="test-image-btn hidden"
                                     disabled
+                                    title="Download a transparent QR overlay.&#10;Whatever you layer this on top of will become scanable."
                                 >
                                     ⬇️ QR Overlay
                                 </button>
                                 <div
                                     class="flex-center gap-4 add-4th-square-control hidden"
+                                    title="Iclude a fourth QR-Code-Square in the bottom-right.&#10;Codes will often also scan without it, but are far less robust."
                                 >
                                     <input
                                         type="checkbox"
@@ -637,7 +691,10 @@
                                 <div
                                     class="color-component-blend-control hidden"
                                 >
-                                    <div class="gap-4 color-blend-slider-row">
+                                    <div
+                                        class="gap-4 color-blend-slider-row"
+                                        title="Strength of the OKLCH Image.&#10;(The Desired Colors Luminance was pushed up/down according to the Data-Pixel (Black/White) in OKLCH space"
+                                    >
                                         <label
                                             for="oklchPreSlider"
                                             class="color-blend-slider-label margin-bottom-0"
@@ -658,7 +715,10 @@
                                             >1.00</span
                                         >
                                     </div>
-                                    <div class="gap-4 color-blend-slider-row">
+                                    <div
+                                        class="gap-4 color-blend-slider-row"
+                                        title="Strength of the Overlay Image.&#10;(The data pixels were blended via overlay on top of the desired colors)"
+                                    >
                                         <label
                                             for="colorOverlaySlider"
                                             class="color-blend-slider-label margin-bottom-0"
@@ -679,7 +739,10 @@
                                             >0.50</span
                                         >
                                     </div>
-                                    <div class="gap-4 color-blend-slider-row">
+                                    <div
+                                        class="gap-4 color-blend-slider-row"
+                                        title="Strength of the HSB Image.&#10;(The Desired Colors Luminance was pushed up/down according to the Data-Pixel (Black/White) in HSB space"
+                                    >
                                         <label
                                             for="colorHsbSlider"
                                             class="color-blend-slider-label margin-bottom-0"
@@ -711,7 +774,12 @@
                             <div class="canvas-container">
                                 <canvas id="resultCanvas"></canvas>
                             </div>
-                            <button id="downloadBtn" class="download-btn">
+                            <button
+                                id="downloadBtn"
+                                class="download-btn"
+                                type="button"
+                                title="Save as PNG"
+                            >
                                 Save
                             </button>
                         </div>
@@ -897,7 +965,9 @@
             <a
                 href="https://github.com/JanglingPointer/Image_To_QR"
                 target="_blank"
+                rel="noopener noreferrer"
                 class="github-footer-link"
+                title="Open the public GitHub repo"
             >
                 >> Go to Github
             </a>
