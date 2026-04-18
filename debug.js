@@ -258,7 +258,16 @@
         typeof window.noiseSeed === "number"
           ? window.noiseSeed
           : parseInt(window.noiseSeed, 10) || 54321;
-      const { noiseLayerImageData } = noiseFactory(baseBw, noiseProbability, seed);
+      const colorfulMode = !!(
+        document.getElementById("colorAppearanceColorful") || {}
+      ).checked;
+      const randomizePolarity = !hasInputImage || colorfulMode;
+      const { noiseLayerImageData } = noiseFactory(
+        baseBw,
+        noiseProbability,
+        seed,
+        randomizePolarity,
+      );
 
       const out = document.createElement("canvas");
       out.width = noiseLayerImageData.width;

@@ -676,6 +676,8 @@ function compositeQrControlSquaresOnTop(targetImageData, qrCtrlx3ImageData) {
  * @param {boolean} useOverlayBlend - If true: no-data (non-control) → original; data + OKLCH L in module band → original
  *   (unless preserveSaturation); else overlay. Control/finder pixels use B&W as when overlay is off. Bands use COLOR_BEND_OKLCH from robustness.
  * @param {ImageData|null} controlMaskImageData - QR **control** squares only (e.g. qrCtrlx3); used to exclude finder patterns from overlay “no data” path.
+ * @param {ImageData|null} noiseAppliedMaskImageData - Optional mask where noise was applied, even if BW value stayed unchanged.
+ * @param {ImageData|null} noisePolarityImageData - Optional 0/255 polarity map for applied-noise pixels.
  * @returns {ImageData} The colored image data using original colors
  */
 function applyOriginalColors(
@@ -688,6 +690,8 @@ function applyOriginalColors(
   preserveSaturation = false,
   useOverlayBlend = false,
   controlMaskImageData = null,
+  noiseAppliedMaskImageData = null,
+  noisePolarityImageData = null,
 ) {
   const result = new ImageData(bwImageData.width, bwImageData.height);
   const bwData = bwImageData.data;
@@ -695,6 +699,12 @@ function applyOriginalColors(
   const resultData = result.data;
   const maskData = maskImageData ? maskImageData.data : null;
   const controlData = controlMaskImageData ? controlMaskImageData.data : null;
+  const noiseAppliedMaskData = noiseAppliedMaskImageData
+    ? noiseAppliedMaskImageData.data
+    : null;
+  const noisePolarityData = noisePolarityImageData
+    ? noisePolarityImageData.data
+    : null;
   const unalteredBwData = unalteredBwImageData
     ? unalteredBwImageData.data
     : null;
@@ -716,7 +726,14 @@ function applyOriginalColors(
       const originalG = originalData[i + 1];
       const originalB = originalData[i + 2];
 
-      const isUnaltered = unalteredBwData && bwData[i] === unalteredBwData[i];
+      const hasAppliedNoise =
+        noiseAppliedMaskData && noiseAppliedMaskData[i + 3] > 0;
+      const effectiveBwValue =
+        hasAppliedNoise && noisePolarityData && noisePolarityData[i + 3] > 0
+          ? noisePolarityData[i]
+          : bwData[i];
+      const isUnaltered =
+        !!unalteredBwData && !hasAppliedNoise && bwData[i] === unalteredBwData[i];
       if (isUnaltered) {
         resultData[i] = originalR;
         resultData[i + 1] = originalG;
@@ -725,7 +742,7 @@ function applyOriginalColors(
         continue;
       }
 
-      const isBlack = bwData[i] === 0;
+      const isBlack = effectiveBwValue === 0;
 
       if (useOverlayBlend) {
         const originalOklch = rgbToOklch(originalR, originalG, originalB);
@@ -739,9 +756,9 @@ function applyOriginalColors(
           resultData[i + 3] = 255;
           continue;
         }
-        const dataR = bwData[i];
-        const dataG = bwData[i + 1];
-        const dataB = bwData[i + 2];
+        const dataR = effectiveBwValue;
+        const dataG = effectiveBwValue;
+        const dataB = effectiveBwValue;
         const adjustedRgb = photoshopOverlayBlendRgb(
           originalR,
           originalG,
@@ -840,24 +857,86 @@ function mulberry32(seed) {
  * @param {ImageData} imageData - The input black and white image data
  * @param {number} noiseProbability - Probability of pixel inversion (0-100)
  * @param {number} seed - Seed for the random generator
+ * @param {boolean} randomizePolarity - When true, changed pixels become random black/white
  * @returns {ImageData} The image with noise added
  */
-function addNoiseToImage(imageData, noiseProbability, seed) {
-  const result = new ImageData(imageData.width, imageData.height);
-  const data = imageData.data;
-  const resultData = result.data;
-  const width = imageData.width;
-  const height = imageData.height;
+function addNoiseToImage(imageData, noiseProbability, seed, randomizePolarity = false) {
+  return generateNoiseArtifacts(
+    imageData,
+    noiseProbability,
+    seed,
+    randomizePolarity,
+  ).noisyImageData;
+}
+
+/**
+ * Deterministically chooses black/white noise polarity from position and seed.
+ * @param {number} x
+ * @param {number} y
+ * @param {number} baseSeed
+ * @returns {0|255}
+ */
+function getDeterministicNoisePolarity(x, y, baseSeed) {
+  let h =
+    (baseSeed ^ Math.imul(x + 1, 0x1f123bb5) ^ Math.imul(y + 1, 0x5f356495)) >>>
+    0;
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x7feb352d) >>> 0;
+  h ^= h >>> 15;
+  h = Math.imul(h, 0x846ca68b) >>> 0;
+  h ^= h >>> 16;
+  return (h & 1) === 0 ? 0 : 255;
+}
+
+/**
+ * Generates both the noisy BW image and explicit noise artifacts.
+ * @param {ImageData} baseBwImageData - Base black/white image
+ * @param {number} noiseProbability - Probability of pixel inversion (0-100)
+ * @param {number} seed - Seed for the random generator
+ * @param {boolean} randomizePolarity - When true, changed pixels become random black/white
+ * @returns {{
+ *   noisyImageData: ImageData,
+ *   noiseLayerImageData: ImageData,
+ *   noiseAppliedMaskImageData: ImageData,
+ *   noisePolarityImageData: ImageData,
+ * }}
+ */
+function generateNoiseArtifacts(
+  baseBwImageData,
+  noiseProbability,
+  seed,
+  randomizePolarity = false,
+) {
+  const noisyImageData = new ImageData(baseBwImageData.width, baseBwImageData.height);
+  const noiseLayerImageData = new ImageData(
+    baseBwImageData.width,
+    baseBwImageData.height,
+  );
+  const noiseAppliedMaskImageData = new ImageData(
+    baseBwImageData.width,
+    baseBwImageData.height,
+  );
+  const noisePolarityImageData = new ImageData(
+    baseBwImageData.width,
+    baseBwImageData.height,
+  );
+  const data = baseBwImageData.data;
+  const noiseLayerData = noiseLayerImageData.data;
+  const noiseAppliedMaskData = noiseAppliedMaskImageData.data;
+  const noisePolarityData = noisePolarityImageData.data;
+  const width = baseBwImageData.width;
+  const height = baseBwImageData.height;
+  const noisyData = noisyImageData.data;
   // Use seeded random generator
   const rand = mulberry32(seed);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const index = (y * width + x) * 4;
       // Copy the original pixel
-      resultData[index] = data[index]; // Red
-      resultData[index + 1] = data[index + 1]; // Green
-      resultData[index + 2] = data[index + 2]; // Blue
-      resultData[index + 3] = data[index + 3]; // Alpha
+      noisyData[index] = data[index]; // Red
+      noisyData[index + 1] = data[index + 1]; // Green
+      noisyData[index + 2] = data[index + 2]; // Blue
+      noisyData[index + 3] = data[index + 3]; // Alpha
       // Check if all pixels in 3x3 neighborhood have the same color
       let allSameColor = true;
       const centerColor = data[index]; // Since it's BW, we only need to check one channel
@@ -890,49 +969,35 @@ function addNoiseToImage(imageData, noiseProbability, seed) {
 
       // Apply noise with adjusted probability
       if (rand() * 100 < adjustedProbability) {
-        // Invert the pixel (black becomes white, white becomes black)
-        resultData[index] = data[index] === 0 ? 255 : 0; // Red
-        resultData[index + 1] = data[index + 1] === 0 ? 255 : 0; // Green
-        resultData[index + 2] = data[index + 2] === 0 ? 255 : 0; // Blue
+        const noiseValue = randomizePolarity
+          ? getDeterministicNoisePolarity(x, y, seed)
+          : data[index] === 0
+            ? 255
+            : 0;
+        noisyData[index] = noiseValue; // Red
+        noisyData[index + 1] = noiseValue; // Green
+        noisyData[index + 2] = noiseValue; // Blue
+        noiseAppliedMaskData[index + 3] = 255;
+        noisePolarityData[index] = noiseValue;
+        noisePolarityData[index + 1] = noiseValue;
+        noisePolarityData[index + 2] = noiseValue;
+        noisePolarityData[index + 3] = 255;
+        if (noiseValue !== data[index]) {
+          noiseLayerData[index] = noiseValue;
+          noiseLayerData[index + 1] = noiseValue;
+          noiseLayerData[index + 2] = noiseValue;
+          noiseLayerData[index + 3] = 255;
+        }
         // Alpha stays the same
       }
     }
   }
-  return result;
-}
-
-/**
- * Generates both the noisy BW image and a transparent noise layer that can be
- * composited on top of the original BW image to reproduce the same result.
- * @param {ImageData} baseBwImageData - Base black/white image
- * @param {number} noiseProbability - Probability of pixel inversion (0-100)
- * @param {number} seed - Seed for the random generator
- * @returns {{ noisyImageData: ImageData, noiseLayerImageData: ImageData }}
- */
-function generateNoiseArtifacts(baseBwImageData, noiseProbability, seed) {
-  const noisyImageData = addNoiseToImage(baseBwImageData, noiseProbability, seed);
-  const noiseLayerImageData = new ImageData(
-    baseBwImageData.width,
-    baseBwImageData.height,
-  );
-  const base = baseBwImageData.data;
-  const noisy = noisyImageData.data;
-  const layer = noiseLayerImageData.data;
-
-  for (let i = 0; i < base.length; i += 4) {
-    const changed =
-      base[i] !== noisy[i] ||
-      base[i + 1] !== noisy[i + 1] ||
-      base[i + 2] !== noisy[i + 2] ||
-      base[i + 3] !== noisy[i + 3];
-    if (!changed) continue;
-    layer[i] = noisy[i];
-    layer[i + 1] = noisy[i + 1];
-    layer[i + 2] = noisy[i + 2];
-    layer[i + 3] = 255;
-  }
-
-  return { noisyImageData, noiseLayerImageData };
+  return {
+    noisyImageData,
+    noiseLayerImageData,
+    noiseAppliedMaskImageData,
+    noisePolarityImageData,
+  };
 }
 
 /**
@@ -1273,10 +1338,15 @@ async function generateQRCodeOverlay(
     }
 
     // Step 11: Add noise to black and white image
-    const { noisyImageData: scaledUploadedImageBW_Noise } = generateNoiseArtifacts(
+    const {
+      noisyImageData: scaledUploadedImageBW_Noise,
+      noiseAppliedMaskImageData: scaledUploadedImageBW_NoiseAppliedMask,
+      noisePolarityImageData: scaledUploadedImageBW_NoisePolarity,
+    } = generateNoiseArtifacts(
       scaledUploadedImageBW,
       noiseProbability,
       noiseSeed,
+      useOriginalColors,
     );
 
     // Step 11b: Noisy BW + thinned QR data only (no finder/control squares) — used for OKLCH/HSB/Overlay components
@@ -1289,12 +1359,32 @@ async function generateQRCodeOverlay(
       bwDataOnlyData[i] = scaledUploadedImageBW_Noise.data[i];
     }
     const qrWithoutCtrlThinnedDataOnly = qrWithoutCtrlThinned.data;
+    const scaledUploadedImageBW_plusDataOnly_NoiseAppliedMask = new ImageData(
+      scaledUploadedImageBW_NoiseAppliedMask.width,
+      scaledUploadedImageBW_NoiseAppliedMask.height,
+    );
+    const plusDataOnlyNoiseAppliedMaskData =
+      scaledUploadedImageBW_plusDataOnly_NoiseAppliedMask.data;
+    for (let i = 0; i < scaledUploadedImageBW_NoiseAppliedMask.data.length; i++) {
+      plusDataOnlyNoiseAppliedMaskData[i] = scaledUploadedImageBW_NoiseAppliedMask.data[i];
+    }
+    const scaledUploadedImageBW_plusDataOnly_NoisePolarity = new ImageData(
+      scaledUploadedImageBW_NoisePolarity.width,
+      scaledUploadedImageBW_NoisePolarity.height,
+    );
+    const plusDataOnlyNoisePolarityData =
+      scaledUploadedImageBW_plusDataOnly_NoisePolarity.data;
+    for (let i = 0; i < scaledUploadedImageBW_NoisePolarity.data.length; i++) {
+      plusDataOnlyNoisePolarityData[i] = scaledUploadedImageBW_NoisePolarity.data[i];
+    }
     for (let i = 0; i < qrWithoutCtrlThinnedDataOnly.length; i += 4) {
       if (qrWithoutCtrlThinnedDataOnly[i + 3] > 0) {
         bwDataOnlyData[i] = qrWithoutCtrlThinnedDataOnly[i];
         bwDataOnlyData[i + 1] = qrWithoutCtrlThinnedDataOnly[i + 1];
         bwDataOnlyData[i + 2] = qrWithoutCtrlThinnedDataOnly[i + 2];
         bwDataOnlyData[i + 3] = qrWithoutCtrlThinnedDataOnly[i + 3];
+        plusDataOnlyNoiseAppliedMaskData[i + 3] = 0;
+        plusDataOnlyNoisePolarityData[i + 3] = 0;
       }
     }
 
@@ -1383,6 +1473,8 @@ async function generateQRCodeOverlay(
         preserveSaturation,
         false,
         null,
+        scaledUploadedImageBW_plusDataOnly_NoiseAppliedMask,
+        scaledUploadedImageBW_plusDataOnly_NoisePolarity,
       );
       // Pure HSB: leaves pixels unchanged where data BW still matches the unaltered BW, or brightness is already at the dark/bright extreme for the module.
       component_hsb = applyOriginalColors(
@@ -1395,6 +1487,8 @@ async function generateQRCodeOverlay(
         preserveSaturation,
         false,
         null,
+        scaledUploadedImageBW_plusDataOnly_NoiseAppliedMask,
+        scaledUploadedImageBW_plusDataOnly_NoisePolarity,
       );
       // Overlay: leaves pixels unchanged where data BW still matches the unaltered BW, original OKLCH L already matches the module band, or the pixel is outside the data mask (non-control).
       component_overlay = applyOriginalColors(
@@ -1407,6 +1501,8 @@ async function generateQRCodeOverlay(
         preserveSaturation,
         true,
         null,
+        scaledUploadedImageBW_plusDataOnly_NoiseAppliedMask,
+        scaledUploadedImageBW_plusDataOnly_NoisePolarity,
       );
       let acc = new ImageData(
         new Uint8ClampedArray(scaledUploadedImage.data),
