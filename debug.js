@@ -131,6 +131,7 @@
 
   const QR_OVERLAY_CTRL_CANVAS_ID = "debugQrCtrlx3";
   const QR_OVERLAY_THINNED_CANVAS_ID = "debugQrWithoutCtrlThinned";
+  const QR_OVERLAY_BW_CANVAS_ID = "debugScaledUploadedImageBW";
 
   /**
    * True when both debug canvases have been rendered (non-zero size).
@@ -215,9 +216,66 @@
       }
     }
 
+    function canvasToImageData(canvas) {
+      if (!canvas || canvas.width <= 0 || canvas.height <= 0) return null;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      return ctx.getImageData(0, 0, canvas.width, canvas.height);
+    }
+
+    function createOpaqueBlackImageData(width, height) {
+      const imageData = new ImageData(width, height);
+      const data = imageData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        data[i] = 0;
+        data[i + 1] = 0;
+        data[i + 2] = 0;
+        data[i + 3] = 255;
+      }
+      return imageData;
+    }
+
+    function buildNoiseCanvasForOverlayExport() {
+      const noiseFactory = window.generateNoiseArtifacts;
+      if (typeof noiseFactory !== "function") return null;
+
+      const w = Math.max(cCtrl.width, cThin.width);
+      const h = Math.max(cCtrl.height, cThin.height);
+      if (w <= 0 || h <= 0) return null;
+
+      const bwCanvas = document.getElementById(QR_OVERLAY_BW_CANVAS_ID);
+      const hasInputImage = !!window.uploadedImage;
+      const baseBw = hasInputImage
+        ? canvasToImageData(bwCanvas)
+        : createOpaqueBlackImageData(w, h);
+
+      if (!baseBw) return null;
+
+      const noiseProbability = hasInputImage
+        ? parseInt((document.getElementById("noiseSlider") || {}).value, 10) || 0
+        : 10;
+      const seed =
+        typeof window.noiseSeed === "number"
+          ? window.noiseSeed
+          : parseInt(window.noiseSeed, 10) || 54321;
+      const { noiseLayerImageData } = noiseFactory(baseBw, noiseProbability, seed);
+
+      const out = document.createElement("canvas");
+      out.width = noiseLayerImageData.width;
+      out.height = noiseLayerImageData.height;
+      const ctx = out.getContext("2d");
+      ctx.putImageData(noiseLayerImageData, 0, 0);
+      return out;
+    }
+
     saveOne(cCtrl, "Overlay_qrCtrlx3.png");
     setTimeout(function () {
       saveOne(cThin, "Overlay_qrWithoutCtrlThinned.png");
+      const cNoise = buildNoiseCanvasForOverlayExport();
+      if (!cNoise) return;
+      setTimeout(function () {
+        saveOne(cNoise, "Overlay_Noise.png");
+      }, 200);
     }, 200);
   }
 

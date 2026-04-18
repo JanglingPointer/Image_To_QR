@@ -902,6 +902,40 @@ function addNoiseToImage(imageData, noiseProbability, seed) {
 }
 
 /**
+ * Generates both the noisy BW image and a transparent noise layer that can be
+ * composited on top of the original BW image to reproduce the same result.
+ * @param {ImageData} baseBwImageData - Base black/white image
+ * @param {number} noiseProbability - Probability of pixel inversion (0-100)
+ * @param {number} seed - Seed for the random generator
+ * @returns {{ noisyImageData: ImageData, noiseLayerImageData: ImageData }}
+ */
+function generateNoiseArtifacts(baseBwImageData, noiseProbability, seed) {
+  const noisyImageData = addNoiseToImage(baseBwImageData, noiseProbability, seed);
+  const noiseLayerImageData = new ImageData(
+    baseBwImageData.width,
+    baseBwImageData.height,
+  );
+  const base = baseBwImageData.data;
+  const noisy = noisyImageData.data;
+  const layer = noiseLayerImageData.data;
+
+  for (let i = 0; i < base.length; i += 4) {
+    const changed =
+      base[i] !== noisy[i] ||
+      base[i + 1] !== noisy[i + 1] ||
+      base[i + 2] !== noisy[i + 2] ||
+      base[i + 3] !== noisy[i + 3];
+    if (!changed) continue;
+    layer[i] = noisy[i];
+    layer[i + 1] = noisy[i + 1];
+    layer[i + 2] = noisy[i + 2];
+    layer[i + 3] = 255;
+  }
+
+  return { noisyImageData, noiseLayerImageData };
+}
+
+/**
  * Tints control pixels using trimmed OKLCH lightness bounds from non-control pixels.
  * Uses full RGB colors from darkest/brightest retained samples.
  * @param {ImageData} imageData - Colored image to modify
@@ -1239,7 +1273,7 @@ async function generateQRCodeOverlay(
     }
 
     // Step 11: Add noise to black and white image
-    const scaledUploadedImageBW_Noise = addNoiseToImage(
+    const { noisyImageData: scaledUploadedImageBW_Noise } = generateNoiseArtifacts(
       scaledUploadedImageBW,
       noiseProbability,
       noiseSeed,
@@ -1509,6 +1543,7 @@ async function generateQRCodeOverlay(
 
 // Export for use in other modules
 window.generateQRCodeOverlay = generateQRCodeOverlay;
+window.generateNoiseArtifacts = generateNoiseArtifacts;
 window.computeBlockSizeFromImage = computeBlockSizeFromImage;
 window.calculateAveragePixelValue = calculateAveragePixelValue;
 window.calculateLuminance = calculateLuminance;
