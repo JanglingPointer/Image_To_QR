@@ -244,6 +244,14 @@ body {
     margin: 0 !important;
 }
 
+.input-group.debug-and-test-controls {
+    gap: 4px;
+}
+
+.debug-and-test-controls .checkbox-label input[type="checkbox"] {
+    margin-right: 1px;
+}
+
 .color-component-blend-control {
     display: flex;
     flex-direction: column;
@@ -632,13 +640,14 @@ body {
     background: #6c757d;
     color: white;
     border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 0.85rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.72rem;
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s ease;
     white-space: nowrap;
+    line-height: 1.25;
 }
 
 .test-image-btn:hover {
@@ -1293,12 +1302,17 @@ body {
         gap: 10px;
     }
 
+    .input-group.debug-and-test-controls {
+        gap: 1px;
+    }
+
     .image-upload-and-scaling {
         gap: 10px;
     }
 
     .test-image-btn {
-        padding: 12px 20px;
+        padding: 5px 12px;
+        font-size: 0.72rem;
     }
 
     /* Color control responsive improvements */

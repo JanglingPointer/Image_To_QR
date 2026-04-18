@@ -149,13 +149,14 @@
   }
 
   /**
-   * Enables or disables the QR Overlay download button from current canvas state.
-   * @param {HTMLButtonElement|null} [button]
+   * Enables or disables QR Overlay download buttons from current canvas state.
    */
-  function syncQrOverlayDownloadButtonState(button) {
-    const btn = button || document.getElementById("qrOverlayDownloadBtn");
-    if (!btn) return;
-    btn.disabled = !qrOverlaySourceCanvasesReady();
+  function syncQrOverlayDownloadButtonState() {
+    const merged = document.getElementById("qrOverlayDownloadBtn");
+    const separate = document.getElementById("qrOverlayDownloadSeparateBtn");
+    const ready = qrOverlaySourceCanvasesReady();
+    if (merged) merged.disabled = !ready;
+    if (separate) separate.disabled = !ready;
   }
 
   /**
@@ -191,6 +192,33 @@
         alert("Failed to generate image");
       }
     }
+  }
+
+  /**
+   * Download qrCtrlx3 and qrWithoutCtrlThinned as two separate PNG files.
+   */
+  function downloadQrOverlayLayersSeparatePng() {
+    const cCtrl = document.getElementById(QR_OVERLAY_CTRL_CANVAS_ID);
+    const cThin = document.getElementById(QR_OVERLAY_THINNED_CANVAS_ID);
+    if (!cCtrl || !cThin || !qrOverlaySourceCanvasesReady()) return;
+
+    function saveOne(canvas, filename) {
+      try {
+        Android.saveToGallery(canvas.toDataURL("image/png"), filename);
+      } catch (e) {
+        const link = document.createElement("a");
+        link.download = filename;
+        link.href = canvas.toDataURL("image/png");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+
+    saveOne(cCtrl, "Overlay_qrCtrlx3.png");
+    setTimeout(function () {
+      saveOne(cThin, "Overlay_qrWithoutCtrlThinned.png");
+    }, 200);
   }
 
   /**
@@ -320,6 +348,7 @@
     isEnabled,
     syncQrOverlayDownloadButtonState,
     downloadQrOverlayPng,
+    downloadQrOverlayLayersSeparatePng,
   };
 
   // Legacy global name for backwards compatibility (e.g. image-manipulation may call it)

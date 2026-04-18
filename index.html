@@ -653,8 +653,7 @@
                                         type="checkbox"
                                         id="debugCheckbox"
                                     />
-                                    <span class="checkmark"></span>
-                                    Debug
+                                    <span class="checkmark"></span>Debug
                                 </label>
                                 <button
                                     id="testImageBtn"
@@ -669,9 +668,18 @@
                                     id="qrOverlayDownloadBtn"
                                     class="test-image-btn hidden"
                                     disabled
-                                    title="Download a transparent QR overlay.&#10;Whatever you layer this on top of will become scanable."
+                                    title="Download merged overlay (control + data) as one PNG."
                                 >
-                                    ⬇️ QR Overlay
+                                    ⬇️ Overlay (Merged)
+                                </button>
+                                <button
+                                    type="button"
+                                    id="qrOverlayDownloadSeparateBtn"
+                                    class="test-image-btn hidden"
+                                    disabled
+                                    title="Download qrCtrlx3 and qrWithoutCtrlThinned as two separate PNG files."
+                                >
+                                    ⬇️ Overlay (Separate)
                                 </button>
                                 <div
                                     class="flex-center gap-4 add-4th-square-control hidden"

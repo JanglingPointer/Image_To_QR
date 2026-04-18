@@ -67,6 +67,9 @@
   const mainImageControls = document.querySelector(".main-image-controls");
   const downloadBtn = document.getElementById("downloadBtn");
   const qrOverlayDownloadBtn = document.getElementById("qrOverlayDownloadBtn");
+  const qrOverlayDownloadSeparateBtn = document.getElementById(
+    "qrOverlayDownloadSeparateBtn",
+  );
   const shineCheckbox = document.getElementById("shineCheckbox");
   const saturationBoostCheckbox = document.getElementById(
     "saturationBoostCheckbox",
@@ -619,16 +622,18 @@
       utils.removeHiddenClass(debugSection);
       utils.removeHiddenClass(testImageBtn);
       utils.removeHiddenClass(qrOverlayDownloadBtn);
+      utils.removeHiddenClass(qrOverlayDownloadSeparateBtn);
       utils.removeHiddenClass(colorComponentBlendControl);
       utils.removeHiddenClass(add4thSquareControl);
       if (window.debugModule) {
-        window.debugModule.syncQrOverlayDownloadButtonState(qrOverlayDownloadBtn);
+        window.debugModule.syncQrOverlayDownloadButtonState();
       }
       updateResult();
     } else {
       utils.addHiddenClass(debugSection);
       utils.addHiddenClass(testImageBtn);
       utils.addHiddenClass(qrOverlayDownloadBtn);
+      utils.addHiddenClass(qrOverlayDownloadSeparateBtn);
       utils.addHiddenClass(colorComponentBlendControl);
       utils.addHiddenClass(add4thSquareControl);
     }
@@ -728,6 +733,16 @@
       }
     });
   }
+  if (qrOverlayDownloadSeparateBtn) {
+    qrOverlayDownloadSeparateBtn.addEventListener("click", function () {
+      if (
+        window.debugModule &&
+        window.debugModule.downloadQrOverlayLayersSeparatePng
+      ) {
+        window.debugModule.downloadQrOverlayLayersSeparatePng();
+      }
+    });
+  }
 
   // Handle download button
   downloadBtn.addEventListener("click", function () {
@@ -821,14 +836,16 @@
   if (debugCheckbox.checked) {
     utils.removeHiddenClass(testImageBtn);
     utils.removeHiddenClass(qrOverlayDownloadBtn);
+    utils.removeHiddenClass(qrOverlayDownloadSeparateBtn);
     utils.removeHiddenClass(colorComponentBlendControl);
     utils.removeHiddenClass(add4thSquareControl);
     if (window.debugModule) {
-      window.debugModule.syncQrOverlayDownloadButtonState(qrOverlayDownloadBtn);
+      window.debugModule.syncQrOverlayDownloadButtonState();
     }
   } else {
     utils.addHiddenClass(testImageBtn);
     utils.addHiddenClass(qrOverlayDownloadBtn);
+    utils.addHiddenClass(qrOverlayDownloadSeparateBtn);
     utils.addHiddenClass(colorComponentBlendControl);
     utils.addHiddenClass(add4thSquareControl);
   }
@@ -1005,7 +1022,7 @@ ${Ox}x${Oy}`;
     if (window.debugModule) {
       window.debugModule.clear();
       if (debugCheckbox.checked) {
-        window.debugModule.syncQrOverlayDownloadButtonState(qrOverlayDownloadBtn);
+        window.debugModule.syncQrOverlayDownloadButtonState();
       }
     }
 
@@ -1088,11 +1105,11 @@ ${Ox}x${Oy}`;
         if (debugCheckbox.checked && debugData && window.debugModule) {
           utils.removeHiddenClass(debugSection, "flex");
           window.debugModule.renderAllDebugImages(debugData);
-          window.debugModule.syncQrOverlayDownloadButtonState(qrOverlayDownloadBtn);
+          window.debugModule.syncQrOverlayDownloadButtonState();
         } else {
           utils.addHiddenClass(debugSection);
           if (debugCheckbox.checked && window.debugModule) {
-            window.debugModule.syncQrOverlayDownloadButtonState(qrOverlayDownloadBtn);
+            window.debugModule.syncQrOverlayDownloadButtonState();
           }
         }
 
@@ -1103,7 +1120,7 @@ ${Ox}x${Oy}`;
         utils.addHiddenClass(resultSection);
         utils.addHiddenClass(debugSection);
         if (window.debugModule && debugCheckbox.checked) {
-          window.debugModule.syncQrOverlayDownloadButtonState(qrOverlayDownloadBtn);
+          window.debugModule.syncQrOverlayDownloadButtonState();
         }
       }
       return;
@@ -1196,11 +1213,11 @@ ${Ox}x${Oy}`;
       if (debugCheckbox.checked && debugData && window.debugModule) {
         utils.removeHiddenClass(debugSection, "flex");
         window.debugModule.renderAllDebugImages(debugData);
-        window.debugModule.syncQrOverlayDownloadButtonState(qrOverlayDownloadBtn);
+        window.debugModule.syncQrOverlayDownloadButtonState();
       } else {
         utils.addHiddenClass(debugSection);
         if (debugCheckbox.checked && window.debugModule) {
-          window.debugModule.syncQrOverlayDownloadButtonState(qrOverlayDownloadBtn);
+          window.debugModule.syncQrOverlayDownloadButtonState();
         }
       }
 
@@ -1231,7 +1248,7 @@ ${Ox}x${Oy}`;
       utils.addHiddenClass(resultSection);
       utils.addHiddenClass(debugSection);
       if (window.debugModule && debugCheckbox.checked) {
-        window.debugModule.syncQrOverlayDownloadButtonState(qrOverlayDownloadBtn);
+        window.debugModule.syncQrOverlayDownloadButtonState();
       }
     }
   }
