@@ -277,9 +277,9 @@
       return out;
     }
 
-    saveOne(cCtrl, "Data_Pixels.png");
+    saveOne(cCtrl, "Squares_And_Border.png");
     setTimeout(function () {
-      saveOne(cThin, "Squares_And_Border.png");
+      saveOne(cThin, "Data_Pixels.png");
       const cNoise = buildNoiseCanvasForOverlayExport();
       if (!cNoise) return;
       setTimeout(function () {
