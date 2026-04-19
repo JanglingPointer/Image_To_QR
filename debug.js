@@ -262,18 +262,47 @@
         document.getElementById("colorAppearanceColorful") || {}
       ).checked;
       const randomizePolarity = !hasInputImage || colorfulMode;
-      const { noiseLayerImageData } = noiseFactory(
+      const {
+        noiseLayerImageData,
+        noiseAppliedMaskImageData,
+        noisePolarityImageData,
+      } = noiseFactory(
         baseBw,
         noiseProbability,
         seed,
         randomizePolarity,
       );
 
+      // For "Overlay (Separate)" export, match the normal manipulation path:
+      // use all applied-noise pixels with their chosen polarity, not only BW-delta pixels.
+      const exportNoiseImageData =
+        noiseAppliedMaskImageData && noisePolarityImageData
+          ? (function buildNoiseFromMaskAndPolarity() {
+              const img = new ImageData(
+                noiseAppliedMaskImageData.width,
+                noiseAppliedMaskImageData.height,
+              );
+              const out = img.data;
+              const mask = noiseAppliedMaskImageData.data;
+              const polarity = noisePolarityImageData.data;
+              for (let i = 0; i < out.length; i += 4) {
+                if (mask[i + 3] > 0) {
+                  const v = polarity[i];
+                  out[i] = v;
+                  out[i + 1] = v;
+                  out[i + 2] = v;
+                  out[i + 3] = 255;
+                }
+              }
+              return img;
+            })()
+          : noiseLayerImageData;
+
       const out = document.createElement("canvas");
-      out.width = noiseLayerImageData.width;
-      out.height = noiseLayerImageData.height;
+      out.width = exportNoiseImageData.width;
+      out.height = exportNoiseImageData.height;
       const ctx = out.getContext("2d");
-      ctx.putImageData(noiseLayerImageData, 0, 0);
+      ctx.putImageData(exportNoiseImageData, 0, 0);
       return out;
     }
 
