@@ -13,6 +13,61 @@ function calculateGrayLuminanceFromRgb(r, g, b) {
   return r * 0.299 + g * 0.587 + b * 0.114;
 }
 
+/**
+ * Flattens image alpha by compositing on a single opaque background color.
+ * @param {ImageData} imageData - Source image data
+ * @param {string} outsidePixels - Outside pixel mode ('color' | others)
+ * @param {string} outsidePixelsColor - Hex color used when outsidePixels is 'color'
+ * @returns {ImageData} Opaque image data
+ */
+function flattenImageDataAlpha(imageData, outsidePixels, outsidePixelsColor) {
+  let bgR = 255;
+  let bgG = 255;
+  let bgB = 255;
+
+  if (outsidePixels === "color") {
+    const bg = hexToRgb(outsidePixelsColor);
+    bgR = bg.r;
+    bgG = bg.g;
+    bgB = bg.b;
+  } else {
+    let weightedLuminanceSum = 0;
+    let totalAlphaWeight = 0;
+    const src = imageData.data;
+    for (let i = 0; i < src.length; i += 4) {
+      const alpha = src[i + 3];
+      if (alpha === 0) continue;
+      const luminance = calculateGrayLuminanceFromRgb(src[i], src[i + 1], src[i + 2]);
+      weightedLuminanceSum += luminance * alpha;
+      totalAlphaWeight += alpha;
+    }
+
+    if (totalAlphaWeight > 0) {
+      const avgLuminance = weightedLuminanceSum / totalAlphaWeight;
+      if (avgLuminance > 128) {
+        bgR = 0;
+        bgG = 0;
+        bgB = 0;
+      }
+    }
+  }
+
+  const result = new ImageData(imageData.width, imageData.height);
+  const src = imageData.data;
+  const out = result.data;
+
+  for (let i = 0; i < src.length; i += 4) {
+    const alpha = src[i + 3] / 255;
+    const invAlpha = 1 - alpha;
+    out[i] = Math.round(src[i] * alpha + bgR * invAlpha);
+    out[i + 1] = Math.round(src[i + 1] * alpha + bgG * invAlpha);
+    out[i + 2] = Math.round(src[i + 2] * alpha + bgB * invAlpha);
+    out[i + 3] = 255;
+  }
+
+  return result;
+}
+
 function readImageDataFromImageElement(image, imageSmoothingEnabled = null) {
   const canvas = document.createElement("canvas");
   canvas.width = image.width;
@@ -1297,6 +1352,11 @@ async function generateQRCodeOverlay(
       ctrlBorderPerSide,
       ctrlBorderPerSide,
       borderFillColor,
+    );
+    scaledUploadedImage = flattenImageDataAlpha(
+      scaledUploadedImage,
+      outsidePixels,
+      outsidePixelsColor,
     );
 
     // Step 10: Convert uploaded image to BW (with optional dither gamma)
