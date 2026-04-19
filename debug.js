@@ -196,7 +196,7 @@
   }
 
   /**
-   * Download qrCtrlx3 and qrWithoutCtrlThinned as two separate PNG files.
+   * Download Noise, qrCtrlx3 (data pixels), and qrWithoutCtrlThinned (squares/border) as three PNG files.
    */
   function downloadQrOverlayLayersSeparatePng() {
     const cCtrl = document.getElementById(QR_OVERLAY_CTRL_CANVAS_ID);
@@ -277,13 +277,13 @@
       return out;
     }
 
-    saveOne(cCtrl, "Overlay_qrCtrlx3.png");
+    saveOne(cCtrl, "Data_Pixels.png");
     setTimeout(function () {
-      saveOne(cThin, "Overlay_qrWithoutCtrlThinned.png");
+      saveOne(cThin, "Squares_And_Border.png");
       const cNoise = buildNoiseCanvasForOverlayExport();
       if (!cNoise) return;
       setTimeout(function () {
-        saveOne(cNoise, "Overlay_Noise.png");
+        saveOne(cNoise, "Noise.png");
       }, 200);
     }, 200);
   }
