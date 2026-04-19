@@ -223,13 +223,13 @@
       return ctx.getImageData(0, 0, canvas.width, canvas.height);
     }
 
-    function createOpaqueBlackImageData(width, height) {
+    function createOpaqueGrayImageData(width, height) {
       const imageData = new ImageData(width, height);
       const data = imageData.data;
       for (let i = 0; i < data.length; i += 4) {
-        data[i] = 0;
-        data[i + 1] = 0;
-        data[i + 2] = 0;
+        data[i] = 127;
+        data[i + 1] = 127;
+        data[i + 2] = 127;
         data[i + 3] = 255;
       }
       return imageData;
@@ -247,7 +247,7 @@
       const hasInputImage = !!window.uploadedImage;
       const baseBw = hasInputImage
         ? canvasToImageData(bwCanvas)
-        : createOpaqueBlackImageData(w, h);
+        : createOpaqueGrayImageData(w, h);
 
       if (!baseBw) return null;
 
