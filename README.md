@@ -6,9 +6,9 @@ Demo: https://janglingpointer.github.io/Image_To_QR/
 <img width="800" alt="ui_screenshot" src="https://github.com/user-attachments/assets/ba1b71bd-f9f9-4ebf-b736-cb5d68c39a34" />
 <img width="800" alt="results" src="https://github.com/user-attachments/assets/fcb2996f-75f3-4313-ab6c-2dabdcdddcc8" />
 
-<b>General Note:</b>
+<b>General Notes:</b>
 <br/>
-Like all QR codes, the code can be created & scanned offline and has no expiration date.
+Like all QR codes, the code can be created & scanned offline and has no expiration date.<br>
 The tool runs 100% in browser, so it works offline and doesn't send any data to any server.
 
 <b>Note on Robustness:</b>
