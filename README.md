@@ -4,7 +4,7 @@ Generating QR Codes From Images
 Demo: https://janglingpointer.github.io/Image_To_QR/
 
 <img width="800" alt="ui_screenshot" src="https://github.com/user-attachments/assets/ba1b71bd-f9f9-4ebf-b736-cb5d68c39a34" />
-<img width="800" alt="results" src="https://github.com/user-attachments/assets/d99d59cb-c4cc-4e72-b878-8ee4e8082d72" />
+<img width="800" alt="results" src="https://github.com/user-attachments/assets/fcb2996f-75f3-4313-ab6c-2dabdcdddcc8" />
 
 <b>General Note:</b>
 <br/>
