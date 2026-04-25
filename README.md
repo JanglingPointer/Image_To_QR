@@ -9,10 +9,13 @@ Demo: https://janglingpointer.github.io/Image_To_QR/
 <b>General Note:</b>
 <br/>
 Like all QR codes, the code can be created & scanned offline and has no expiration date.
+The tool runs 100% in browser, so it works offline and doesn't send any data to any server.
 
 <b>Note on Robustness:</b>
 <br/>
-As not all the pixels in the resulting image display data of the QR Code, the resulting code is a tiny bit "less robust" compared to a simple "boring" qr-code. But in my use cases they always worked nicely. Just try out the Examples.
+As not all the pixels in the resulting image display data of the QR Code, the resulting code is a tiny bit "less robust" compared to a simple "boring" qr-code. 
+This means that under bad lighting conditions or when printed out and damaged, the code might be harder to scan.
+In my use cases, they always worked nicely, though (Just try out the Examples)
 
 <b>Thanks to:</b>
 <br/>
