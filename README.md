@@ -24,6 +24,6 @@ https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js
 
 
 <b>PS:</b> I'm new to OpenSource Development, so If I am doing something wrong, i'm happy to adapt.<br/>
-<b>PS2:</b> There's also an <a href="https://play.google.com/store/apps/details?id=dev.janglingpointer.image_to_qr">Android App</a>, that is just an offline view of the website.
-<b>PS3:</b> I described the used method in a step-by-step tutorial <a href="https://www.reddit.com/r/PixelArt/comments/1v52x96/tutorial_turn_pixel_art_into_a_working_qrcode/">reddit post</a>.
-<b>PS4:</b> Another user created a derivation of my app, focusing on additional robustness measures <a href="https://yhsure.github.io/qr-dancer/"> here </a>
+<b>PS2:</b> There's also an <a href="https://play.google.com/store/apps/details?id=dev.janglingpointer.image_to_qr">Android App</a>, that is just an offline view of the website.<br/>
+<b>PS3:</b> I described the used method in a step-by-step tutorial <a href="https://www.reddit.com/r/PixelArt/comments/1v52x96/tutorial_turn_pixel_art_into_a_working_qrcode/">reddit post</a>.<br/>
+<b>PS4:</b> Another user created a derivation of my app, focusing on additional robustness measures <a href="https://yhsure.github.io/qr-dancer/"> here </a><br/>
